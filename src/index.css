@@ -1,0 +1,216 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 自定义样式匹配原型设计 */
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+  }
+
+  body {
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+    color: #202124;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  #root {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+}
+
+@layer components {
+  /* 手机容器样式 */
+  .phone-container {
+    @apply w-[390px] h-[844px] bg-white rounded-[40px] overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.15)] relative border-[12px] border-gray-900;
+  }
+
+  .phone-screen {
+    @apply w-full h-full relative overflow-hidden;
+  }
+
+  /* 状态栏 */
+  .status-bar {
+    @apply h-12 bg-primary-500 text-white flex justify-between items-center px-6 text-sm absolute top-0 left-0 right-0 z-50 pt-3;
+  }
+
+  .status-left {
+    @apply flex items-center gap-1 font-semibold;
+  }
+
+  .status-time {
+    @apply font-semibold;
+  }
+
+  .status-icons {
+    @apply flex gap-2;
+  }
+
+  /* 固定头部 */
+  .fixed-header {
+    @apply absolute top-12 left-0 right-0 bg-gradient-to-r from-primary-500 to-primary-800 p-4 flex justify-between items-center text-white z-40 h-[68px] shadow-header;
+  }
+
+  .brand {
+    @apply flex items-center gap-3;
+  }
+
+  .app-logo {
+    @apply w-10 h-10 bg-white rounded-xl flex items-center justify-center text-primary-500 font-bold text-xl shadow-card;
+  }
+
+  .app-title {
+    @apply text-xl font-bold;
+  }
+
+  .login-status {
+    @apply text-sm flex items-center gap-2 bg-white/15 px-4 py-2 rounded-full cursor-pointer font-medium transition-colors hover:bg-white/25;
+  }
+
+  /* 可滚动内容区域 */
+  .scrollable-content {
+    @apply absolute top-[116px] bottom-[76px] left-0 right-0 overflow-y-auto overflow-x-hidden pb-8 px-5;
+  }
+
+  /* 欢迎区域 */
+  .welcome-section {
+    @apply bg-gradient-to-br from-blue-50 to-blue-100 p-7 mt-5 mb-6 rounded-2xl text-center shadow-card border border-primary-100;
+  }
+
+  .welcome-text {
+    @apply text-xl font-bold text-gray-900 mb-3;
+  }
+
+  .welcome-subtext {
+    @apply text-base text-gray-600 leading-relaxed;
+  }
+
+  /* 市场状态 */
+  .market-status {
+    @apply bg-white rounded-[18px] p-4 mb-7 shadow-card border border-gray-100 flex justify-between items-center;
+  }
+
+  .market-indicator {
+    @apply flex flex-col items-center flex-1 min-w-[100px];
+  }
+
+  .market-value {
+    @apply text-lg font-extrabold text-primary-500 leading-tight;
+  }
+
+  .market-change {
+    @apply text-lg font-bold px-2 py-1 rounded mt-1 text-center;
+  }
+
+  .market-change.up {
+    @apply text-red-500 bg-red-50;
+  }
+
+  .market-change.down {
+    @apply text-green-500 bg-green-50;
+  }
+
+  .market-label {
+    @apply text-xs text-gray-500 mt-1;
+  }
+
+  /* 功能区 */
+  .section-title {
+    @apply py-5 px-0 text-xl font-bold text-gray-900 flex justify-between items-center;
+  }
+
+  .func-grid {
+    @apply grid grid-cols-3 gap-4 mb-8;
+  }
+
+  .func-item {
+    @apply bg-white rounded-card p-5 no-underline text-gray-900 shadow-card border border-gray-200 transition-all duration-300 flex flex-col items-center text-center h-40 overflow-hidden justify-center hover:shadow-card-hover hover:-translate-y-1 hover:border-primary-500;
+  }
+
+  .func-icon {
+    @apply w-[60px] h-[60px] rounded-3xl flex items-center justify-center text-2xl mb-3 bg-gradient-to-br from-blue-50 to-blue-100 text-primary-500;
+  }
+
+  .func-name {
+    @apply text-lg font-bold mb-2;
+  }
+
+  .func-desc {
+    @apply text-sm text-gray-600 leading-tight px-2;
+  }
+
+  /* 底部导航 */
+  .fixed-bottom-nav {
+    @apply absolute bottom-0 left-0 right-0 bg-white flex px-0 py-3 border-t border-gray-200 h-[76px] z-40 shadow-nav;
+  }
+
+  .nav-item {
+    @apply flex-1 text-center text-gray-500 no-underline p-2 transition-all duration-200 relative flex flex-col items-center justify-center;
+  }
+
+  .nav-item.active {
+    @apply text-primary-500;
+  }
+
+  .nav-item.active::after {
+    content: '';
+    @apply absolute top-0 left-1/2 transform -translate-x-1/2 w-10 h-1 bg-primary-500 rounded-b;
+  }
+
+  .nav-icon {
+    @apply text-xl mb-1;
+  }
+
+  .nav-text {
+    @apply text-xs font-semibold;
+  }
+}
+
+/* 自定义滚动条样式 */
+@layer utilities {
+  .scrollable-content::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .scrollable-content::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollable-content::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+  }
+}
+
+/* 响应式设计 */
+@media (max-width: 400px) {
+  .phone-container {
+    @apply w-full h-full rounded-none border-none;
+  }
+
+  .status-bar,
+  .fixed-header,
+  .fixed-bottom-nav {
+    @apply w-[calc(100%-40px)] left-5 transform-none;
+  }
+
+  .func-grid {
+    @apply gap-3;
+  }
+
+  .func-item {
+    @apply h-[150px] p-4;
+  }
+}

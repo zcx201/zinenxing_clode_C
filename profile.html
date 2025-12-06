@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>我的 - 智能鑫AI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #1a73e8;
+            --primary-dark: #0d47a1;
+            --secondary: #34a853;
+            --accent: #fbbc05;
+            --danger: #ea4335;
+            --light-bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-primary: #202124;
+            --text-secondary: #5f6368;
+            --border-color: #dadce0;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            --shadow-hover: 0 6px 16px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .phone-container {
+            width: 390px;
+            height: 844px;
+            background: white;
+            border-radius: 40px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            position: relative;
+            border: 12px solid #111;
+        }
+        
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .status-bar {
+            height: 48px;
+            background: #1a73e8;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 24px;
+            font-size: 15px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding-top: 12px;
+        }
+        
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 600;
+        }
+        
+        .status-time {
+            font-weight: 600;
+        }
+        
+        .status-icons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .fixed-header {
+            position: absolute;
+            top: 48px;
+            left: 0;
+            right: 0;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 18px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            z-index: 999;
+            height: 68px;
+            box-shadow: 0 4px 12px rgba(26, 115, 232, 0.2);
+        }
+        
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .app-logo {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-weight: bold;
+            font-size: 22px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .app-title {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        
+        .login-status {
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 10px 18px;
+            border-radius: 24px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        
+        .login-status:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        
+        .scrollable-content {
+            position: absolute;
+            top: 116px;
+            bottom: 76px;
+            left: 0;
+            right: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            padding: 20px 20px 30px;
+        }
+        
+        .user-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 28px 24px;
+            margin: 20px 0 24px;
+            color: white;
+            box-shadow: var(--shadow);
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .user-avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            margin-right: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .user-details {
+            flex: 1;
+        }
+        
+        .user-name {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+        
+        .user-id {
+            font-size: 15px;
+            opacity: 0.9;
+        }
+        
+        .user-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+        
+        .stat-value.guest {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .stat-label {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+        
+        .guest-placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .func-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 28px;
+        }
+        
+        .func-item {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 18px 8px;
+            text-decoration: none;
+            color: var(--text-primary);
+            box-shadow: var(--shadow);
+            transition: all 0.3s;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            cursor: pointer;
+        }
+        
+        .func-item:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--primary);
+        }
+        
+        .func-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+            font-size: 22px;
+            background: linear-gradient(135deg, #e8f0fe 0%, #f1f8ff 100%);
+            color: var(--primary);
+        }
+        
+        .func-name {
+            font-size: 15px;
+            font-weight: 600;
+        }
+        
+        .section-title {
+            padding: 20px 0 16px;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .portfolio-card {
+            background: var(--card-bg);
+            border-radius: 18px;
+            padding: 22px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+        
+        .portfolio-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .portfolio-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+        
+        .portfolio-total {
+            text-align: right;
+        }
+        
+        .total-value {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--danger);
+            margin-bottom: 4px;
+        }
+        
+        .total-change {
+            font-size: 14px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 6px;
+            text-align: center;
+            display: inline-block;
+        }
+        
+        .change-up {
+            color: #ea4335;
+            background: rgba(234, 67, 53, 0.1);
+        }
+        
+        .change-down {
+            color: #34a853;
+            background: rgba(52, 168, 83, 0.1);
+        }
+        
+        .portfolio-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .portfolio-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            transition: all 0.2s;
+        }
+        
+        .portfolio-item:hover {
+            background: #f0f2f5;
+        }
+        
+        .stock-basic {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        
+        .stock-symbol {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        .stock-name {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        .stock-position {
+            text-align: right;
+        }
+        
+        .position-value {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .menu-section {
+            background: var(--card-bg);
+            border-radius: 18px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+        
+        .section-header {
+            padding: 20px;
+            font-size: 16px;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .menu-list {
+            background: white;
+        }
+        
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--border-color);
+            text-decoration: none;
+            color: inherit;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .menu-item:last-child {
+            border-bottom: none;
+        }
+        
+        .menu-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .menu-icon {
+            width: 28px;
+            height: 28px;
+            margin-right: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: var(--primary);
+        }
+        
+        .menu-content {
+            flex: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .menu-text {
+            font-size: 16px;
+            font-weight: 500;
+        }
+        
+        .menu-badge {
+            background: var(--danger);
+            color: white;
+            border-radius: 10px;
+            padding: 2px 8px;
+            font-size: 12px;
+            min-width: 18px;
+            text-align: center;
+            margin-right: 10px;
+        }
+        
+        .menu-arrow {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        .alert-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .alert-item:last-child {
+            border-bottom: none;
+        }
+        
+        .alert-info {
+            flex: 1;
+        }
+        
+        .alert-stock {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        
+        .alert-condition {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        .alert-status {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-active {
+            background: rgba(26, 115, 232, 0.1);
+            color: var(--primary);
+        }
+        
+        .status-triggered {
+            background: rgba(234, 67, 53, 0.1);
+            color: var(--danger);
+        }
+        
+        .fixed-bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            display: flex;
+            padding: 14px 0;
+            border-top: 1px solid var(--border-color);
+            height: 76px;
+            z-index: 999;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+        }
+        
+        .nav-item {
+            flex: 1;
+            text-align: center;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 8px 0;
+            transition: all 0.2s;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .nav-item.active {
+            color: var(--primary);
+        }
+        
+        .nav-item.active::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 0 0 4px 4px;
+        }
+        
+        .nav-icon {
+            font-size: 24px;
+            margin-bottom: 6px;
+        }
+        
+        .nav-text {
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        /* 账户设置模态框样式 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            width: 320px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            padding: 22px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: #f0f2f5;
+        }
+
+        .modal-body {
+            padding: 0 24px 24px;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+
+        .setting-info {
+            flex: 1;
+        }
+
+        .setting-name {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .setting-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+        
+        .scrollable-content::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .scrollable-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .scrollable-content::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+        }
+        
+        /* 确保内容区域在滚动时可以完整显示顶部 */
+        .scrollable-content::before {
+            content: '';
+            display: block;
+            height: 10px;
+            width: 100%;
+        }
+        
+        @media (max-width: 400px) {
+            .phone-container {
+                width: 100%;
+                height: 100%;
+                border-radius: 0;
+                border: none;
+            }
+            
+            .status-bar,
+            .fixed-header,
+            .fixed-bottom-nav {
+                width: calc(100% - 40px);
+                left: 20px;
+                transform: none;
+            }
+            
+            .func-grid {
+                gap: 12px;
+            }
+            
+            .func-item {
+                padding: 16px 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-container">
+        <div class="phone-screen">
+            <div class="status-bar">
+                <div class="status-left">
+                    <span>中国移动</span>
+                    <span>4G</span>
+                </div>
+                <div class="status-time" id="current-time">14:30</div>
+                <div class="status-icons">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+            </div>
+            
+            <div class="fixed-header">
+                <div class="brand">
+                    <div class="app-logo">AI</div>
+                    <div class="app-title">智能鑫AI</div>
+                </div>
+                <div class="login-status" id="top-login-btn">
+                    <i class="fas fa-user-circle"></i>
+                    <span>登录/注册</span>
+                </div>
+            </div>
+            
+            <div class="scrollable-content" id="scrollable-content">
+                <div class="user-header">
+                    <div class="user-info">
+                        <div class="user-avatar" id="user-avatar">访</div>
+                        <div class="user-details">
+                            <div class="user-name" id="user-name">游客</div>
+                            <div class="user-id" id="user-id">ID: -- -- -- --</div>
+                        </div>
+                    </div>
+                    
+                    <div class="user-stats">
+                        <div class="stat-item">
+                            <div class="stat-value guest" id="follow-value">--</div>
+                            <div class="stat-label">关注</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value guest" id="fans-value">--</div>
+                            <div class="stat-label">粉丝</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value guest" id="winrate-value">--</div>
+                            <div class="stat-label">胜率</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="func-grid">
+                    <a class="func-item" href="favorites.html">
+                        <div class="func-icon"><i class="fas fa-star"></i></div>
+                        <div class="func-name">我的自选</div>
+                    </a>
+                    <a class="func-item" href="interaction.html">
+                        <div class="func-icon"><i class="fas fa-bullseye"></i></div>
+                        <div class="func-name">我的竞猜</div>
+                    </a>
+                    <a class="func-item" href="friends.html">
+                        <div class="func-icon"><i class="fas fa-users"></i></div>
+                        <div class="func-name">我的好友</div>
+                    </a>
+                    <div class="func-item" onclick="openAccountSettings()">
+                        <div class="func-icon"><i class="fas fa-cog"></i></div>
+                        <div class="func-name">账户设置</div>
+                    </div>
+                </div>
+                
+                <div class="portfolio-card">
+                    <div class="portfolio-header">
+                        <div class="portfolio-title">模拟持仓</div>
+                        <div class="portfolio-total">
+                            <div class="total-value">¥126,845.60</div>
+                            <div class="total-change change-up">+2.35%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="portfolio-list">
+                        <div class="portfolio-item">
+                            <div class="stock-basic">
+                                <div class="stock-symbol">600519</div>
+                                <div class="stock-name">贵州茅台</div>
+                            </div>
+                            <div class="stock-position">
+                                <div class="position-value">¥68,400.00</div>
+                                <div class="total-change change-up">+3.2%</div>
+                            </div>
+                        </div>
+                        
+                        <div class="portfolio-item">
+                            <div class="stock-basic">
+                                <div class="stock-symbol">300750</div>
+                                <div class="stock-name">宁德时代</div>
+                            </div>
+                            <div class="stock-position">
+                                <div class="position-value">¥45,230.50</div>
+                                <div class="total-change change-down">-1.5%</div>
+                            </div>
+                        </div>
+                        
+                        <div class="portfolio-item">
+                            <div class="stock-basic">
+                                <div class="stock-symbol">00700</div>
+                                <div class="stock-name">腾讯控股</div>
+                            </div>
+                            <div class="stock-position">
+                                <div class="position-value">¥13,215.10</div>
+                                <div class="total-change change-up">+0.8%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="menu-section">
+                    <div class="section-header">智能预警</div>
+                    <div class="menu-list">
+                        <div class="alert-item">
+                            <div class="alert-info">
+                                <div class="alert-stock">贵州茅台 (600519)</div>
+                                <div class="alert-condition">价格 ≥ 1700.00</div>
+                            </div>
+                            <div class="alert-status status-active">监控中</div>
+                        </div>
+                        
+                        <div class="alert-item">
+                            <div class="alert-info">
+                                <div class="alert-stock">宁德时代 (300750)</div>
+                                <div class="alert-condition">跌幅 ≥ 5%</div>
+                            </div>
+                            <div class="alert-status status-active">监控中</div>
+                        </div>
+                        
+                        <div class="alert-item">
+                            <div class="alert-info">
+                                <div class="alert-stock">上证指数</div>
+                                <div class="alert-condition">突破 3050 点</div>
+                            </div>
+                            <div class="alert-status status-triggered">已触发</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="menu-section">
+                    <div class="section-header">功能设置</div>
+                    <div class="menu-list">
+                        <a class="menu-item" href="javascript:void(0)" onclick="openMyAlerts()">
+                            <div class="menu-icon"><i class="fas fa-bell"></i></div>
+                            <div class="menu-content">
+                                <div class="menu-text">我的预警</div>
+                                <div class="menu-arrow"><i class="fas fa-chevron-right"></i></div>
+                            </div>
+                        </a>
+                        
+                        <a class="menu-item" href="javascript:void(0)" onclick="openMyGroups()">
+                            <div class="menu-icon"><i class="fas fa-users"></i></div>
+                            <div class="menu-content">
+                                <div class="menu-text">我的群组</div>
+                                <div class="menu-badge">3</div>
+                            </div>
+                        </a>
+                        
+                        <a class="menu-item" href="javascript:void(0)" onclick="openCollection()">
+                            <div class="menu-icon"><i class="fas fa-folder"></i></div>
+                            <div class="menu-content">
+                                <div class="menu-text">我的收藏</div>
+                                <div class="menu-arrow"><i class="fas fa-chevron-right"></i></div>
+                            </div>
+                        </a>
+                        
+                        <a class="menu-item" href="javascript:void(0)" onclick="openAnalysisHistory()">
+                            <div class="menu-icon"><i class="fas fa-chart-bar"></i></div>
+                            <div class="menu-content">
+                                <div class="menu-text">分析记录</div>
+                                <div class="menu-arrow"><i class="fas fa-chevron-right"></i></div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="menu-section">
+                    <div class="section-header">系统设置</div>
+                    <div class="menu-list">
+                        <a class="menu-item" href="javascript:void(0)" onclick="openNotificationSettings()">
+                            <div class="menu-icon"><i class="fas fa-volume-up"></i></div>
+                            <div class="menu-content">
+                                <div class="menu-text">消息通知</div>
+                                <div class="menu-arrow"><i class="fas fa-chevron-right"></i></div>
+                            </div>
+                        </a>
+                        
+                        <a class="menu-item" href="javascript:void(0)" onclick="openPrivacySettings()">
+                            <div class="menu-icon"><i class="fas fa-lock"></i></div>
+                            <div class="menu-content">
+                                <div class="menu-text">隐私设置</div>
+                                <div class="menu-arrow"><i class="fas fa-chevron-right"></i></div>
+                            </div>
+                        </a>
+                        
+                        <a class="menu-item" href="javascript:void(0)" onclick="openHelpCenter()">
+                            <div class="menu-icon"><i class="fas fa-question-circle"></i></div>
+                            <div class="menu-content">
+                                <div class="menu-text">帮助中心</div>
+                                <div class="menu-arrow"><i class="fas fa-chevron-right"></i></div>
+                            </div>
+                        </a>
+                        
+                        <a class="menu-item" href="javascript:void(0)" onclick="openAbout()">
+                            <div class="menu-icon"><i class="fas fa-info-circle"></i></div>
+                            <div class="menu-content">
+                                <div class="menu-text">关于我们</div>
+                                <div class="menu-arrow"><i class="fas fa-chevron-right"></i></div>
+                            </div>
+                        </a>
+                        
+                        <div class="menu-item" onclick="switchAccount()">
+                            <div class="menu-icon"><i class="fas fa-exchange-alt"></i></div>
+                            <div class="menu-content">
+                                <div class="menu-text">切换账号</div>
+                                <div class="menu-arrow"><i class="fas fa-chevron-right"></i></div>
+                            </div>
+                        </div>
+                        
+                        <div class="menu-item" onclick="logout()">
+                            <div class="menu-icon"><i class="fas fa-sign-out-alt"></i></div>
+                            <div class="menu-content">
+                                <div class="menu-text" style="color: #ff4d4f;">退出登录</div>
+                                <div class="menu-arrow"><i class="fas fa-chevron-right"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="fixed-bottom-nav">
+                <a class="nav-item" href="index.html">
+                    <div class="nav-icon"><i class="fas fa-home"></i></div>
+                    <div class="nav-text">首页</div>
+                </a>
+                <a class="nav-item" href="interaction.html">
+                    <div class="nav-icon"><i class="fas fa-bullseye"></i></div>
+                    <div class="nav-text">互动点盘</div>
+                </a>
+                <a class="nav-item" href="friends.html">
+                    <div class="nav-icon"><i class="fas fa-users"></i></div>
+                    <div class="nav-text">股友</div>
+                </a>
+                <a class="nav-item active" href="profile.html">
+                    <div class="nav-icon"><i class="fas fa-user"></i></div>
+                    <div class="nav-text">我的</div>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="accountSettingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">账户设置</div>
+                <button class="modal-close" onclick="closeAccountSettings()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-name">推送通知</div>
+                        <div class="setting-desc">接收股价预警、新闻推送等通知</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-name">夜间模式</div>
+                        <div class="setting-desc">开启深色主题保护眼睛</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-name">声音提醒</div>
+                        <div class="setting-desc">重要通知时播放提示音</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-name">震动反馈</div>
+                        <div class="setting-desc">操作时提供触觉反馈</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-name">K线图设置</div>
+                        <div class="setting-desc">自定义K线图显示参数</div>
+                    </div>
+                    <div class="menu-arrow"><i class="fas fa-chevron-right"></i></div>
+                </div>
+                
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-name">语言设置</div>
+                        <div class="setting-desc">切换应用显示语言</div>
+                    </div>
+                    <div class="menu-arrow"><i class="fas fa-chevron-right"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 游客数据
+        const guestData = {
+            name: '游客',
+            userId: '-- -- -- --',
+            followers: '--',
+            following: '--',
+            winRate: '--'
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // 更新时间显示
+            function updateTime() {
+                const now = new Date();
+                const hours = now.getHours().toString().padStart(2, '0');
+                const minutes = now.getMinutes().toString().padStart(2, '0');
+                document.getElementById('current-time').textContent = `${hours}:${minutes}`;
+            }
+            updateTime();
+            setInterval(updateTime, 60000);
+
+            // 更新用户界面
+            updateUserInterface();
+            
+            // 顶部登录按钮点击事件
+            const topLoginBtn = document.getElementById('top-login-btn');
+            if (topLoginBtn) {
+                topLoginBtn.addEventListener('click', function() {
+                    const currentUser = localStorage.getItem('currentUser');
+                    if (!currentUser) {
+                        window.location.href = 'login.html';
+                    } else {
+                        // 如果已登录，点击可以显示用户菜单（这里简单处理为跳转到个人中心）
+                        window.location.href = 'profile.html';
+                    }
+                });
+            }
+
+            // 模拟实时更新持仓数据
+            function updatePortfolioData() {
+                const currentUser = localStorage.getItem('currentUser');
+                if (!currentUser) return; // 未登录不更新持仓数据
+                
+                const changes = document.querySelectorAll('.total-change');
+                changes.forEach(change => {
+                    const randomChange = (Math.random() - 0.5) * 2;
+                    const isPositive = randomChange > 0;
+                    const changeText = isPositive ? `+${randomChange.toFixed(2)}%` : `${randomChange.toFixed(2)}%`;
+                    
+                    change.textContent = changeText;
+                    change.className = change.className.replace(/(change-up|change-down)/g, '') + ` ${isPositive ? 'change-up' : 'change-down'}`;
+                });
+            }
+            
+            // 每10秒更新一次持仓数据（模拟实时行情）
+            const currentUser = localStorage.getItem('currentUser');
+            if (currentUser) {
+                setInterval(updatePortfolioData, 10000);
+            }
+            
+            // 导航栏交互
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    if (this.classList.contains('active')) {
+                        e.preventDefault();
+                    }
+                });
+            });
+
+            // 初始化滚动到顶部
+            const scrollArea = document.getElementById('scrollable-content');
+            if (scrollArea) scrollArea.scrollTo(0, 0);
+        });
+
+        // 更新用户界面
+        function updateUserInterface() {
+            const currentUser = localStorage.getItem('currentUser');
+            const isLoggedIn = !!currentUser;
+            
+            // 准备用户数据
+            let userData;
+            if (isLoggedIn) {
+                const user = JSON.parse(currentUser);
+                userData = {
+                    name: user.username,
+                    userId: user.username,
+                    followers: 1256,
+                    following: 28,
+                    winRate: 86
+                };
+            } else {
+                userData = guestData;
+            }
+            
+            // 更新用户信息
+            document.getElementById('user-name').textContent = userData.name;
+            document.getElementById('user-id').textContent = `ID: ${userData.userId}`;
+            document.getElementById('user-avatar').textContent = userData.name.charAt(0);
+            
+            // 更新统计数据
+            document.getElementById('follow-value').textContent = userData.following;
+            document.getElementById('fans-value').textContent = userData.followers;
+            document.getElementById('winrate-value').textContent = typeof userData.winRate === 'number' ? `${userData.winRate}%` : userData.winRate;
+            
+            // 更新统计值的样式
+            const statValues = document.querySelectorAll('.stat-value');
+            statValues.forEach(value => {
+                if (isLoggedIn) {
+                    value.classList.remove('guest');
+                } else {
+                    value.classList.add('guest');
+                }
+            });
+            
+            // 更新顶部登录按钮
+            const topLoginBtn = document.getElementById('top-login-btn');
+            if (topLoginBtn) {
+                if (isLoggedIn) {
+                    topLoginBtn.innerHTML = '<i class="fas fa-user-circle"></i><span>' + userData.name + '</span>';
+                } else {
+                    topLoginBtn.innerHTML = '<i class="fas fa-user-circle"></i><span>登录/注册</span>';
+                }
+            }
+        }
+
+        // 检查登录状态
+        function checkLogin() {
+            const currentUser = localStorage.getItem('currentUser');
+            if (!currentUser) {
+                // 修改：直接跳转到登录页面，不弹出确认对话框
+                window.location.href = 'login.html?back=profile.html';
+                return false;
+            }
+            return true;
+        }
+
+        // 账户设置功能
+        function openAccountSettings() {
+            // 修改：直接检查登录状态，如果未登录直接跳转到登录页面
+            const currentUser = localStorage.getItem('currentUser');
+            if (!currentUser) {
+                window.location.href = 'login.html?back=profile.html';
+                return;
+            }
+            document.getElementById('accountSettingsModal').style.display = 'flex';
+        }
+
+        function closeAccountSettings() {
+            document.getElementById('accountSettingsModal').style.display = 'none';
+        }
+        
+        // 点击模态框外部关闭
+        const accountSettingsModal = document.getElementById('accountSettingsModal');
+        if (accountSettingsModal) {
+            accountSettingsModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeAccountSettings();
+                }
+            });
+        }
+        
+        // 切换账号功能
+        function switchAccount() {
+            const currentUser = localStorage.getItem('currentUser');
+            if (currentUser) {
+                if (confirm('确定要切换账号吗？')) {
+                    // 清除当前用户登录状态
+                    localStorage.removeItem('currentUser');
+                    // 跳转到登录页面
+                    window.location.href = 'login.html?action=switch';
+                }
+            } else {
+                window.location.href = 'login.html';
+            }
+        }
+        
+        // 其他菜单项的功能（占位函数）
+        function openMyAlerts() {
+            if (!checkLogin()) return;
+            alert('打开我的预警页面');
+        }
+
+        function openMyGroups() {
+            if (!checkLogin()) return;
+            alert('打开我的群组页面');
+        }
+
+        function openCollection() {
+            if (!checkLogin()) return;
+            alert('打开我的收藏页面');
+        }
+
+        function openAnalysisHistory() {
+            if (!checkLogin()) return;
+            alert('打开分析记录页面');
+        }
+
+        function openNotificationSettings() {
+            if (!checkLogin()) return;
+            alert('打开消息通知设置');
+        }
+
+        function openPrivacySettings() {
+            if (!checkLogin()) return;
+            alert('打开隐私设置');
+        }
+
+        function openHelpCenter() {
+            if (!checkLogin()) return;
+            alert('打开帮助中心');
+        }
+
+        function openAbout() {
+            if (!checkLogin()) return;
+            alert('打开关于我们');
+        }
+        
+        function logout() {
+            const currentUser = localStorage.getItem('currentUser');
+            if (currentUser) {
+                if (confirm('确定要退出登录吗？')) {
+                    // 清除localStorage中的用户数据
+                    localStorage.removeItem('currentUser');
+                    // 更新界面
+                    alert('已退出登录');
+                    updateUserInterface();
+                }
+            } else {
+                alert('您尚未登录');
+            }
+        }
+        
+        // 防止缩放
+        document.addEventListener('touchmove', function(e) {
+            if (e.scale !== 1) e.preventDefault();
+        }, { passive: false });
+    </script>
+</body>
+</html>

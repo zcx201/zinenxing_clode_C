@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>股海波涛 - 智能鑫AI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #1a73e8;
+            --primary-dark: #0d47a1;
+            --secondary: #34a853;
+            --accent: #fbbc05;
+            --danger: #ea4335;
+            --light-bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-primary: #202124;
+            --text-secondary: #5f6368;
+            --border-color: #dadce0;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            --shadow-hover: 0 6px 16px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .phone-container {
+            width: 390px;
+            height: 844px;
+            background: white;
+            border-radius: 40px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            position: relative;
+            border: 12px solid #111;
+        }
+        
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .status-bar {
+            height: 48px;
+            background: #1a73e8;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 24px;
+            font-size: 15px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding-top: 12px;
+        }
+        
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 600;
+        }
+        
+        .status-time {
+            font-weight: 600;
+        }
+        
+        .status-icons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .market-header {
+            position: absolute;
+            top: 48px;
+            left: 0;
+            right: 0;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 18px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            z-index: 999;
+            height: 68px;
+            box-shadow: 0 4px 12px rgba(26, 115, 232, 0.2);
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .back-btn {
+            color: white;
+            font-size: 20px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            transition: all 0.2s;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        
+        .login-status {
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 10px 18px;
+            border-radius: 24px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            text-decoration: none;
+            color: white;
+        }
+        
+        .login-status:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        
+        .scrollable-content {
+            position: absolute;
+            top: 116px;
+            bottom: 76px;
+            left: 0;
+            right: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            padding: 20px 20px 30px;
+        }
+        
+        /* 搜索框样式 */
+        .search-container {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 20px 0 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+        
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: var(--light-bg);
+            border-radius: 12px;
+            padding: 12px 18px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s;
+        }
+        
+        .search-box:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
+        }
+        
+        .search-icon {
+            color: var(--text-secondary);
+            font-size: 18px;
+            margin-right: 12px;
+        }
+        
+        .search-input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-size: 16px;
+            color: var(--text-primary);
+            outline: none;
+        }
+        
+        .search-input::placeholder {
+            color: var(--text-secondary);
+        }
+        
+        .search-results {
+            margin-top: 16px;
+            display: none;
+        }
+        
+        .search-results.active {
+            display: block;
+        }
+        
+        .search-result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .search-result-item:hover {
+            background: var(--light-bg);
+        }
+        
+        .search-result-info {
+            flex: 1;
+        }
+        
+        .search-result-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+        }
+        
+        .search-result-code {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        .search-result-price {
+            text-align: right;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        /* 修改：将行情Tab移到搜索框下面 */
+        .market-tabs {
+            display: flex;
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 8px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+        
+        .market-tab {
+            flex: 1;
+            text-align: center;
+            padding: 14px 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.2s;
+        }
+        
+        .market-tab.active {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+        }
+        
+        /* 修改：指数卡片横向滚动 */
+        .index-scroll-container {
+            width: 100%;
+            overflow-x: auto;
+            margin-bottom: 24px;
+            padding-bottom: 10px;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .index-scroll-container::-webkit-scrollbar {
+            height: 4px;
+        }
+        
+        .index-scroll-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .index-scroll-container::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+        }
+        
+        .index-cards {
+            display: flex;
+            gap: 12px;
+            padding: 5px 0;
+            width: max-content;
+        }
+        
+        .index-card {
+            flex: 0 0 auto;
+            width: 150px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 18px 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .index-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--primary);
+        }
+        
+        .index-name {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        
+        .index-point {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+        
+        .index-change {
+            font-size: 16px;
+            font-weight: 700;
+            padding: 6px 12px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+        
+        .change-up {
+            color: #ea4335;
+            background: rgba(234, 67, 53, 0.1);
+        }
+        
+        .change-down {
+            color: #34a853;
+            background: rgba(52, 168, 83, 0.1);
+        }
+        
+        .section-title {
+            padding: 20px 0 16px;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .stock-list {
+            margin-bottom: 30px;
+        }
+        
+        .stock-item {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 18px 20px;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .stock-item:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--primary);
+        }
+        
+        .stock-info {
+            flex: 1;
+        }
+        
+        .stock-name-code {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        
+        .stock-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        .stock-code {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        .stock-tags {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .stock-tag {
+            padding: 4px 10px;
+            background: var(--light-bg);
+            border-radius: 20px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .stock-price {
+            text-align: right;
+        }
+        
+        .current-price {
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+        
+        .price-change {
+            font-size: 16px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+        
+        .capital-flow {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            margin-bottom: 30px;
+        }
+        
+        .flow-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-top: 20px;
+        }
+        
+        .flow-item {
+            background: var(--light-bg);
+            border-radius: 12px;
+            padding: 16px;
+        }
+        
+        .flow-name {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        
+        .flow-amount {
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+        
+        .flow-in {
+            color: #ea4335;
+        }
+        
+        .flow-out {
+            color: #34a853;
+        }
+        
+        .fixed-bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            display: flex;
+            padding: 14px 0;
+            border-top: 1px solid var(--border-color);
+            height: 76px;
+            z-index: 999;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+        }
+        
+        .nav-item {
+            flex: 1;
+            text-align: center;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 8px 0;
+            transition: all 0.2s;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .nav-item.active {
+            color: var(--primary);
+        }
+        
+        .nav-item.active::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 0 0 4px 4px;
+        }
+        
+        .nav-icon {
+            font-size: 24px;
+            margin-bottom: 6px;
+        }
+        
+        .nav-text {
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        .scrollable-content::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .scrollable-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .scrollable-content::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+        }
+        
+        /* 确保内容区域在滚动时可以完整显示顶部 */
+        .scrollable-content::before {
+            content: '';
+            display: block;
+            height: 10px;
+            width: 100%;
+        }
+        
+        @media (max-width: 400px) {
+            .phone-container {
+                width: 100%;
+                height: 100%;
+                border-radius: 0;
+                border: none;
+            }
+            
+            .status-bar,
+            .market-header,
+            .fixed-bottom-nav {
+                width: calc(100% - 40px);
+                left: 20px;
+                transform: none;
+            }
+            
+            .index-card {
+                width: 140px;
+            }
+            
+            .flow-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-container">
+        <div class="phone-screen">
+            <div class="status-bar">
+                <div class="status-left">
+                    <span>中国移动</span>
+                    <span>4G</span>
+                </div>
+                <div class="status-time" id="current-time">14:30</div>
+                <div class="status-icons">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+            </div>
+            
+            <div class="market-header">
+                <div class="header-left">
+                    <a class="back-btn" href="index.html">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                    <div class="page-title">股海波涛</div>
+                </div>
+                <a class="login-status" href="login.html">
+                    <i class="fas fa-user-circle"></i>
+                    <span>登录/注册</span>
+                </a>
+            </div>
+            
+            <div class="scrollable-content" id="scrollable-content">
+                <!-- 搜索对话框 -->
+                <div class="search-container">
+                    <div class="search-box">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" class="search-input" id="search-input" placeholder="搜索股票名称或代码" autocomplete="off">
+                    </div>
+                    <div class="search-results" id="search-results">
+                        <!-- 搜索结果将在这里动态显示 -->
+                    </div>
+                </div>
+                
+                <!-- 修改：行情Tab移动到搜索框下面 -->
+                <div class="market-tabs">
+                    <a class="market-tab active" href="#" onclick="switchMarketTab('market')">行情</a>
+                    <a class="market-tab" href="#" onclick="switchMarketTab('sector')">板块</a>
+                    <a class="market-tab" href="#" onclick="switchMarketTab('rank')">排行</a>
+                    <a class="market-tab" href="#" onclick="switchMarketTab('capital')">资金</a>
+                </div>
+                
+                <!-- 修改：指数卡片横向滚动 -->
+                <div class="index-scroll-container">
+                    <div class="index-cards">
+                        <div class="index-card" data-index="sh" data-name="上证指数" onclick="openChart(this)">
+                            <div class="index-name">上证指数</div>
+                            <div class="index-point" id="sh-index">3,025.67</div>
+                            <div class="index-change change-up" id="sh-change">+1.23%</div>
+                        </div>
+                        <div class="index-card" data-index="sz" data-name="深证成指" onclick="openChart(this)">
+                            <div class="index-name">深证成指</div>
+                            <div class="index-point" id="sz-index">9,456.42</div>
+                            <div class="index-change change-up" id="sz-change">+0.87%</div>
+                        </div>
+                        <div class="index-card" data-index="cy" data-name="创业板指" onclick="openChart(this)">
+                            <div class="index-name">创业板指</div>
+                            <div class="index-point" id="cy-index">1,856.89</div>
+                            <div class="index-change change-down" id="cy-change">-0.34%</div>
+                        </div>
+                        <div class="index-card" data-index="hs300" data-name="沪深300" onclick="openChart(this)">
+                            <div class="index-name">沪深300</div>
+                            <div class="index-point" id="hs300-index">3,678.45</div>
+                            <div class="index-change change-up" id="hs300-change">+0.95%</div>
+                        </div>
+                        <div class="index-card" data-index="sz50" data-name="上证50" onclick="openChart(this)">
+                            <div class="index-name">上证50</div>
+                            <div class="index-point" id="sz50-index">2,543.21</div>
+                            <div class="index-change change-up" id="sz50-change">+1.12%</div>
+                        </div>
+                        <div class="index-card" data-index="zxb" data-name="中小板指" onclick="openChart(this)">
+                            <div class="index-name">中小板指</div>
+                            <div class="index-point" id="zxb-index">6,789.12</div>
+                            <div class="index-change change-down" id="zxb-change">-0.21%</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 行情列表 -->
+                <div id="market-content" class="tab-content">
+                    <div class="section-title">
+                        <span>热门股票</span>
+                    </div>
+                    
+                    <div class="stock-list">
+                        <a class="stock-item" href="stock-detail.html">
+                            <div class="stock-info">
+                                <div class="stock-name-code">
+                                    <div class="stock-name">贵州茅台</div>
+                                    <div class="stock-code">600519</div>
+                                </div>
+                                <div class="stock-tags">
+                                    <div class="stock-tag">白酒</div>
+                                    <div class="stock-tag">沪深300</div>
+                                </div>
+                            </div>
+                            <div class="stock-price">
+                                <div class="current-price">1,688.00</div>
+                                <div class="price-change change-up">+2.35%</div>
+                            </div>
+                        </a>
+                        
+                        <a class="stock-item" href="stock-detail.html">
+                            <div class="stock-info">
+                                <div class="stock-name-code">
+                                    <div class="stock-name">宁德时代</div>
+                                    <div class="stock-code">300750</div>
+                                </div>
+                                <div class="stock-tags">
+                                    <div class="stock-tag">锂电池</div>
+                                    <div class="stock-tag">新能源</div>
+                                </div>
+                            </div>
+                            <div class="stock-price">
+                                <div class="current-price">198.50</div>
+                                <div class="price-change change-down">-1.24%</div>
+                            </div>
+                        </a>
+                        
+                        <a class="stock-item" href="stock-detail.html">
+                            <div class="stock-info">
+                                <div class="stock-name-code">
+                                    <div class="stock-name">招商银行</div>
+                                    <div class="stock-code">600036</div>
+                                </div>
+                                <div class="stock-tags">
+                                    <div class="stock-tag">银行</div>
+                                    <div class="stock-tag">权重股</div>
+                                </div>
+                            </div>
+                            <div class="stock-price">
+                                <div class="current-price">32.45</div>
+                                <div class="price-change change-up">+0.62%</div>
+                            </div>
+                        </a>
+                    </div>
+                    
+                    <!-- 资金流向 -->
+                    <div class="capital-flow">
+                        <div class="section-title">板块资金流向</div>
+                        <div class="flow-list">
+                            <div class="flow-item">
+                                <div class="flow-name">半导体</div>
+                                <div class="flow-amount flow-in">+12.5亿</div>
+                                <div class="index-change change-up">+3.2%</div>
+                            </div>
+                            <div class="flow-item">
+                                <div class="flow-name">人工智能</div>
+                                <div class="flow-amount flow-in">+8.7亿</div>
+                                <div class="index-change change-up">+2.1%</div>
+                            </div>
+                            <div class="flow-item">
+                                <div class="flow-name">白酒</div>
+                                <div class="flow-amount flow-out">-5.3亿</div>
+                                <div class="index-change change-down">-1.5%</div>
+                            </div>
+                            <div class="flow-item">
+                                <div class="flow-name">房地产</div>
+                                <div class="flow-amount flow-out">-3.8亿</div>
+                                <div class="index-change change-down">-2.3%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 板块内容 -->
+                <div id="sector-content" class="tab-content" style="display: none;">
+                    <div class="section-title">
+                        <span>热门板块</span>
+                    </div>
+                    
+                    <div class="stock-list">
+                        <a class="stock-item" href="sector-detail.html">
+                            <div class="stock-info">
+                                <div class="stock-name-code">
+                                    <div class="stock-name">半导体板块</div>
+                                    <div class="stock-code">+3.2%</div>
+                                </div>
+                                <div class="stock-tags">
+                                    <div class="stock-tag">资金流入第一</div>
+                                    <div class="stock-tag">12股涨停</div>
+                                </div>
+                            </div>
+                            <div class="stock-price">
+                                <div class="current-price">1,256.8</div>
+                                <div class="price-change change-up">+3.2%</div>
+                            </div>
+                        </a>
+                        
+                        <a class="stock-item" href="sector-detail.html">
+                            <div class="stock-info">
+                                <div class="stock-name-code">
+                                    <div class="stock-name">人工智能</div>
+                                    <div class="stock-code">+2.1%</div>
+                                </div>
+                                <div class="stock-tags">
+                                    <div class="stock-tag">政策利好</div>
+                                    <div class="stock-tag">8股涨停</div>
+                                </div>
+                            </div>
+                            <div class="stock-price">
+                                <div class="current-price">892.3</div>
+                                <div class="price-change change-up">+2.1%</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 底部导航 -->
+            <div class="fixed-bottom-nav">
+                <a class="nav-item" href="index.html">
+                    <div class="nav-icon"><i class="fas fa-home"></i></div>
+                    <div class="nav-text">首页</div>
+                </a>
+                <a class="nav-item" href="interaction.html">
+                    <div class="nav-icon"><i class="fas fa-bullseye"></i></div>
+                    <div class="nav-text">互动点盘</div>
+                </a>
+                <a class="nav-item" href="friends.html">
+                    <div class="nav-icon"><i class="fas fa-users"></i></div>
+                    <div class="nav-text">股友</div>
+                </a>
+                <a class="nav-item" href="profile.html">
+                    <div class="nav-icon"><i class="fas fa-user"></i></div>
+                    <div class="nav-text">我的</div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            function updateTime() {
+                const now = new Date();
+                const hours = now.getHours().toString().padStart(2, '0');
+                const minutes = now.getMinutes().toString().padStart(2, '0');
+                document.getElementById('current-time').textContent = `${hours}:${minutes}`;
+            }
+            updateTime();
+            setInterval(updateTime, 60000);
+
+            // 检查并更新登录状态
+            function checkLoginStatus() {
+                const currentUser = localStorage.getItem('currentUser');
+                const loginStatusEl = document.querySelector('.login-status');
+                
+                if (loginStatusEl) {
+                    if (currentUser) {
+                        // 用户已登录，显示用户名
+                        const user = JSON.parse(currentUser);
+                        loginStatusEl.innerHTML = `
+                            <i class="fas fa-user-circle"></i>
+                            <span>${user.username}</span>
+                        `;
+                        // 移除登录跳转事件，或者添加用户菜单功能
+                        loginStatusEl.removeEventListener('click', loginClickHandler);
+                        loginStatusEl.addEventListener('click', function() {
+                            window.location.href = 'profile.html';
+                        });
+                    } else {
+                        // 用户未登录，显示登录/注册
+                        loginStatusEl.innerHTML = `
+                            <i class="fas fa-user-circle"></i>
+                            <span>登录/注册</span>
+                        `;
+                        loginStatusEl.addEventListener('click', loginClickHandler);
+                    }
+                }
+            }
+            
+            function loginClickHandler() {
+                window.location.href = 'login.html?back=market.html';
+            }
+            
+            // 初始化登录状态
+            checkLoginStatus();
+
+            // 模拟实时数据更新
+            function updateMarketData() {
+                // 更新所有指数数据
+                const indices = [
+                    { id: 'sh-index', changeId: 'sh-change' },
+                    { id: 'sz-index', changeId: 'sz-change' },
+                    { id: 'cy-index', changeId: 'cy-change' },
+                    { id: 'hs300-index', changeId: 'hs300-change' },
+                    { id: 'sz50-index', changeId: 'sz50-change' },
+                    { id: 'zxb-index', changeId: 'zxb-change' }
+                ];
+                
+                indices.forEach(index => {
+                    const valueEl = document.getElementById(index.id);
+                    const changeEl = document.getElementById(index.changeId);
+                    
+                    if (!valueEl || !changeEl) return;
+                    
+                    const isPositive = Math.random() > 0.4;
+                    const changePercent = (Math.random() * 2.5).toFixed(2);
+                    const changeSymbol = isPositive ? '+' : '-';
+                    
+                    let value = parseFloat(valueEl.textContent.replace(/,/g, ''));
+                    value = value * (1 + (isPositive ? 1 : -1) * parseFloat(changePercent) / 100);
+                    valueEl.textContent = value.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                    
+                    changeEl.textContent = `${changeSymbol}${changePercent}%`;
+                    changeEl.className = 'index-change ' + (isPositive ? 'change-up' : 'change-down');
+                });
+                
+                // 更新股票价格
+                updateStockPrices();
+            }
+
+            function updateStockPrices() {
+                const changes = document.querySelectorAll('.price-change');
+                changes.forEach(change => {
+                    const randomChange = (Math.random() - 0.5) * 4;
+                    const isPositive = randomChange > 0;
+                    const changeText = isPositive ? `+${randomChange.toFixed(2)}%` : `${randomChange.toFixed(2)}%`;
+                    
+                    change.textContent = changeText;
+                    change.className = `price-change ${isPositive ? 'change-up' : 'change-down'}`;
+                    
+                    // 更新对应的价格
+                    const priceEl = change.previousElementSibling;
+                    if (priceEl && priceEl.classList.contains('current-price')) {
+                        let price = parseFloat(priceEl.textContent.replace(/,/g, ''));
+                        price = price * (1 + randomChange / 100);
+                        priceEl.textContent = price.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                    }
+                });
+            }
+
+            setInterval(updateMarketData, 8000);
+            updateMarketData();
+
+            // 修复：底部导航栏单击切换问题
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    // 移除所有active类
+                    document.querySelectorAll('.nav-item').forEach(nav => {
+                        nav.classList.remove('active');
+                    });
+                    // 给当前点击的添加active类
+                    this.classList.add('active');
+                    
+                    // 如果点击的不是当前页面，允许跳转
+                    if (!this.href.includes(window.location.pathname)) {
+                        return true;
+                    } else {
+                        e.preventDefault();
+                    }
+                });
+            });
+
+            // 为股票项添加点击效果
+            document.querySelectorAll('.stock-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    if (window.innerWidth <= 768) {
+                        e.preventDefault();
+                        this.style.transform = 'scale(0.97)';
+                        setTimeout(() => {
+                            this.style.transform = '';
+                            // 这里可以添加实际跳转逻辑
+                            // window.location.href = this.href;
+                        }, 150);
+                    }
+                });
+            });
+
+            const scrollArea = document.getElementById('scrollable-content');
+            if (scrollArea) scrollArea.scrollTo(0, 0);
+        });
+
+        // 登录状态检查
+        let isLoggedIn = false;
+
+        function checkLogin() {
+            if (!isLoggedIn) {
+                window.location.href = 'login.html?back=market.html';
+                return false;
+            }
+            return true;
+        }
+
+        function switchMarketTab(tabName) {
+            if (!checkLogin()) return;
+
+            // 更新tab激活状态
+            document.querySelectorAll('.market-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // 显示对应内容
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            document.getElementById(tabName + '-content').style.display = 'block';
+        }
+
+        // 搜索功能
+        const searchInput = document.getElementById('search-input');
+        const searchResults = document.getElementById('search-results');
+        
+        // 模拟股票数据
+        const stockData = [
+            { name: '贵州茅台', code: '600519', price: '1,688.00', change: '+2.35%' },
+            { name: '宁德时代', code: '300750', price: '198.50', change: '-1.24%' },
+            { name: '招商银行', code: '600036', price: '32.45', change: '+0.62%' },
+            { name: '中国平安', code: '601318', price: '48.30', change: '+1.05%' },
+            { name: '五粮液', code: '000858', price: '152.80', change: '-0.87%' },
+            { name: '比亚迪', code: '002594', price: '215.60', change: '+3.12%' },
+            { name: '中信证券', code: '600030', price: '22.15', change: '+0.45%' },
+            { name: '恒瑞医药', code: '600276', price: '43.20', change: '-0.92%' },
+            { name: '海康威视', code: '002415', price: '35.80', change: '+1.42%' },
+            { name: '东方财富', code: '300059', price: '14.35', change: '-0.69%' }
+        ];
+        
+        // 搜索输入事件监听
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.trim().toLowerCase();
+            
+            if (searchTerm.length === 0) {
+                searchResults.classList.remove('active');
+                return;
+            }
+            
+            // 过滤股票数据
+            const filteredStocks = stockData.filter(stock => 
+                stock.name.toLowerCase().includes(searchTerm) || 
+                stock.code.includes(searchTerm)
+            );
+            
+            // 显示搜索结果
+            displaySearchResults(filteredStocks);
+        });
+        
+        // 显示搜索结果
+        function displaySearchResults(stocks) {
+            if (stocks.length === 0) {
+                searchResults.innerHTML = '<div class="search-result-item">未找到相关股票</div>';
+                searchResults.classList.add('active');
+                return;
+            }
+            
+            let resultsHTML = '';
+            stocks.forEach(stock => {
+                const isPositive = stock.change.startsWith('+');
+                
+                resultsHTML += `
+                    <div class="search-result-item" onclick="selectStock('${stock.code}')">
+                        <div class="search-result-info">
+                            <div class="search-result-name">${stock.name}</div>
+                            <div class="search-result-code">${stock.code}</div>
+                        </div>
+                        <div class="search-result-price">
+                            <div>${stock.price}</div>
+                            <div class="${isPositive ? 'change-up' : 'change-down'}" style="font-size: 14px; padding: 2px 8px; margin-top: 4px;">${stock.change}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            searchResults.innerHTML = resultsHTML;
+            searchResults.classList.add('active');
+        }
+        
+        // 点击搜索结果
+        function selectStock(stockCode) {
+            // 这里可以跳转到股票详情页
+            alert(`跳转到股票详情页：${stockCode}`);
+            // window.location.href = `stock-detail.html?code=${stockCode}`;
+            
+            // 清空搜索框并隐藏结果
+            searchInput.value = '';
+            searchResults.classList.remove('active');
+        }
+        
+        // 点击指数卡片进入实时走势图
+        function openChart(element) {
+            const indexCode = element.getAttribute('data-index');
+            const indexName = element.getAttribute('data-name');
+            
+            // 这里跳转到实时走势图页面，传递指数代码和名称
+            // 实际应用中应该跳转到 chart.html?index=sh&name=上证指数
+            alert(`进入实时走势图：${indexName} (${indexCode})\n\n页面包含：分时、日K、周K、月K等图表`);
+            
+            // 实际跳转代码：
+            // window.location.href = `chart.html?index=${indexCode}&name=${encodeURIComponent(indexName)}`;
+        }
+        
+        // 点击页面其他地方关闭搜索结果
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.search-container')) {
+                searchResults.classList.remove('active');
+            }
+        });
+
+        document.addEventListener('touchmove', function(e) {
+            if (e.scale !== 1) e.preventDefault();
+        }, { passive: false });
+    </script>
+</body>
+</html>

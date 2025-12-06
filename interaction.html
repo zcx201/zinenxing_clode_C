@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>互动点盘 - 智能鑫AI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #1a73e8;
+            --primary-dark: #0d47a1;
+            --secondary: #34a853;
+            --accent: #fbbc05;
+            --danger: #ea4335;
+            --light-bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-primary: #202124;
+            --text-secondary: #5f6368;
+            --border-color: #dadce0;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            --shadow-hover: 0 6px 16px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .phone-container {
+            width: 390px;
+            height: 844px;
+            background: white;
+            border-radius: 40px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            position: relative;
+            border: 12px solid #111;
+        }
+        
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .status-bar {
+            height: 48px;
+            background: #1a73e8;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 24px;
+            font-size: 15px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding-top: 12px;
+        }
+        
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 600;
+        }
+        
+        .status-time {
+            font-weight: 600;
+        }
+        
+        .status-icons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .fixed-header {
+            position: absolute;
+            top: 48px;
+            left: 0;
+            right: 0;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 18px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            z-index: 999;
+            height: 68px;
+            box-shadow: 0 4px 12px rgba(26, 115, 232, 0.2);
+        }
+        
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .app-title {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        
+        .back-btn {
+            color: white;
+            text-decoration: none;
+            font-size: 20px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        
+        .login-status {
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 10px 18px;
+            border-radius: 24px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            color: white;
+            text-decoration: none;
+        }
+        
+        .login-status:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        
+        .scrollable-content {
+            position: absolute;
+            top: 116px; /* 状态栏48px + 固定头部68px = 116px */
+            bottom: 76px; /* 底部导航高度 */
+            left: 0;
+            right: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            padding: 0 20px 20px;
+            margin-top: 0; /* 确保顶部内容不会被遮挡 */
+        }
+        
+        .section-title {
+            padding: 16px 0 12px;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        /* 主竞猜卡片 */
+        .main-guess-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-radius: 20px;
+            padding: 20px;
+            color: white;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+        
+        .guess-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .guess-target {
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* 新增：指数选择下拉菜单 */
+        .index-select {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            padding: 8px 12px;
+            cursor: pointer;
+            outline: none;
+            min-width: 160px;
+        }
+        
+        .index-select option {
+            background: var(--primary-dark);
+            color: white;
+        }
+        
+        .guess-deadline {
+            font-size: 14px;
+            opacity: 0.9;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 6px 12px;
+            border-radius: 20px;
+        }
+        
+        /* 新增：指数显示区域 */
+        .index-display {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .index-item {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            padding: 16px;
+            text-align: center;
+        }
+        
+        .index-name {
+            font-size: 14px;
+            margin-bottom: 8px;
+            opacity: 0.9;
+        }
+        
+        .index-value {
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+        
+        .index-change {
+            font-size: 18px;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+        
+        .index-change.up {
+            color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.15);
+        }
+        
+        .index-change.down {
+            color: #34a853;
+            background: rgba(52, 168, 83, 0.15);
+        }
+        
+        .guess-options {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .guess-option {
+            flex: 1;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid transparent;
+            border-radius: 16px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .guess-option:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+        
+        .guess-option.selected {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .guess-option.up {
+            color: #ffebee;
+        }
+        
+        .guess-option.down {
+            color: #e8f5e9;
+        }
+        
+        .option-icon {
+            font-size: 24px;
+        }
+        
+        .bet-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .bet-amount {
+            flex: 1;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            color: white;
+            font-size: 18px;
+            text-align: center;
+        }
+        
+        .bet-amount::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .bet-btn {
+            padding: 14px 28px;
+            background: var(--accent);
+            color: var(--text-primary);
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .bet-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .bet-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .participants {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            opacity: 0.9;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        /* 竞猜列表 */
+        .guess-list-container {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+        
+        .guess-item {
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .guess-item:last-child {
+            border-bottom: none;
+        }
+        
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .item-target {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        .item-deadline {
+            font-size: 14px;
+            color: var(--text-secondary);
+            background: var(--light-bg);
+            padding: 4px 12px;
+            border-radius: 12px;
+        }
+        
+        .item-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .vote-distribution {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+        
+        .vote-bar {
+            flex: 1;
+            height: 8px;
+            background: var(--light-bg);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .vote-up-bar {
+            height: 100%;
+            background: var(--danger);
+            border-radius: 4px 0 0 4px;
+        }
+        
+        .vote-down-bar {
+            height: 100%;
+            background: var(--secondary);
+            border-radius: 0 4px 4px 0;
+        }
+        
+        .vote-numbers {
+            font-size: 14px;
+            color: var(--text-secondary);
+            min-width: 100px;
+            text-align: right;
+            font-weight: 600;
+        }
+        
+        .join-btn {
+            padding: 10px 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .join-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+        
+        /* 排行榜 */
+        .ranking-container {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+        }
+        
+        .ranking-tabs {
+            display: flex;
+            background: var(--light-bg);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 20px;
+        }
+        
+        .ranking-tab {
+            flex: 1;
+            text-align: center;
+            padding: 12px 0;
+            font-size: 15px;
+            color: var(--text-secondary);
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .ranking-tab.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        }
+        
+        .ranking-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .ranking-item {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            background: var(--light-bg);
+            border-radius: 16px;
+            transition: all 0.3s;
+        }
+        
+        .ranking-item:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+        
+        .rank-number {
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            margin-right: 16px;
+        }
+        
+        .rank-number.top3 {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%);
+        }
+        
+        .user-info {
+            flex: 1;
+        }
+        
+        .user-name {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .user-stats {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        .user-profit {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--danger);
+        }
+        
+        .user-profit.negative {
+            color: var(--secondary);
+        }
+        
+        /* 底部导航 */
+        .fixed-bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            display: flex;
+            padding: 14px 0;
+            border-top: 1px solid var(--border-color);
+            height: 76px;
+            z-index: 999;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+        }
+        
+        .nav-item {
+            flex: 1;
+            text-align: center;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 8px 0;
+            transition: all 0.2s;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .nav-item.active {
+            color: var(--primary);
+        }
+        
+        .nav-item.active::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 0 0 4px 4px;
+        }
+        
+        .nav-icon {
+            font-size: 24px;
+            margin-bottom: 6px;
+        }
+        
+        .nav-text {
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        .scrollable-content::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .scrollable-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .scrollable-content::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+        }
+        
+        /* 添加一个顶部空白区域，确保内容不会被状态栏和固定头部遮挡 */
+        .scrollable-content::before {
+            content: '';
+            display: block;
+            height: 0;
+            width: 100%;
+        }
+        
+        @media (max-width: 400px) {
+            .phone-container {
+                width: 100%;
+                height: 100%;
+                border-radius: 0;
+                border: none;
+            }
+            
+            .status-bar,
+            .fixed-header,
+            .fixed-bottom-nav {
+                width: calc(100% - 40px);
+                left: 20px;
+                transform: none;
+            }
+            
+            .scrollable-content {
+                padding: 0 15px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-container">
+        <div class="phone-screen">
+            <div class="status-bar">
+                <div class="status-left">
+                    <span>中国移动</span>
+                    <span>4G</span>
+                </div>
+                <div class="status-time" id="current-time">14:30</div>
+                <div class="status-icons">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+            </div>
+            
+            <div class="fixed-header">
+                <a class="back-btn" href="index.html">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+                <div class="app-title">互动点盘</div>
+                <a class="login-status" href="login.html">
+                    <i class="fas fa-user-circle"></i>
+                    <span>登录/注册</span>
+                </a>
+            </div>
+            
+            <div class="scrollable-content" id="scrollable-content">
+                <!-- 主竞猜区域 -->
+                <div class="section-title">
+                    <span>📊 热门竞猜</span>
+                </div>
+                
+                <div class="main-guess-card">
+                    <div class="guess-header">
+                        <div class="guess-target">
+                            <i class="fas fa-chart-line"></i>
+                            <select id="indexSelect" class="index-select" onchange="changeSelectedIndex(this.value)">
+                                <option value="shanghai">上证指数涨跌</option>
+                                <option value="shenzhen">深圳成指涨跌</option>
+                            </select>
+                        </div>
+                        <div class="guess-deadline" id="deadlineText">截止: 今日15:00</div>
+                    </div>
+                    
+                    <!-- 新增：双指数显示 -->
+                    <div class="index-display">
+                        <div class="index-item">
+                            <div class="index-name">上证指数</div>
+                            <div class="index-value" id="sh-index">3,025.67</div>
+                            <div class="index-change up" id="sh-change">+1.23%</div>
+                        </div>
+                        <div class="index-item">
+                            <div class="index-name">深圳成指</div>
+                            <div class="index-value" id="sz-index">10,245.67</div>
+                            <div class="index-change down" id="sz-change">-0.85%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="guess-options">
+                        <div class="guess-option up" onclick="selectGuessOption(this, 'up')">
+                            <div class="option-icon">📈</div>
+                            <div>看涨</div>
+                        </div>
+                        <div class="guess-option down" onclick="selectGuessOption(this, 'down')">
+                            <div class="option-icon">📉</div>
+                            <div>看跌</div>
+                        </div>
+                    </div>
+                    
+                    <div class="bet-controls">
+                        <input type="number" class="bet-amount" placeholder="投注积分" value="100" min="10" max="1000">
+                        <button class="bet-btn" id="placeBetBtn" onclick="placeBet()">投注</button>
+                    </div>
+                    
+                    <div class="participants">
+                        <span><i class="fas fa-users"></i> 已有 <span id="participantsCount">2,348</span> 人参与</span>
+                        <span><i class="fas fa-coins"></i> 总奖池: <span id="totalPool">234,800</span> 积分</span>
+                    </div>
+                </div>
+                
+                <!-- 进行中的竞猜 -->
+                <div class="guess-list-container">
+                    <div class="section-title">
+                        <span>🔥 进行中竞猜</span>
+                    </div>
+                    
+                    <div class="guess-item">
+                        <div class="item-header">
+                            <div class="item-target">贵州茅台 (600519)</div>
+                            <div class="item-deadline">剩余: 2小时15分</div>
+                        </div>
+                        <div class="item-stats">
+                            <div class="vote-distribution">
+                                <div class="vote-bar">
+                                    <div class="vote-up-bar" style="width: 65%"></div>
+                                </div>
+                                <div class="vote-numbers">65% 📈 | 35% 📉</div>
+                            </div>
+                            <button class="join-btn" onclick="joinGuess('贵州茅台')">参与</button>
+                        </div>
+                    </div>
+                    
+                    <div class="guess-item">
+                        <div class="item-header">
+                            <div class="item-target">宁德时代 (300750)</div>
+                            <div class="item-deadline">剩余: 3小时40分</div>
+                        </div>
+                        <div class="item-stats">
+                            <div class="vote-distribution">
+                                <div class="vote-bar">
+                                    <div class="vote-down-bar" style="width: 70%"></div>
+                                </div>
+                                <div class="vote-numbers">30% 📈 | 70% 📉</div>
+                            </div>
+                            <button class="join-btn" onclick="joinGuess('宁德时代')">参与</button>
+                        </div>
+                    </div>
+                    
+                    <div class="guess-item">
+                        <div class="item-header">
+                            <div class="item-target">创业板指明日涨跌</div>
+                            <div class="item-deadline">剩余: 5小时20分</div>
+                        </div>
+                        <div class="item-stats">
+                            <div class="vote-distribution">
+                                <div class="vote-bar">
+                                    <div class="vote-up-bar" style="width: 48%"></div>
+                                </div>
+                                <div class="vote-numbers">48% 📈 | 52% 📉</div>
+                            </div>
+                            <button class="join-btn" onclick="joinGuess('创业板指')">参与</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 排行榜 -->
+                <div class="ranking-container">
+                    <div class="section-title">
+                        <span>🏆 排行榜</span>
+                    </div>
+                    
+                    <div class="ranking-tabs">
+                        <div class="ranking-tab active" onclick="switchRankingTab('daily')">今日</div>
+                        <div class="ranking-tab" onclick="switchRankingTab('weekly')">本周</div>
+                        <div class="ranking-tab" onclick="switchRankingTab('monthly')">本月</div>
+                    </div>
+                    
+                    <div class="ranking-list">
+                        <div class="ranking-item">
+                            <div class="rank-number top3">1</div>
+                            <div class="user-info">
+                                <div class="user-name">股神小张</div>
+                                <div class="user-stats">胜率: 78% | 参与: 45次</div>
+                            </div>
+                            <div class="user-profit">+12,450</div>
+                        </div>
+                        
+                        <div class="ranking-item">
+                            <div class="rank-number top3">2</div>
+                            <div class="user-info">
+                                <div class="user-name">趋势猎人</div>
+                                <div class="user-stats">胜率: 72% | 参与: 38次</div>
+                            </div>
+                            <div class="user-profit">+9,870</div>
+                        </div>
+                        
+                        <div class="ranking-item">
+                            <div class="rank-number top3">3</div>
+                            <div class="user-info">
+                                <div class="user-name">价值投资者</div>
+                                <div class="user-stats">胜率: 68% | 参与: 52次</div>
+                            </div>
+                            <div class="user-profit">+8,560</div>
+                        </div>
+                        
+                        <div class="ranking-item">
+                            <div class="rank-number">4</div>
+                            <div class="user-info">
+                                <div class="user-name">短线高手</div>
+                                <div class="user-stats">胜率: 65% | 参与: 67次</div>
+                            </div>
+                            <div class="user-profit">+7,230</div>
+                        </div>
+                        
+                        <div class="ranking-item">
+                            <div class="rank-number">5</div>
+                            <div class="user-info">
+                                <div class="user-name">AI预测师</div>
+                                <div class="user-stats">胜率: 63% | 参与: 41次</div>
+                            </div>
+                            <div class="user-profit">+6,450</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 底部导航 -->
+            <div class="fixed-bottom-nav">
+                <a class="nav-item" href="index.html">
+                    <div class="nav-icon"><i class="fas fa-home"></i></div>
+                    <div class="nav-text">首页</div>
+                </a>
+                <a class="nav-item active" href="interaction.html">
+                    <div class="nav-icon"><i class="fas fa-bullseye"></i></div>
+                    <div class="nav-text">互动点盘</div>
+                </a>
+                <a class="nav-item" href="friends.html">
+                    <div class="nav-icon"><i class="fas fa-users"></i></div>
+                    <div class="nav-text">股友</div>
+                </a>
+                <a class="nav-item" href="profile.html">
+                    <div class="nav-icon"><i class="fas fa-user"></i></div>
+                    <div class="nav-text">我的</div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 检查并更新登录状态
+            function checkLoginStatus() {
+                const currentUser = localStorage.getItem('currentUser');
+                const loginStatusEl = document.querySelector('.login-status');
+                
+                if (loginStatusEl) {
+                    if (currentUser) {
+                        // 用户已登录，显示用户名
+                        const user = JSON.parse(currentUser);
+                        loginStatusEl.innerHTML = `
+                            <i class="fas fa-user-circle"></i>
+                            <span>${user.username}</span>
+                        `;
+                        // 移除登录跳转事件，或者添加用户菜单功能
+                        loginStatusEl.removeEventListener('click', loginClickHandler);
+                        loginStatusEl.addEventListener('click', function() {
+                            window.location.href = 'profile.html';
+                        });
+                    } else {
+                        // 用户未登录，显示登录/注册
+                        loginStatusEl.innerHTML = `
+                            <i class="fas fa-user-circle"></i>
+                            <span>登录/注册</span>
+                        `;
+                        loginStatusEl.addEventListener('click', loginClickHandler);
+                    }
+                }
+            }
+            
+            function loginClickHandler() {
+                window.location.href = 'login.html';
+            }
+            
+            // 初始化登录状态
+            checkLoginStatus();
+
+        let selectedOption = null;
+        let currentBetAmount = 100;
+        let currentSelectedIndex = "shanghai"; // 默认选中上证指数
+
+        // 更新时间显示
+        function updateTime() {
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            document.getElementById('current-time').textContent = `${hours}:${minutes}`;
+        }
+        updateTime();
+        setInterval(updateTime, 60000);
+
+        // 模拟更新指数数据
+        function updateMarketData() {
+            const shIndexEl = document.getElementById('sh-index');
+            const szIndexEl = document.getElementById('sz-index');
+            const shChangeEl = document.getElementById('sh-change');
+            const szChangeEl = document.getElementById('sz-change');
+
+            // 上证指数数据
+            const isShUp = Math.random() > 0.4;
+            const shChangePercent = (Math.random() * 2.5).toFixed(2);
+            const shChangeSymbol = isShUp ? '+' : '-';
+            const shChangeValue = parseFloat(shChangePercent);
+            
+            // 深证成指数据
+            const isSzUp = Math.random() > 0.45;
+            const szChangePercent = (Math.random() * 2.5).toFixed(2);
+            const szChangeSymbol = isSzUp ? '+' : '-';
+            const szChangeValue = parseFloat(szChangePercent);
+            
+            // 更新上证指数
+            let shValue = parseFloat(shIndexEl.textContent.replace(',', ''));
+            shValue = shValue * (1 + (isShUp ? 1 : -1) * shChangeValue / 100);
+            shIndexEl.textContent = shValue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            
+            shChangeEl.textContent = `${shChangeSymbol}${shChangePercent}%`;
+            shChangeEl.className = 'index-change ' + (isShUp ? 'up' : 'down');
+            
+            // 更新深证成指
+            let szValue = parseFloat(szIndexEl.textContent.replace(',', ''));
+            szValue = szValue * (1 + (isSzUp ? 1 : -1) * szChangeValue / 100);
+            szIndexEl.textContent = szValue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            
+            szChangeEl.textContent = `${szChangeSymbol}${szChangePercent}%`;
+            szChangeEl.className = 'index-change ' + (isSzUp ? 'up' : 'down');
+        }
+
+        // 每8秒更新一次指数数据
+        setInterval(updateMarketData, 8000);
+        // 初始更新
+        updateMarketData();
+
+        // 检查登录状态，未登录则跳转到登录页面
+        function checkLogin() {
+            if (!isLoggedIn) {
+                window.location.href = 'login.html?back=interaction.html';
+                return false;
+            }
+            return true;
+        }
+
+        // 切换选择的指数
+        function changeSelectedIndex(index) {
+            currentSelectedIndex = index;
+            
+            // 根据选择的指数更新显示
+            const deadlineText = document.getElementById('deadlineText');
+            const participantsCount = document.getElementById('participantsCount');
+            const totalPool = document.getElementById('totalPool');
+            
+            if (index === "shanghai") {
+                // 上证指数
+                deadlineText.textContent = "截止: 今日15:00";
+                participantsCount.textContent = "2,348";
+                totalPool.textContent = "234,800";
+            } else if (index === "shenzhen") {
+                // 深圳成指
+                deadlineText.textContent = "截止: 今日15:00";
+                participantsCount.textContent = "1,892";
+                totalPool.textContent = "189,200";
+            }
+            
+            // 重置选择
+            selectedOption = null;
+            document.querySelectorAll('.guess-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            document.getElementById('placeBetBtn').disabled = true;
+            
+            console.log(`切换到${index === "shanghai" ? "上证指数" : "深圳成指"}竞猜`);
+        }
+
+        function selectGuessOption(element, direction) {
+            // 添加登录检查
+            if (!checkLogin()) return;
+
+            // 移除其他选项的选择状态
+            document.querySelectorAll('.guess-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+
+            // 设置当前选项为选中状态
+            element.classList.add('selected');
+            selectedOption = direction;
+
+            // 启用投注按钮
+            document.getElementById('placeBetBtn').disabled = false;
+        }
+        
+        function placeBet() {
+            // 添加登录检查
+            if (!checkLogin()) return;
+
+            if (!selectedOption) {
+                alert('请选择看涨或看跌');
+                return;
+            }
+
+            const betAmount = document.querySelector('.bet-amount').value;
+            if (!betAmount || betAmount < 10) {
+                alert('请输入有效的投注积分（最少10积分）');
+                return;
+            }
+
+            const indexName = currentSelectedIndex === "shanghai" ? "上证指数" : "深圳成指";
+            const directionText = selectedOption === 'up' ? '看涨' : '看跌';
+            
+            if (confirm(`确认投注 ${betAmount} 积分，标的：${indexName}，方向：${directionText}？`)) {
+                // 模拟投注成功
+                alert(`投注成功！${indexName}明日收盘后揭晓结果`);
+
+                // 重置选择
+                selectedOption = null;
+                document.querySelectorAll('.guess-option').forEach(option => {
+                    option.classList.remove('selected');
+                });
+                document.getElementById('placeBetBtn').disabled = true;
+            }
+        }
+
+        function joinGuess(target) {
+            // 添加登录检查
+            if (!checkLogin()) return;
+            // 模拟跳转到具体竞猜页面
+            alert(`参与 ${target} 的竞猜`);
+            // 实际应用中这里会跳转到具体的竞猜详情页
+        }
+
+        function switchRankingTab(tab) {
+            // 添加登录检查
+            if (!checkLogin()) return;
+
+            // 更新tab激活状态
+            document.querySelectorAll('.ranking-tab').forEach(tabElement => {
+                tabElement.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // 实际应用中这里会加载对应时间段的数据
+            console.log('切换到排行榜:', tab);
+        }
+        
+        // 为所有按钮和输入框添加登录检查
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取所有按钮和输入框（除了导航栏和返回按钮）
+            const buttons = document.querySelectorAll('button:not(.nav-item):not(.back-btn)');
+            const guessOptions = document.querySelectorAll('.guess-option');
+            const rankingTabs = document.querySelectorAll('.ranking-tab');
+            const betAmount = document.querySelector('.bet-amount');
+
+            buttons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    if (!checkLogin() && !this.onclick || !this.onclick.toString().includes('checkLogin')) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                });
+            });
+
+            guessOptions.forEach(option => {
+                option.addEventListener('click', function(e) {
+                    if (!checkLogin()) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                });
+            });
+
+            rankingTabs.forEach(tab => {
+                tab.addEventListener('click', function(e) {
+                    if (!checkLogin()) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                });
+            });
+
+            if (betAmount) {
+                betAmount.addEventListener('focus', function(e) {
+                    if (!checkLogin()) {
+                        e.preventDefault();
+                        this.blur();
+                    }
+                });
+
+                // 投注金额输入验证
+                betAmount.addEventListener('input', function() {
+                    let value = parseInt(this.value);
+                    if (value < 10) this.value = 10;
+                    if (value > 1000) this.value = 1000;
+                });
+            }
+
+            // 修复底部导航栏单击切换问题
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    // 移除所有active类
+                    document.querySelectorAll('.nav-item').forEach(nav => {
+                        nav.classList.remove('active');
+                    });
+                    // 给当前点击的添加active类
+                    this.classList.add('active');
+                    
+                    // 如果点击的不是当前页面，允许跳转
+                    if (!this.href.includes(window.location.pathname)) {
+                        // 允许跳转到其他页面
+                        return true;
+                    } else {
+                        // 阻止在当前页面的刷新
+                        e.preventDefault();
+                    }
+                });
+            });
+
+            // 初始化：禁用投注按钮直到选择方向
+            document.getElementById('placeBetBtn').disabled = true;
+            
+            // 确保页面加载时滚动到顶部
+            document.getElementById('scrollable-content').scrollTop = 0;
+            
+            // 初始化指数选择
+            document.getElementById('indexSelect').value = currentSelectedIndex;
+        });
+
+        document.addEventListener('touchmove', function(e) {
+            if (e.scale !== 1) e.preventDefault();
+        }, { passive: false });
+    </script>
+</body>
+</html>

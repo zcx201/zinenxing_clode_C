@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>谈股论经 - 智能鑫AI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #1a73e8;
+            --primary-dark: #0d47a1;
+            --secondary: #34a853;
+            --accent: #fbbc05;
+            --danger: #ea4335;
+            --light-bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-primary: #202124;
+            --text-secondary: #5f6368;
+            --border-color: #dadce0;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            --shadow-hover: 0 6px 16px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .phone-container {
+            width: 390px;
+            height: 844px;
+            background: white;
+            border-radius: 40px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            position: relative;
+            border: 12px solid #111;
+        }
+        
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .status-bar {
+            height: 48px;
+            background: #1a73e8;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 24px;
+            font-size: 15px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding-top: 12px;
+        }
+        
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 600;
+        }
+        
+        .status-time {
+            font-weight: 600;
+        }
+        
+        .status-icons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .fixed-header {
+            position: absolute;
+            top: 48px;
+            left: 0;
+            right: 0;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 18px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            z-index: 999;
+            height: 68px;
+            box-shadow: 0 4px 12px rgba(26, 115, 232, 0.2);
+        }
+        
+        .back-btn {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
+            transition: all 0.2s;
+            font-size: 18px;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        
+        .page-title {
+            font-size: 22px;
+            font-weight: 700;
+            flex: 1;
+            text-align: center;
+            margin: 0 20px;
+        }
+        
+        .login-status {
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 10px 18px;
+            border-radius: 24px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        
+        .login-status:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        
+        /* ✅ 修复：调整滚动区域，使其完全可见 */
+        .scrollable-content {
+            position: absolute;
+            top: 116px; /* 状态栏48px + 头部68px = 116px */
+            bottom: 76px;
+            left: 0;
+            right: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            padding: 20px 20px 30px;
+            /* 确保内容可以从顶部开始滚动 */
+            margin: 0;
+        }
+        
+        .category-tabs {
+            display: flex;
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 8px;
+            margin: 20px 0;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+        
+        .category-tab {
+            flex: 1;
+            text-align: center;
+            padding: 14px 10px;
+            font-size: 15px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+        
+        .category-tab.active {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            box-shadow: 0 2px 6px rgba(26, 115, 232, 0.2);
+        }
+        
+        .content-list {
+            margin-top: 10px;
+        }
+        
+        .content-item {
+            background: var(--card-bg);
+            border-radius: 18px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s;
+        }
+        
+        .content-item:hover {
+            box-shadow: var(--shadow-hover);
+            border-color: rgba(26, 115, 232, 0.2);
+        }
+        
+        .content-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .author-avatar {
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #e8f0fe 0%, #f1f8ff 100%);
+            margin-right: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: var(--primary);
+            font-weight: 700;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .author-info {
+            flex: 1;
+        }
+        
+        .author-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        
+        .post-time {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        .follow-btn {
+            padding: 8px 20px;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            border-radius: 20px;
+            font-size: 14px;
+            background: transparent;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .follow-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .follow-btn.followed {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .content-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+            line-height: 1.4;
+        }
+        
+        .content-summary {
+            font-size: 15px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 16px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .content-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .tag {
+            padding: 6px 14px;
+            background: rgba(26, 115, 232, 0.08);
+            border-radius: 20px;
+            font-size: 13px;
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .content-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .stats-left {
+            display: flex;
+            gap: 24px;
+        }
+        
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        .read-more {
+            color: var(--primary);
+            font-size: 14px;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 8px 18px;
+            background: rgba(26, 115, 232, 0.1);
+            border-radius: 20px;
+            transition: all 0.2s;
+        }
+        
+        .read-more:hover {
+            background: rgba(26, 115, 232, 0.2);
+        }
+        
+        .celebrity-item {
+            background: var(--card-bg);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .celebrity-cover {
+            width: 100%;
+            height: 140px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 22px;
+            font-weight: 700;
+            text-align: center;
+            padding: 0 20px;
+        }
+        
+        .celebrity-content {
+            padding: 20px;
+        }
+        
+        .fixed-bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            display: flex;
+            padding: 14px 0;
+            border-top: 1px solid var(--border-color);
+            height: 76px;
+            z-index: 999;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+        }
+        
+        .nav-item {
+            flex: 1;
+            text-align: center;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 8px 0;
+            transition: all 0.2s;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .nav-item.active {
+            color: var(--primary);
+        }
+        
+        .nav-item.active::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 0 0 4px 4px;
+        }
+        
+        .nav-icon {
+            font-size: 24px;
+            margin-bottom: 6px;
+        }
+        
+        .nav-text {
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        .scrollable-content::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .scrollable-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .scrollable-content::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+        }
+        
+        /* 确保内容区域在滚动时可以完整显示顶部 */
+        .scrollable-content::before {
+            content: '';
+            display: block;
+            height: 10px;
+            width: 100%;
+        }
+        
+        @media (max-width: 400px) {
+            .phone-container {
+                width: 100%;
+                height: 100%;
+                border-radius: 0;
+                border: none;
+            }
+            
+            .status-bar,
+            .fixed-header,
+            .fixed-bottom-nav {
+                width: calc(100% - 40px);
+                left: 20px;
+                transform: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-container">
+        <div class="phone-screen">
+            <div class="status-bar">
+                <div class="status-left">
+                    <span>中国移动</span>
+                    <span>4G</span>
+                </div>
+                <div class="status-time" id="current-time">14:30</div>
+                <div class="status-icons">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+            </div>
+            
+            <div class="fixed-header">
+                <a class="back-btn" href="index.html">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <div class="page-title">谈股论经</div>
+                <div class="login-status" id="login-btn">
+                    <i class="fas fa-user-circle"></i>
+                    <span>登录/注册</span>
+                </div>
+            </div>
+            
+            <div class="scrollable-content" id="scrollable-content">
+                <div class="category-tabs">
+                    <a class="category-tab active" href="#" onclick="switchTab('celebrity')">名人传记</a>
+                    <a class="category-tab" href="#" onclick="switchTab('ai')">AI经验总结</a>
+                    <a class="category-tab" href="#" onclick="switchTab('influencer')">大V观点</a>
+                </div>
+                
+                <div id="celebrity-content" class="content-list">
+                    <div class="celebrity-item">
+                        <div class="celebrity-cover">沃伦·巴菲特投资哲学</div>
+                        <div class="celebrity-content">
+                            <div class="content-title">价值投资的智慧：巴菲特如何选择长期赢家</div>
+                            <div class="content-summary">深入剖析巴菲特的价值投资理念，了解他如何通过基本面分析找到具有持久竞争优势的企业...</div>
+                            <div class="content-tags">
+                                <span class="tag">价值投资</span>
+                                <span class="tag">长期持有</span>
+                                <span class="tag">安全边际</span>
+                            </div>
+                            <div class="content-stats">
+                                <div class="stats-left">
+                                    <div class="stat-item"><i class="fas fa-eye"></i> 2.3k 阅读</div>
+                                    <div class="stat-item"><i class="fas fa-heart"></i> 156 赞</div>
+                                </div>
+                                <a class="read-more" href="#" onclick="checkLogin(event)">阅读全文</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="celebrity-item">
+                        <div class="celebrity-cover">彼得·林奇选股法则</div>
+                        <div class="celebrity-content">
+                            <div class="content-title">从日常生活中发现十倍股</div>
+                            <div class="content-summary">彼得·林奇教你如何从身边的消费趋势中发现投资机会，找到那些被市场低估的成长股...</div>
+                            <div class="content-tags">
+                                <span class="tag">成长股</span>
+                                <span class="tag">消费趋势</span>
+                                <span class="tag">实地调研</span>
+                            </div>
+                            <div class="content-stats">
+                                <div class="stats-left">
+                                    <div class="stat-item"><i class="fas fa-eye"></i> 1.8k 阅读</div>
+                                    <div class="stat-item"><i class="fas fa-heart"></i> 89 赞</div>
+                                </div>
+                                <a class="read-more" href="#" onclick="checkLogin(event)">阅读全文</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="ai-content" class="content-list" style="display: none;">
+                    <div class="content-item">
+                        <div class="content-header">
+                            <div class="author-avatar">AI</div>
+                            <div class="author-info">
+                                <div class="author-name">智能鑫AI助手</div>
+                                <div class="post-time"><i class="far fa-clock"></i> 2小时前 · AI生成</div>
+                            </div>
+                        </div>
+                        <div class="content-title">基于机器学习的市场情绪分析模型</div>
+                        <div class="content-summary">本模型通过分析新闻舆情、社交媒体数据和交易行为，准确预测市场短期情绪波动，为投资决策提供数据支持...</div>
+                        <div class="content-tags">
+                            <span class="tag">机器学习</span>
+                            <span class="tag">情绪分析</span>
+                            <span class="tag">量化投资</span>
+                        </div>
+                        <div class="content-stats">
+                            <div class="stats-left">
+                                <div class="stat-item"><i class="fas fa-eye"></i> 3.2k 阅读</div>
+                                <div class="stat-item"><i class="fas fa-heart"></i> 234 赞</div>
+                            </div>
+                            <a class="read-more" href="#" onclick="checkLogin(event)">阅读全文</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="influencer-content" class="content-list" style="display: none;">
+                    <div class="content-item">
+                        <div class="content-header">
+                            <div class="author-avatar">张</div>
+                            <div class="author-info">
+                                <div class="author-name">张财经 · 金牌分析师</div>
+                                <div class="post-time"><i class="far fa-clock"></i> 30分钟前</div>
+                            </div>
+                            <button class="follow-btn" onclick="toggleFollow(this)">关注</button>
+                        </div>
+                        <div class="content-title">科技板块迎来布局良机，重点关注AI产业链</div>
+                        <div class="content-summary">经过前期调整，科技板块估值已回归合理区间。建议关注人工智能、半导体等细分领域...</div>
+                        <div class="content-tags">
+                            <span class="tag">科技股</span>
+                            <span class="tag">AI概念</span>
+                            <span class="tag">投资策略</span>
+                        </div>
+                        <div class="content-stats">
+                            <div class="stats-left">
+                                <div class="stat-item"><i class="fas fa-comment"></i> 86 评论</div>
+                                <div class="stat-item"><i class="fas fa-retweet"></i> 45 转发</div>
+                            </div>
+                            <a class="read-more" href="#" onclick="checkLogin(event)">查看详情</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="fixed-bottom-nav">
+                <a class="nav-item" href="index.html">
+                    <div class="nav-icon"><i class="fas fa-home"></i></div>
+                    <div class="nav-text">首页</div>
+                </a>
+                <a class="nav-item" href="interaction.html">
+                    <div class="nav-icon"><i class="fas fa-bullseye"></i></div>
+                    <div class="nav-text">互动点盘</div>
+                </a>
+                <a class="nav-item" href="friends.html">
+                    <div class="nav-icon"><i class="fas fa-users"></i></div>
+                    <div class="nav-text">股友</div>
+                </a>
+                <a class="nav-item" href="profile.html">
+                    <div class="nav-icon"><i class="fas fa-user"></i></div>
+                    <div class="nav-text">我的</div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 更新时间
+            function updateTime() {
+                const now = new Date();
+                const hours = now.getHours().toString().padStart(2, '0');
+                const minutes = now.getMinutes().toString().padStart(2, '0');
+                document.getElementById('current-time').textContent = `${hours}:${minutes}`;
+            }
+            updateTime();
+            setInterval(updateTime, 60000);
+
+            // 检查并更新登录状态
+            function checkLoginStatus() {
+                const currentUser = localStorage.getItem('currentUser');
+                const loginStatusEl = document.querySelector('.login-status');
+                
+                if (loginStatusEl) {
+                    if (currentUser) {
+                        // 用户已登录，显示用户名
+                        const user = JSON.parse(currentUser);
+                        loginStatusEl.innerHTML = `
+                            <i class="fas fa-user-circle"></i>
+                            <span>${user.username}</span>
+                        `;
+                        // 移除登录跳转事件，或者添加用户菜单功能
+                        loginStatusEl.removeEventListener('click', loginClickHandler);
+                        loginStatusEl.addEventListener('click', function() {
+                            window.location.href = 'profile.html';
+                        });
+                    } else {
+                        // 用户未登录，显示登录/注册
+                        loginStatusEl.innerHTML = `
+                            <i class="fas fa-user-circle"></i>
+                            <span>登录/注册</span>
+                        `;
+                        loginStatusEl.addEventListener('click', loginClickHandler);
+                    }
+                }
+            }
+            
+            function loginClickHandler() {
+                window.location.href = 'login.html?back=education.html';
+            }
+            
+            // 初始化登录状态
+            checkLoginStatus();
+
+            // 功能按钮点击效果
+            document.querySelectorAll('.func-item, .read-more, .follow-btn').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    if (window.innerWidth <= 768) {
+                        this.style.transform = 'scale(0.97)';
+                        setTimeout(() => this.style.transform = '', 150);
+                    }
+                });
+            });
+
+            // 底部导航交互
+            const bottomNav = document.querySelector('.fixed-bottom-nav');
+            if (bottomNav) {
+                bottomNav.addEventListener('click', function(e) {
+                    const navItem = e.target.closest('.nav-item');
+                    if (navItem) {
+                        e.preventDefault();
+                        document.querySelectorAll('.nav-item').forEach(item => {
+                            item.classList.remove('active');
+                        });
+                        navItem.classList.add('active');
+                        const href = navItem.getAttribute('href');
+                        if (href && href !== '#') {
+                            setTimeout(() => {
+                                window.location.href = href;
+                            }, 300);
+                        }
+                    }
+                });
+            }
+
+            // ✅ 修复：确保滚动区域初始位置正确
+            const scrollArea = document.getElementById('scrollable-content');
+            if (scrollArea) {
+                // 直接滚动到最顶部
+                scrollArea.scrollTop = 0;
+                
+                // 如果有滚动条，确保可以完全看到顶部内容
+                setTimeout(() => {
+                    if (scrollArea.scrollHeight > scrollArea.clientHeight) {
+                        scrollArea.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                }, 100);
+            }
+        });
+
+        // 标签切换
+        function switchTab(tabName) {
+            // 更新标签状态
+            document.querySelectorAll('.category-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // 显示对应内容
+            document.querySelectorAll('.content-list').forEach(content => {
+                content.style.display = 'none';
+            });
+            document.getElementById(tabName + '-content').style.display = 'block';
+            
+            // ✅ 修复：切换标签后滚动到顶部
+            const scrollArea = document.getElementById('scrollable-content');
+            if (scrollArea) {
+                setTimeout(() => {
+                    scrollArea.scrollTo({ top: 0, behavior: 'smooth' });
+                }, 10);
+            }
+        }
+
+        // 关注按钮功能
+        function toggleFollow(button) {
+            if (!checkLogin(event)) return;
+            
+            if (button.textContent === '关注') {
+                button.textContent = '已关注';
+                button.classList.add('followed');
+            } else {
+                button.textContent = '关注';
+                button.classList.remove('followed');
+            }
+        }
+
+        // 登录检查
+        function checkLogin(event) {
+            const isLoggedIn = false; // 模拟未登录状态
+            if (!isLoggedIn) {
+                event.preventDefault();
+                window.location.href = 'login.html?back=education.html';
+                return false;
+            }
+            return true;
+        }
+
+        // 防止缩放
+        document.addEventListener('touchmove', function(e) {
+            if (e.scale !== 1) e.preventDefault();
+        }, { passive: false });
+    </script>
+</body>
+</html>

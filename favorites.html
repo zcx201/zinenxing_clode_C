@@ -1,0 +1,1647 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>自选嗨吧 - 智能鑫AI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #1a73e8;
+            --primary-dark: #0d47a1;
+            --secondary: #34a853;
+            --accent: #fbbc05;
+            --danger: #ea4335;
+            --light-bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-primary: #202124;
+            --text-secondary: #5f6368;
+            --border-color: #dadce0;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            --shadow-hover: 0 6px 16px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .phone-container {
+            width: 390px;
+            height: 844px;
+            background: white;
+            border-radius: 40px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            position: relative;
+            border: 12px solid #111;
+        }
+        
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .status-bar {
+            height: 48px;
+            background: #1a73e8;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 24px;
+            font-size: 15px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding-top: 12px;
+        }
+        
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 600;
+        }
+        
+        .status-time {
+            font-weight: 600;
+        }
+        
+        .status-icons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .fixed-header {
+            position: absolute;
+            top: 48px;
+            left: 0;
+            right: 0;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 18px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            z-index: 999;
+            height: 68px;
+            box-shadow: 0 4px 12px rgba(26, 115, 232, 0.2);
+        }
+        
+        .back-btn {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
+            transition: all 0.2s;
+            font-size: 18px;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        
+        .page-title {
+            font-size: 22px;
+            font-weight: 700;
+            flex: 1;
+            text-align: center;
+            margin: 0 20px;
+        }
+        
+        /* 修改1：将登入口按钮改为登录/注册按钮，与index.html保持一致 */
+        .login-status {
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 10px 18px;
+            border-radius: 24px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            color: white;
+            text-decoration: none;
+            border: none;
+        }
+        
+        .login-status:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        
+        .scrollable-content {
+            position: absolute;
+            top: 116px;
+            bottom: 76px;
+            left: 0;
+            right: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            padding: 20px 20px 30px;
+        }
+        
+        .content-tabs {
+            display: flex;
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 8px;
+            margin: 16px 0 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+        
+        .content-tab {
+            flex: 1;
+            text-align: center;
+            padding: 14px 10px;
+            font-size: 15px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+        
+        .content-tab.active {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            box-shadow: 0 2px 6px rgba(26, 115, 232, 0.2);
+        }
+        
+        .tab-content {
+            display: block;
+        }
+        
+        /* 股票搜索栏 */
+        .stock-search-bar {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .stock-search-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+        }
+        
+        .stock-search-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.1);
+        }
+        
+        .stock-search-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            box-shadow: 0 2px 6px rgba(26, 115, 232, 0.2);
+        }
+        
+        .stock-search-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+        }
+        
+        /* 搜索结果区域 */
+        .search-results {
+            margin-top: 16px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            display: none;
+        }
+        
+        .search-result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+        
+        .result-stock-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .result-stock-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .result-stock-code {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        .add-to-favorites-btn {
+            padding: 8px 16px;
+            background: rgba(26, 115, 232, 0.1);
+            color: var(--primary);
+            border: 1px solid rgba(26, 115, 232, 0.2);
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .add-to-favorites-btn:hover {
+            background: rgba(26, 115, 232, 0.2);
+            transform: translateY(-1px);
+        }
+        
+        /* 自选股横条表格 */
+        .favorites-table-container {
+            background: var(--card-bg);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            margin-top: 20px;
+        }
+        
+        /* 修改2：调整表头字体大小并优化对齐 */
+        .table-header {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1.2fr;
+            background: rgba(26, 115, 232, 0.05);
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 12px; /* 减小表头字体 */
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-align: center;
+            align-items: center;
+        }
+        
+        .table-header-cell {
+            padding: 0 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .table-header-cell:nth-child(1) {
+            text-align: left;
+        }
+        
+        .table-header-cell:nth-child(2),
+        .table-header-cell:nth-child(3),
+        .table-header-cell:nth-child(4) {
+            text-align: right;
+        }
+        
+        .stock-table-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1.2fr;
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            align-items: center;
+            transition: all 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+        
+        .stock-table-row:last-child {
+            border-bottom: none;
+        }
+        
+        .stock-table-row:hover {
+            background: rgba(26, 115, 232, 0.03);
+        }
+        
+        .stock-table-row.deleting {
+            background: rgba(234, 67, 53, 0.05);
+        }
+        
+        .stock-info-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .stock-name-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .stock-table-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .stock-table-code {
+            font-size: 12px;
+            color: var(--text-secondary);
+            background: rgba(0, 0, 0, 0.05);
+            padding: 2px 8px;
+            border-radius: 8px;
+        }
+        
+        .stock-tags-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        
+        .stock-table-tag {
+            font-size: 10px;
+            color: var(--primary);
+            background: rgba(26, 115, 232, 0.08);
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+        
+        .price-cell, .change-cell, .action-cell {
+            text-align: right;
+            font-weight: 600;
+        }
+        
+        .stock-table-price {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        .stock-table-change {
+            font-size: 13px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            display: inline-block;
+            min-width: 60px;
+            text-align: center;
+        }
+        
+        .change-up {
+            color: var(--danger);
+            background: rgba(234, 67, 53, 0.1);
+        }
+        
+        .change-down {
+            color: var(--secondary);
+            background: rgba(52, 168, 83, 0.1);
+        }
+        
+        /* AI分析按钮 - 修改3：调整操作按钮容器宽度，防止超出屏幕 */
+        .ai-analysis-table-btn {
+            padding: 6px 10px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 11px; /* 稍微减小字体 */
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: fit-content;
+            min-width: 65px; /* 调整最小宽度 */
+            height: 30px; /* 调整高度 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            box-shadow: 0 1px 3px rgba(26, 115, 232, 0.2);
+            white-space: nowrap;
+        }
+        
+        .ai-analysis-table-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 6px rgba(26, 115, 232, 0.3);
+        }
+        
+        .ai-analysis-table-btn i {
+            font-size: 10px;
+        }
+        
+        /* 删除按钮 - 修改3：调整删除按钮大小，防止超出屏幕 */
+        .delete-stock-btn {
+            padding: 6px 10px;
+            background: rgba(234, 67, 53, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(234, 67, 53, 0.2);
+            border-radius: 6px;
+            font-size: 11px; /* 稍微减小字体 */
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: fit-content;
+            min-width: 60px; /* 调整最小宽度 */
+            height: 30px; /* 调整高度 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            box-shadow: 0 1px 3px rgba(234, 67, 53, 0.2);
+            white-space: nowrap;
+        }
+        
+        .delete-stock-btn:hover {
+            background: rgba(234, 67, 53, 0.2);
+            transform: translateY(-1px);
+            box-shadow: 0 3px 6px rgba(234, 67, 53, 0.3);
+        }
+        
+        .delete-stock-btn i {
+            font-size: 10px;
+        }
+        
+        /* 操作按钮容器 - 修改3：调整按钮容器布局，确保不超出屏幕 */
+        .action-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 6px; /* 减小间距 */
+            flex-wrap: nowrap;
+            width: 100%;
+            max-width: 150px; /* 限制最大宽度 */
+            margin-left: auto;
+        }
+        
+        .forum-list {
+            margin-top: 10px;
+        }
+        
+        .forum-item {
+            background: var(--card-bg);
+            border-radius: 18px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+        
+        .forum-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .user-avatar {
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #e8f0fe 0%, #f1f8ff 100%);
+            margin-right: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: var(--primary);
+            font-weight: 700;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .user-info {
+            flex: 1;
+        }
+        
+        .user-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        
+        .post-time {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        .mentioned-stock {
+            color: var(--primary);
+            font-weight: 700;
+        }
+        
+        .forum-content {
+            font-size: 15px;
+            line-height: 1.5;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+        }
+        
+        .forum-stats {
+            display: flex;
+            gap: 24px;
+        }
+        
+        .forum-stat {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        .analysis-report {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 24px;
+            margin-top: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+        
+        .report-section {
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .report-section:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .report-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+        }
+        
+        .report-content {
+            font-size: 15px;
+            line-height: 1.5;
+            color: var(--text-secondary);
+        }
+        
+        .risk-level {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-left: 12px;
+        }
+        
+        .risk-low {
+            background: rgba(52, 168, 83, 0.1);
+            color: var(--secondary);
+        }
+        
+        .risk-medium {
+            background: rgba(251, 188, 5, 0.1);
+            color: var(--accent);
+        }
+        
+        .alert-setup {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 24px;
+            margin-top: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+        
+        .alert-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .alert-item:last-child {
+            border-bottom: none;
+        }
+        
+        .alert-condition {
+            font-size: 16px;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        
+        .alert-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .alert-switch {
+            position: relative;
+            width: 52px;
+            height: 28px;
+        }
+        
+        .alert-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #dadce0;
+            transition: .4s;
+            border-radius: 28px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        input:checked + .slider {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+        
+        .fixed-bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            display: flex;
+            padding: 14px 0;
+            border-top: 1px solid var(--border-color);
+            height: 76px;
+            z-index: 999;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+        }
+        
+        .nav-item {
+            flex: 1;
+            text-align: center;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 8px 0;
+            transition: all 0.2s;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .nav-item.active {
+            color: var(--primary);
+        }
+        
+        .nav-item.active::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 0 0 4px 4px;
+        }
+        
+        .nav-icon {
+            font-size: 24px;
+            margin-bottom: 6px;
+        }
+        
+        .nav-text {
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        .scrollable-content::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .scrollable-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .scrollable-content::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+        }
+        
+        /* 确保内容区域在滚动时可以完整显示顶部 */
+        .scrollable-content::before {
+            content: '';
+            display: block;
+            height: 10px;
+            width: 100%;
+        }
+        
+        @media (max-width: 400px) {
+            .phone-container {
+                width: 100%;
+                height: 100%;
+                border-radius: 0;
+                border: none;
+            }
+            
+            .status-bar,
+            .fixed-header,
+            .fixed-bottom-nav {
+                width: calc(100% - 40px);
+                left: 20px;
+                transform: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-container">
+        <div class="phone-screen">
+            <div class="status-bar">
+                <div class="status-left">
+                    <span>中国移动</span>
+                    <span>4G</span>
+                </div>
+                <div class="status-time" id="current-time">14:30</div>
+                <div class="status-icons">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+            </div>
+            
+            <!-- 修改1：将登入口按钮改为登录/注册 -->
+            <div class="fixed-header">
+                <a class="back-btn" href="index.html">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <div class="page-title">自选嗨吧</div>
+                <div class="login-status" onclick="goToLoginPage()">
+                    <i class="fas fa-user-circle"></i>
+                    <span>登录/注册</span>
+                </div>
+            </div>
+            
+            <div class="scrollable-content" id="scrollable-content">
+                <div class="content-tabs">
+                    <a class="content-tab active" href="#" onclick="switchContentTab('favorites')">自选股</a>
+                    <a class="content-tab" href="#" onclick="switchContentTab('forum')">股吧</a>
+                    <a class="content-tab" href="#" onclick="switchContentTab('analysis')">分析</a>
+                    <a class="content-tab" href="#" onclick="switchContentTab('alerts')">预警</a>
+                </div>
+                
+                <div id="favorites-content" class="tab-content">
+                    <!-- 股票搜索栏 -->
+                    <div class="stock-search-bar">
+                        <input type="text" class="stock-search-input" id="stockSearchInput" placeholder="输入股票代码或名称，例如：000001 平安银行">
+                        <button class="stock-search-btn" onclick="searchStock()">
+                            <i class="fas fa-search"></i> 搜索
+                        </button>
+                    </div>
+                    
+                    <!-- 搜索结果区域 -->
+                    <div class="search-results" id="searchResults">
+                        <div class="search-result-item">
+                            <div class="result-stock-info">
+                                <div class="result-stock-name">平安银行</div>
+                                <div class="result-stock-code">000001.SZ</div>
+                            </div>
+                            <button class="add-to-favorites-btn" onclick="addStockToFavorites('平安银行', '000001')">
+                                <i class="fas fa-plus"></i> 添加
+                            </button>
+                        </div>
+                        <div class="search-result-item">
+                            <div class="result-stock-info">
+                                <div class="result-stock-name">招商银行</div>
+                                <div class="result-stock-code">600036.SH</div>
+                            </div>
+                            <button class="add-to-favorites-btn" onclick="addStockToFavorites('招商银行', '600036')">
+                                <i class="fas fa-plus"></i> 添加
+                            </button>
+                        </div>
+                        <div class="search-result-item">
+                            <div class="result-stock-info">
+                                <div class="result-stock-name">工商银行</div>
+                                <div class="result-stock-code">601398.SH</div>
+                            </div>
+                            <button class="add-to-favorites-btn" onclick="addStockToFavorites('工商银行', '601398')">
+                                <i class="fas fa-plus"></i> 添加
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 自选股横条表格 -->
+                    <div class="favorites-table-container">
+                        <!-- 表格标题栏 -->
+                        <div class="table-header">
+                            <div class="table-header-cell">股票名称</div>
+                            <div class="table-header-cell">现价</div>
+                            <div class="table-header-cell">涨跌幅</div>
+                            <div class="table-header-cell">操作</div>
+                        </div>
+                        
+                        <!-- 表格内容行 -->
+                        <div class="stock-table-row" id="stock-row-600519" data-stock-name="贵州茅台" data-stock-code="600519">
+                            <div class="stock-info-cell">
+                                <div class="stock-name-row">
+                                    <div class="stock-table-name">贵州茅台</div>
+                                    <div class="stock-table-code">600519</div>
+                                </div>
+                                <div class="stock-tags-row">
+                                    <div class="stock-table-tag">白酒龙头</div>
+                                    <div class="stock-table-tag">沪深300</div>
+                                </div>
+                            </div>
+                            <div class="price-cell">
+                                <div class="stock-table-price">1,688.00</div>
+                            </div>
+                            <div class="change-cell">
+                                <div class="stock-table-change change-up">+2.35%</div>
+                            </div>
+                            <div class="action-cell">
+                                <div class="action-buttons">
+                                    <button class="ai-analysis-table-btn" onclick="showAnalysis('贵州茅台')">
+                                        <i class="fas fa-robot"></i> AI分析
+                                    </button>
+                                    <button class="delete-stock-btn" onclick="deleteStock('贵州茅台', '600519')">
+                                        <i class="fas fa-trash"></i> 删除
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="stock-table-row" id="stock-row-300750" data-stock-name="宁德时代" data-stock-code="300750">
+                            <div class="stock-info-cell">
+                                <div class="stock-name-row">
+                                    <div class="stock-table-name">宁德时代</div>
+                                    <div class="stock-table-code">300750</div>
+                                </div>
+                                <div class="stock-tags-row">
+                                    <div class="stock-table-tag">锂电池</div>
+                                    <div class="stock-table-tag">新能源</div>
+                                </div>
+                            </div>
+                            <div class="price-cell">
+                                <div class="stock-table-price">198.50</div>
+                            </div>
+                            <div class="change-cell">
+                                <div class="stock-table-change change-down">-1.24%</div>
+                            </div>
+                            <div class="action-cell">
+                                <div class="action-buttons">
+                                    <button class="ai-analysis-table-btn" onclick="showAnalysis('宁德时代')">
+                                        <i class="fas fa-robot"></i> AI分析
+                                    </button>
+                                    <button class="delete-stock-btn" onclick="deleteStock('宁德时代', '300750')">
+                                        <i class="fas fa-trash"></i> 删除
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="stock-table-row" id="stock-row-00700" data-stock-name="腾讯控股" data-stock-code="00700">
+                            <div class="stock-info-cell">
+                                <div class="stock-name-row">
+                                    <div class="stock-table-name">腾讯控股</div>
+                                    <div class="stock-table-code">00700</div>
+                                </div>
+                                <div class="stock-tags-row">
+                                    <div class="stock-table-tag">互联网</div>
+                                    <div class="stock-table-tag">港股</div>
+                                </div>
+                            </div>
+                            <div class="price-cell">
+                                <div class="stock-table-price">345.60</div>
+                            </div>
+                            <div class="change-cell">
+                                <div class="stock-table-change change-up">+0.83%</div>
+                            </div>
+                            <div class="action-cell">
+                                <div class="action-buttons">
+                                    <button class="ai-analysis-table-btn" onclick="showAnalysis('腾讯控股')">
+                                        <i class="fas fa-robot"></i> AI分析
+                                    </button>
+                                    <button class="delete-stock-btn" onclick="deleteStock('腾讯控股', '00700')">
+                                        <i class="fas fa-trash"></i> 删除
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="stock-table-row" id="stock-row-601318" data-stock-name="中国平安" data-stock-code="601318">
+                            <div class="stock-info-cell">
+                                <div class="stock-name-row">
+                                    <div class="stock-table-name">中国平安</div>
+                                    <div class="stock-table-code">601318</div>
+                                </div>
+                                <div class="stock-tags-row">
+                                    <div class="stock-table-tag">保险</div>
+                                    <div class="stock-table-tag">金融</div>
+                                </div>
+                            </div>
+                            <div class="price-cell">
+                                <div class="stock-table-price">45.23</div>
+                            </div>
+                            <div class="change-cell">
+                                <div class="stock-table-change change-up">+1.12%</div>
+                            </div>
+                            <div class="action-cell">
+                                <div class="action-buttons">
+                                    <button class="ai-analysis-table-btn" onclick="showAnalysis('中国平安')">
+                                        <i class="fas fa-robot"></i> AI分析
+                                    </button>
+                                    <button class="delete-stock-btn" onclick="deleteStock('中国平安', '601318')">
+                                        <i class="fas fa-trash"></i> 删除
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="stock-table-row" id="stock-row-600036" data-stock-name="招商银行" data-stock-code="600036">
+                            <div class="stock-info-cell">
+                                <div class="stock-name-row">
+                                    <div class="stock-table-name">招商银行</div>
+                                    <div class="stock-table-code">600036</div>
+                                </div>
+                                <div class="stock-tags-row">
+                                    <div class="stock-table-tag">银行</div>
+                                    <div class="stock-table-tag">金融</div>
+                                </div>
+                            </div>
+                            <div class="price-cell">
+                                <div class="stock-table-price">32.15</div>
+                            </div>
+                            <div class="change-cell">
+                                <div class="stock-table-change change-up">+0.78%</div>
+                            </div>
+                            <div class="action-cell">
+                                <div class="action-buttons">
+                                    <button class="ai-analysis-table-btn" onclick="showAnalysis('招商银行')">
+                                        <i class="fas fa-robot"></i> AI分析
+                                    </button>
+                                    <button class="delete-stock-btn" onclick="deleteStock('招商银行', '600036')">
+                                        <i class="fas fa-trash"></i> 删除
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="forum-content" class="tab-content" style="display: none;">
+                    <div class="forum-list">
+                        <div class="forum-item">
+                            <div class="forum-header">
+                                <div class="user-avatar">股</div>
+                                <div class="user-info">
+                                    <div class="user-name">股市小能手</div>
+                                    <div class="post-time"><i class="far fa-clock"></i> 2小时前 · 讨论 <span class="mentioned-stock">贵州茅台</span></div>
+                                </div>
+                            </div>
+                            <div class="forum-content">
+                                茅台今天又创新高了！大家觉得还能追吗？我觉得消费复苏的逻辑还在，长期看好。
+                            </div>
+                            <div class="forum-stats">
+                                <div class="forum-stat"><i class="fas fa-thumbs-up"></i> 128</div>
+                                <div class="forum-stat"><i class="fas fa-comment"></i> 45</div>
+                                <div class="forum-stat"><i class="fas fa-retweet"></i> 23</div>
+                            </div>
+                        </div>
+                        
+                        <div class="forum-item">
+                            <div class="forum-header">
+                                <div class="user-avatar">牛</div>
+                                <div class="user-info">
+                                    <div class="user-name">牛市猎人</div>
+                                    <div class="post-time"><i class="far fa-clock"></i> 5小时前 · 讨论 <span class="mentioned-stock">宁德时代</span></div>
+                                </div>
+                            </div>
+                            <div class="forum-content">
+                                宁德时代这个位置可以抄底了吗？新能源车渗透率还在提升，基本面没问题。
+                            </div>
+                            <div class="forum-stats">
+                                <div class="forum-stat"><i class="fas fa-thumbs-up"></i> 89</div>
+                                <div class="forum-stat"><i class="fas fa-comment"></i> 67</div>
+                                <div class="forum-stat"><i class="fas fa-retweet"></i> 12</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="analysis-content" class="tab-content" style="display: none;">
+                    <div class="analysis-report">
+                        <div class="report-section">
+                            <div class="report-title">自选股深度分析报告 <span class="risk-level risk-low">低风险</span></div>
+                            <div class="report-content">
+                                基于AI分析，您的自选股组合整体表现稳健，以价值股和成长股为主，风险分散较好。
+                            </div>
+                        </div>
+                        
+                        <div class="report-section">
+                            <div class="report-title">技术面分析</div>
+                            <div class="report-content">
+                                贵州茅台：突破前期高点，技术形态强势<br>
+                                宁德时代：处于调整阶段，关注200元支撑<br>
+                                腾讯控股：震荡上行，趋势良好
+                            </div>
+                        </div>
+                        
+                        <div class="report-section">
+                            <div class="report-title">资金面分析</div>
+                            <div class="report-content">
+                                北向资金持续流入贵州茅台，机构对宁德时代分歧较大，腾讯控股获南下资金青睐。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="alerts-content" class="tab-content" style="display: none;">
+                    <div class="alert-setup">
+                        <div class="alert-item">
+                            <div class="alert-condition">价格预警</div>
+                            <div class="alert-value">±5%</div>
+                            <label class="alert-switch">
+                                <input type="checkbox" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="alert-item">
+                            <div class="alert-condition">成交量异常</div>
+                            <div class="alert-value">2倍均量</div>
+                            <label class="alert-switch">
+                                <input type="checkbox" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="alert-item">
+                            <div class="alert-condition">重大新闻</div>
+                            <div class="alert-value">实时推送</div>
+                            <label class="alert-switch">
+                                <input type="checkbox">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="alert-item">
+                            <div class="alert-condition">技术指标</div>
+                            <div class="alert-value">金叉/死叉</div>
+                            <label class="alert-switch">
+                                <input type="checkbox">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="fixed-bottom-nav">
+                <a class="nav-item" href="index.html">
+                    <div class="nav-icon"><i class="fas fa-home"></i></div>
+                    <div class="nav-text">首页</div>
+                </a>
+                <a class="nav-item" href="interaction.html">
+                    <div class="nav-icon"><i class="fas fa-bullseye"></i></div>
+                    <div class="nav-text">互动点盘</div>
+                </a>
+                <a class="nav-item" href="friends.html">
+                    <div class="nav-icon"><i class="fas fa-users"></i></div>
+                    <div class="nav-text">股友</div>
+                </a>
+                <a class="nav-item" href="profile.html">
+                    <div class="nav-icon"><i class="fas fa-user"></i></div>
+                    <div class="nav-text">我的</div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 更新时间
+        function updateTime() {
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            document.getElementById('current-time').textContent = `${hours}:${minutes}`;
+        }
+
+        // 检查登录状态的通用函数
+        function checkLogin() {
+            const currentUser = localStorage.getItem('currentUser');
+            if (!currentUser) {
+                if (confirm('此功能需要登录后才能使用，是否立即登录？')) {
+                    goToLoginPage();
+                }
+                return false;
+            }
+            return true;
+        }
+        
+        // 检查并更新登录状态
+        function checkLoginStatus() {
+            const currentUser = localStorage.getItem('currentUser');
+            const loginStatusEl = document.querySelector('.login-status');
+            
+            if (loginStatusEl) {
+                if (currentUser) {
+                    // 用户已登录，显示用户名
+                    const user = JSON.parse(currentUser);
+                    loginStatusEl.innerHTML = `
+                        <i class="fas fa-user-circle"></i>
+                        <span>${user.username}</span>
+                    `;
+                    // 移除登录跳转事件，或者添加用户菜单功能
+                    loginStatusEl.removeEventListener('click', loginClickHandler);
+                    loginStatusEl.addEventListener('click', function() {
+                        window.location.href = 'profile.html';
+                    });
+                } else {
+                    // 用户未登录，显示登录/注册
+                    loginStatusEl.innerHTML = `
+                        <i class="fas fa-user-circle"></i>
+                        <span>登录/注册</span>
+                    `;
+                    loginStatusEl.addEventListener('click', loginClickHandler);
+                }
+            }
+        }
+        
+        function loginClickHandler() {
+            window.location.href = 'login.html?back=favorites.html';
+        }
+
+        // 初始化自选股列表
+        function initFavoritesList() {
+            const favorites = getFavorites();
+            const tableContainer = document.querySelector('.favorites-table-container');
+            
+            // 清空现有数据（保留表头）
+            const existingRows = tableContainer.querySelectorAll('.stock-table-row');
+            existingRows.forEach(row => row.remove());
+            
+            // 移除可能存在的空状态
+            const emptyState = tableContainer.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+            
+            if (favorites.length === 0) {
+                // 如果没有自选股，显示空状态
+                const emptyMessage = document.createElement('div');
+                emptyMessage.className = 'empty-state';
+                emptyMessage.innerHTML = `
+                    <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
+                        <i class="fas fa-chart-line" style="font-size: 48px; margin-bottom: 16px; opacity: 0.3;"></i>
+                        <div style="font-size: 16px; margin-bottom: 8px;">暂无自选股</div>
+                        <div style="font-size: 14px;">请使用上方搜索栏添加股票到自选股</div>
+                    </div>
+                `;
+                tableContainer.appendChild(emptyMessage);
+            } else {
+                // 如果有自选股，动态生成DOM元素
+                favorites.forEach(stock => {
+                    addStockRow(stock);
+                });
+            }
+
+            // 功能按钮点击效果
+            document.querySelectorAll('.ai-analysis-table-btn, .stock-search-btn, .add-to-favorites-btn, .delete-stock-btn, .login-status').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    if (window.innerWidth <= 768) {
+                        this.style.transform = 'scale(0.97)';
+                        setTimeout(() => this.style.transform = '', 150);
+                    }
+                });
+            });
+
+            // 底部导航交互
+            const bottomNav = document.querySelector('.fixed-bottom-nav');
+            if (bottomNav) {
+                bottomNav.addEventListener('click', function(e) {
+                    const navItem = e.target.closest('.nav-item');
+                    if (navItem) {
+                        e.preventDefault();
+                        document.querySelectorAll('.nav-item').forEach(item => {
+                            item.classList.remove('active');
+                        });
+                        navItem.classList.add('active');
+                        const href = navItem.getAttribute('href');
+                        if (href && href !== '#') {
+                            setTimeout(() => {
+                                window.location.href = href;
+                            }, 300);
+                        }
+                    }
+                });
+            }
+
+            // 初始化预警开关
+            document.querySelectorAll('.alert-switch input').forEach(switchInput => {
+                switchInput.addEventListener('change', function(e) {
+                    if (e.target.checked) {
+                        console.log('预警开启');
+                    } else {
+                        console.log('预警关闭');
+                    }
+                });
+            });
+
+            // 搜索框回车键支持
+            const searchInput = document.getElementById('stockSearchInput');
+            if (searchInput) {
+                searchInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        searchStock();
+                    }
+                });
+            }
+
+            // 初始滚动位置
+            const scrollArea = document.getElementById('scrollable-content');
+            if (scrollArea) scrollArea.scrollTo(0, 0);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTime();
+            setInterval(updateTime, 60000);
+            
+            // 初始化登录状态
+            checkLoginStatus();
+            
+            // 初始化自选股列表
+            initFavoritesList();
+        });
+        
+        // 初始化自选股列表
+        function initFavoritesList() {
+            const favorites = getFavorites();
+            const tableContainer = document.querySelector('.favorites-table-container');
+            
+            // 清空现有数据（保留表头）
+            const existingRows = tableContainer.querySelectorAll('.stock-table-row');
+            existingRows.forEach(row => row.remove());
+            
+            // 移除可能存在的空状态
+            const emptyState = tableContainer.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+            
+            if (favorites.length === 0) {
+                // 如果没有自选股，显示空状态
+                const emptyMessage = document.createElement('div');
+                emptyMessage.className = 'empty-state';
+                emptyMessage.innerHTML = `
+                    <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
+                        <i class="fas fa-chart-line" style="font-size: 48px; margin-bottom: 16px; opacity: 0.3;"></i>
+                        <div style="font-size: 16px; margin-bottom: 8px;">暂无自选股</div>
+                        <div style="font-size: 14px;">请使用上方搜索栏添加股票到自选股</div>
+                    </div>
+                `;
+                tableContainer.appendChild(emptyMessage);
+            } else {
+                // 如果有自选股，动态生成DOM元素
+                favorites.forEach(stock => {
+                    addStockRow(stock);
+                });
+            }
+
+            // 功能按钮点击效果
+            document.querySelectorAll('.ai-analysis-table-btn, .stock-search-btn, .add-to-favorites-btn, .delete-stock-btn, .login-status').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    if (window.innerWidth <= 768) {
+                        this.style.transform = 'scale(0.97)';
+                        setTimeout(() => this.style.transform = '', 150);
+                    }
+                });
+            });
+
+            // 底部导航交互
+            const bottomNav = document.querySelector('.fixed-bottom-nav');
+            if (bottomNav) {
+                bottomNav.addEventListener('click', function(e) {
+                    const navItem = e.target.closest('.nav-item');
+                    if (navItem) {
+                        e.preventDefault();
+                        document.querySelectorAll('.nav-item').forEach(item => {
+                            item.classList.remove('active');
+                        });
+                        navItem.classList.add('active');
+                        const href = navItem.getAttribute('href');
+                        if (href && href !== '#') {
+                            setTimeout(() => {
+                                window.location.href = href;
+                            }, 300);
+                        }
+                    }
+                });
+            }
+
+            // 初始化预警开关
+            document.querySelectorAll('.alert-switch input').forEach(switchInput => {
+                switchInput.addEventListener('change', function(e) {
+                    if (e.target.checked) {
+                        console.log('预警开启');
+                    } else {
+                        console.log('预警关闭');
+                    }
+                });
+            });
+
+            // 搜索框回车键支持
+            const searchInput = document.getElementById('stockSearchInput');
+            if (searchInput) {
+                searchInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        searchStock();
+                    }
+                });
+            }
+
+            // 初始滚动位置
+            const scrollArea = document.getElementById('scrollable-content');
+            if (scrollArea) scrollArea.scrollTo(0, 0);
+        }
+
+        // 修改：跳转到登录页面
+        function goToLoginPage() {
+            window.location.href = 'login.html?back=favorites.html';
+        }
+
+        // 标签切换
+        function switchContentTab(tabName) {
+            // 添加登录检查
+            if (!checkLogin()) return;
+
+            // 更新tab激活状态
+            document.querySelectorAll('.content-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // 显示对应内容
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            document.getElementById(tabName + '-content').style.display = 'block';
+            
+            // 如果是切换到自选股标签，确保搜索栏可见
+            if (tabName === 'favorites') {
+                const searchBar = document.querySelector('.stock-search-bar');
+                const searchResults = document.getElementById('searchResults');
+                if (searchBar) searchBar.style.display = 'flex';
+                if (searchResults) searchResults.style.display = 'none';
+            }
+        }
+
+        // AI分析
+        function showAnalysis(stockName) {
+            if (!checkLogin()) return;
+            alert(`正在生成 ${stockName} 的AI深度分析报告...`);
+        }
+        
+        // 搜索股票
+        function searchStock() {
+            if (!checkLogin()) return;
+            
+            const searchInput = document.getElementById('stockSearchInput');
+            const searchTerm = searchInput.value.trim();
+            const searchResults = document.getElementById('searchResults');
+            
+            if (!searchTerm) {
+                alert('请输入股票代码或名称');
+                return;
+            }
+            
+            // 模拟搜索过程
+            searchInput.disabled = true;
+            document.querySelector('.stock-search-btn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> 搜索中';
+            
+            setTimeout(() => {
+                // 显示搜索结果
+                searchResults.style.display = 'block';
+                searchInput.disabled = false;
+                document.querySelector('.stock-search-btn').innerHTML = '<i class="fas fa-search"></i> 搜索';
+                
+                // 模拟搜索结果
+                console.log(`搜索股票: ${searchTerm}`);
+            }, 800);
+        }
+        
+        // 自选股管理函数
+        function getFavorites() {
+            const favorites = localStorage.getItem('favorites');
+            return favorites ? JSON.parse(favorites) : [];
+        }
+        
+        function saveFavorites(favorites) {
+            localStorage.setItem('favorites', JSON.stringify(favorites));
+        }
+        
+        // 添加股票到自选股
+        function addStockToFavorites(stockName, stockCode) {
+            if (!checkLogin()) return;
+            
+            let favorites = getFavorites();
+            
+            // 检查是否已存在
+            const existingStock = favorites.find(stock => stock.code === stockCode);
+            if (existingStock) {
+                alert(`${stockName}(${stockCode}) 已在自选股列表中`);
+                return;
+            }
+            
+            // 添加到自选股
+            const newStock = {
+                name: stockName,
+                code: stockCode,
+                addedAt: new Date().toISOString()
+            };
+            favorites.push(newStock);
+            
+            // 保存到localStorage
+            saveFavorites(favorites);
+            
+            // 更新DOM
+            addStockRow(newStock);
+            
+            // 隐藏搜索结果
+            const searchResults = document.getElementById('searchResults');
+            if (searchResults) searchResults.style.display = 'none';
+            
+            // 清空搜索框
+            const searchInput = document.getElementById('stockSearchInput');
+            if (searchInput) searchInput.value = '';
+            
+            alert(`已将 ${stockName}(${stockCode}) 添加到自选股`);
+        }
+        
+        // 添加股票行到DOM
+        function addStockRow(stock) {
+            const tableContainer = document.querySelector('.favorites-table-container');
+            const emptyState = tableContainer.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+            
+            const stockRow = document.createElement('div');
+            stockRow.className = 'stock-table-row';
+            stockRow.id = `stock-row-${stock.code}`;
+            stockRow.setAttribute('data-stock-name', stock.name);
+            stockRow.setAttribute('data-stock-code', stock.code);
+            
+            // 生成随机价格和涨跌幅
+            const basePrice = (Math.random() * 200 + 10).toFixed(2);
+            const isUp = Math.random() > 0.5;
+            const changePercent = (Math.random() * 5).toFixed(2);
+            const changeClass = isUp ? 'change-up' : 'change-down';
+            const changeSymbol = isUp ? '+' : '-';
+            
+            stockRow.innerHTML = `
+                <div class="stock-info-cell">
+                    <div class="stock-name-row">
+                        <div class="stock-table-name">${stock.name}</div>
+                        <div class="stock-table-code">${stock.code}</div>
+                    </div>
+                    <div class="stock-tags-row">
+                        <div class="stock-table-tag">热门</div>
+                    </div>
+                </div>
+                <div class="price-cell">
+                    <div class="stock-table-price">${basePrice}</div>
+                </div>
+                <div class="change-cell">
+                    <div class="stock-table-change ${changeClass}">${changeSymbol}${changePercent}%</div>
+                </div>
+                <div class="action-cell">
+                    <div class="action-buttons">
+                        <button class="ai-analysis-table-btn" onclick="showAnalysis('${stock.name}')">
+                            <i class="fas fa-robot"></i> AI分析
+                        </button>
+                        <button class="delete-stock-btn" onclick="deleteStock('${stock.name}', '${stock.code}')">
+                            <i class="fas fa-trash"></i> 删除
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // 直接添加到表格容器
+            tableContainer.appendChild(stockRow);
+        }
+        
+        // 删除自选股
+        function deleteStock(stockName, stockCode) {
+            if (!checkLogin()) return;
+            
+            // 确认删除
+            const confirmDelete = confirm(`确定要删除 ${stockName}(${stockCode}) 吗？`);
+            if (!confirmDelete) return;
+            
+            // 获取要删除的行
+            const stockRow = document.getElementById(`stock-row-${stockCode}`);
+            if (!stockRow) return;
+            
+            // 从localStorage中删除
+            let favorites = getFavorites();
+            favorites = favorites.filter(stock => stock.code !== stockCode);
+            saveFavorites(favorites);
+            
+            // 添加删除动画效果
+            stockRow.classList.add('deleting');
+            
+            setTimeout(() => {
+                // 从DOM中移除
+                stockRow.remove();
+                
+                // 显示删除成功消息
+                alert(`已删除 ${stockName}(${stockCode})`);
+                
+                // 检查是否还有股票
+                const tableContainer = document.querySelector('.favorites-table-container');
+                const remainingRows = tableContainer.querySelectorAll('.stock-table-row');
+                
+                if (remainingRows.length === 0) {
+                    // 如果没有股票了，显示空状态
+                    const emptyMessage = document.createElement('div');
+                    emptyMessage.className = 'empty-state';
+                    emptyMessage.innerHTML = `
+                        <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
+                            <i class="fas fa-chart-line" style="font-size: 48px; margin-bottom: 16px; opacity: 0.3;"></i>
+                            <div style="font-size: 16px; margin-bottom: 8px;">暂无自选股</div>
+                            <div style="font-size: 14px;">请使用上方搜索栏添加股票到自选股</div>
+                        </div>
+                    `;
+                    tableContainer.appendChild(emptyMessage);
+                }
+            }, 300);
+        }
+
+        // 防止缩放
+        document.addEventListener('touchmove', function(e) {
+            if (e.scale !== 1) e.preventDefault();
+        }, { passive: false });
+    </script>
+</body>
+</html>
