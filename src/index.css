@@ -81,7 +81,7 @@
 
   /* 可滚动内容区域 */
   .scrollable-content {
-    @apply absolute top-[116px] bottom-[76px] left-0 right-0 overflow-y-auto overflow-x-hidden pb-8 px-5;
+    @apply absolute top-[116px] bottom-[60px] left-0 right-0 overflow-y-auto overflow-x-hidden pb-8 px-5;
   }
 
   /* 欢迎区域 */
@@ -153,7 +153,7 @@
 
   /* 底部导航 */
   .fixed-bottom-nav {
-    @apply absolute bottom-0 left-0 right-0 bg-white flex px-0 py-3 border-t border-gray-200 h-[76px] z-40 shadow-nav;
+    @apply absolute bottom-0 left-0 right-0 bg-white flex px-0 py-3 border-t border-gray-200 h-[60px] z-40 shadow-nav;
   }
 
   .nav-item {
@@ -175,6 +175,715 @@
 
   .nav-text {
     @apply text-xs font-semibold;
+  }
+
+  /* 聊天界面样式 */
+  .chat-tabs {
+    @apply flex bg-white rounded-card py-2 mb-4 shadow-card border border-gray-200;
+  }
+
+  .chat-tab {
+    @apply flex-1 text-center py-2 mx-1 text-sm text-gray-600 font-semibold rounded-lg transition-all duration-200;
+  }
+
+  .chat-tab.active {
+    @apply bg-gradient-to-r from-primary-500 to-primary-700 text-white shadow-md;
+  }
+
+  .message-list {
+    @apply space-y-3;
+  }
+
+  .message-item {
+    @apply flex items-center p-3 bg-white rounded-card shadow-card border border-gray-200 transition-all duration-300 cursor-pointer hover:shadow-md hover:-translate-y-1;
+  }
+
+  .message-avatar {
+    @apply w-12 h-12 rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center text-lg text-blue-600 font-bold mr-3 shadow-sm;
+  }
+
+  .message-content {
+    @apply flex-1 min-w-0;
+  }
+
+  .message-header {
+    @apply flex justify-between items-center mb-1;
+  }
+
+  .message-name {
+    @apply text-sm font-semibold text-gray-900 truncate;
+  }
+
+  .message-time {
+    @apply text-xs text-gray-500;
+  }
+
+  .message-preview {
+    @apply text-sm text-gray-600 truncate;
+  }
+
+  .unread-badge {
+    @apply bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center ml-2 font-semibold;
+  }
+
+  .chat-container {
+    @apply bg-white rounded-card shadow-card border border-gray-200 overflow-hidden h-full flex flex-col;
+  }
+
+  .chat-header {
+    @apply bg-gradient-to-r from-primary-500 to-primary-700 px-4 py-3 flex justify-between items-center text-white;
+  }
+
+  .chat-user {
+    @apply flex items-center;
+  }
+
+  .chat-user-avatar {
+    @apply w-10 h-10 rounded-lg bg-white bg-opacity-20 flex items-center justify-center text-lg font-bold mr-3;
+  }
+
+  .chat-user-info {
+    @apply flex flex-col;
+  }
+
+  .chat-user-name {
+    @apply font-semibold text-lg;
+  }
+
+  .chat-user-status {
+    @apply text-xs text-blue-100;
+  }
+
+  .back-btn {
+    @apply w-8 h-8 rounded-full bg-white bg-opacity-20 flex items-center justify-center cursor-pointer hover:bg-opacity-30 transition-colors;
+  }
+
+  .chat-messages {
+    @apply flex-1 p-4 bg-gray-50 overflow-y-auto;
+  }
+
+  .message-bubble {
+    @apply max-w-[80%] mb-3 flex flex-col;
+  }
+
+  .message-bubble.received {
+    @apply self-start;
+  }
+
+  .message-bubble.sent {
+    @apply self-end;
+  }
+
+  .bubble-content {
+    @apply px-3 py-2 rounded-2xl text-sm shadow-sm;
+  }
+
+  .received .bubble-content {
+    @apply bg-white border border-gray-200;
+  }
+
+  .sent .bubble-content {
+    @apply bg-gradient-to-r from-primary-500 to-primary-600 text-white;
+  }
+
+  .bubble-time {
+    @apply text-xs text-gray-500 mt-1 px-2;
+  }
+
+  .stock-card-message {
+    @apply bg-white border border-gray-200 rounded-xl p-3 shadow-sm;
+  }
+
+  .stock-card-header {
+    @apply flex justify-between items-center mb-2;
+  }
+
+  .stock-card-name {
+    @apply font-semibold text-sm;
+  }
+
+  .stock-card-price {
+    @apply font-bold text-lg text-red-500;
+  }
+
+  .stock-card-change {
+    @apply text-sm font-semibold text-red-500 mb-2;
+  }
+
+  .stock-card-actions {
+    @apply flex gap-2;
+  }
+
+  .stock-card-btn {
+    @apply flex-1 py-1 text-xs border border-gray-300 rounded-lg bg-white hover:bg-gray-50 transition-colors;
+  }
+
+  .chat-input-area {
+    @apply px-4 py-3 border-t border-gray-200 bg-white flex items-center gap-3;
+  }
+
+  .input-tools {
+    @apply flex gap-2;
+  }
+
+  .tool-btn {
+    @apply w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center cursor-pointer transition-colors;
+  }
+
+  .message-input {
+    @apply flex-1 py-2 px-3 border border-gray-300 rounded-full text-sm outline-none focus:border-primary-500;
+  }
+
+  .send-btn {
+    @apply px-4 py-2 bg-primary-500 text-white rounded-full text-sm font-semibold hover:bg-primary-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors;
+  }
+
+  /* Market页面专用样式 */
+  .search-container {
+    @apply bg-white rounded-card p-5 mb-4 shadow-card border border-gray-200;
+  }
+
+  .search-box {
+    @apply flex items-center bg-gray-50 rounded-xl px-4 py-3 border border-gray-300 transition-all duration-300;
+  }
+
+  .search-box:focus-within {
+    @apply border-primary-500 shadow-md;
+  }
+
+  .search-icon {
+    @apply text-gray-500 mr-3 text-lg;
+  }
+
+  .search-input {
+    @apply flex-1 bg-transparent border-none outline-none text-gray-900 placeholder-gray-500;
+  }
+
+  .search-results {
+    @apply mt-3;
+  }
+
+  .search-result-item {
+    @apply flex justify-between items-center py-3 px-4 border-b border-gray-200 hover:bg-gray-50 cursor-pointer;
+  }
+
+  .search-result-info {
+    @apply flex flex-col;
+  }
+
+  .search-result-name {
+    @apply font-semibold text-gray-900;
+  }
+
+  .search-result-code {
+    @apply text-sm text-gray-500;
+  }
+
+  .search-result-price {
+    @apply text-right;
+  }
+
+  .market-tabs {
+    @apply flex bg-white rounded-card p-1 mb-4 shadow-card border border-gray-200;
+  }
+
+  .market-tab {
+    @apply flex-1 py-2 px-3 text-center text-sm font-semibold rounded-lg transition-all duration-200;
+  }
+
+  .market-tab:not(.active) {
+    @apply text-gray-600 hover:bg-gray-50;
+  }
+
+  .market-tab.active {
+    @apply bg-gradient-to-r from-primary-500 to-primary-700 text-white shadow-sm;
+  }
+
+  .index-scroll-container {
+    @apply overflow-x-auto pb-3 mb-4;
+  }
+
+  .index-scroll-container::-webkit-scrollbar {
+    @apply h-1;
+  }
+
+  .index-scroll-container::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .index-scroll-container::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 rounded-full;
+  }
+
+  .index-cards {
+    @apply flex gap-3 w-max px-1;
+  }
+
+  .index-card {
+    @apply w-32 bg-white rounded-card p-4 text-center shadow-card border border-gray-200 hover:shadow-md hover:-translate-y-1 transition-all duration-300 cursor-pointer;
+  }
+
+  .index-name {
+    @apply text-sm text-gray-600 mb-2;
+  }
+
+  .index-point {
+    @apply text-lg font-bold text-gray-900 mb-1;
+  }
+
+  .index-change {
+    @apply text-sm font-semibold px-2 py-1 rounded-lg inline-block;
+  }
+
+  .change-up {
+    @apply text-red-500 bg-red-50;
+  }
+
+  .change-down {
+    @apply text-green-500 bg-green-50;
+  }
+
+  .section-title {
+    @apply text-xl font-bold text-gray-900 mb-4;
+  }
+
+  .stock-list {
+    @apply space-y-3;
+  }
+
+  .stock-item {
+    @apply bg-white rounded-card p-4 flex justify-between items-center shadow-card border border-gray-200 hover:shadow-md hover:-translate-y-1 transition-all duration-300;
+  }
+
+  .stock-info {
+    @apply flex-1;
+  }
+
+  .stock-name-code {
+    @apply flex items-center gap-2 mb-2;
+  }
+
+  .stock-name {
+    @apply font-semibold text-gray-900;
+  }
+
+  .stock-code {
+    @apply text-sm text-gray-500;
+  }
+
+  .stock-tags {
+    @apply flex gap-2;
+  }
+
+  .stock-tag {
+    @apply text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full;
+  }
+
+  .stock-price-info {
+    @apply text-right;
+  }
+
+  .stock-price {
+    @apply text-lg font-bold text-gray-900;
+  }
+
+  .stock-change {
+    @apply text-sm font-semibold px-2 py-1 rounded-lg;
+  }
+
+  .sector-list, .rank-list, .capital-list {
+    @apply space-y-3;
+  }
+
+  .sector-item, .rank-item, .capital-item {
+    @apply bg-white rounded-card p-4 flex justify-between items-center shadow-card border border-gray-200;
+  }
+
+  .sector-info, .rank-info, .capital-info {
+    @apply flex-1;
+  }
+
+  .sector-name, .rank-name, .capital-name {
+    @apply font-semibold text-gray-900;
+  }
+
+  .sector-leader, .rank-code, .capital-market {
+    @apply text-sm text-gray-500;
+  }
+
+  .rank-number {
+    @apply w-6 h-6 bg-primary-500 text-white rounded-full flex items-center justify-center font-bold text-sm mr-3;
+  }
+
+  .rank-info {
+    @apply flex items-center;
+  }
+
+  .capital-in {
+    @apply text-red-500 font-semibold;
+  }
+
+  .capital-out {
+    @apply text-green-500 font-semibold;
+  }
+
+  /* AIPicks页面专用样式 */
+  .ai-chat-input {
+    @apply bg-white p-4 mb-4 shadow-card border-b border-gray-200;
+  }
+
+  .chat-input-container {
+    @apply flex gap-3 items-end;
+  }
+
+  .chat-input-wrapper {
+    @apply flex-1;
+  }
+
+  .chat-input {
+    @apply w-full p-3 border border-gray-300 rounded-xl outline-none resize-none min-h-12 max-h-32 transition-colors focus:border-primary-500 placeholder-gray-500;
+  }
+
+  .send-chat-btn {
+    @apply px-4 py-3 bg-primary-500 text-white rounded-xl font-semibold hover:bg-primary-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors whitespace-nowrap;
+  }
+
+  .chat-examples {
+    @apply flex flex-wrap gap-2 mt-3;
+  }
+
+  .example-tag {
+    @apply px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs cursor-pointer hover:bg-blue-100 hover:text-primary-500 transition-colors;
+  }
+
+  .ai-tabs {
+    @apply flex bg-white mb-4 shadow-card border-b border-gray-200 mx-[-20px] px-5;
+  }
+
+  .ai-tab {
+    @apply flex-1 text-center py-4 text-sm border-b-2 border-transparent transition-all duration-200;
+  }
+
+  .ai-tab:not(.active) {
+    @apply text-gray-600;
+  }
+
+  .ai-tab.active {
+    @apply text-primary-500 border-primary-500 font-semibold;
+  }
+
+  .ai-recommendation {
+    @apply space-y-6;
+  }
+
+  .strategy-section {
+    @apply mb-6;
+  }
+
+  .strategy-header {
+    @apply flex items-center mb-4;
+  }
+
+  .strategy-icon {
+    @apply w-9 h-9 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-lg flex items-center justify-center text-white text-sm mr-3;
+  }
+
+  .strategy-info {
+    @apply flex-1;
+  }
+
+  .strategy-name {
+    @apply font-bold text-gray-900;
+  }
+
+  .strategy-desc {
+    @apply text-sm text-gray-600;
+  }
+
+  .recommend-stocks {
+    @apply grid grid-cols-2 gap-3;
+  }
+
+  .stock-card {
+    @apply bg-gray-50 rounded-xl p-3 border border-gray-200;
+  }
+
+  .stock-card-header {
+    @apply flex justify-between items-start mb-2;
+  }
+
+  .stock-name-code {
+    @apply flex-1;
+  }
+
+  .stock-name {
+    @apply font-semibold text-sm;
+  }
+
+  .stock-code {
+    @apply text-xs text-gray-500;
+  }
+
+  .confidence-score {
+    @apply bg-primary-500 text-white px-2 py-1 rounded-lg text-xs font-bold;
+  }
+
+  .stock-price {
+    @apply font-bold text-lg text-gray-900;
+  }
+
+  .price-change {
+    @apply text-sm mb-2;
+  }
+
+  .change-up {
+    @apply text-red-500;
+  }
+
+  .change-down {
+    @apply text-green-500;
+  }
+
+  .ai-reason {
+    @apply text-xs text-gray-600 mb-3 line-clamp-2;
+  }
+
+  .stock-actions {
+    @apply flex gap-2;
+  }
+
+  .add-favorite-btn, .view-detail-btn {
+    @apply flex-1 py-1 text-xs border border-gray-300 rounded-lg bg-white hover:bg-gray-50 transition-colors;
+  }
+
+  .chat-history {
+    @apply space-y-4;
+  }
+
+  .message-bubble {
+    @apply max-w-[85%] mb-3;
+  }
+
+  .message-bubble.user {
+    @apply ml-auto;
+  }
+
+  .bubble-content {
+    @apply bg-white border border-gray-200 rounded-2xl p-3 shadow-sm text-sm;
+  }
+
+  .user .bubble-content {
+    @apply bg-primary-500 text-white border-primary-500;
+  }
+
+  .bubble-time {
+    @apply text-xs text-gray-500 mt-1;
+  }
+
+  .empty-history {
+    @apply text-center py-12;
+  }
+
+  .empty-icon {
+    @apply text-gray-300 text-4xl mb-3;
+  }
+
+  .empty-text {
+    @apply text-gray-600 font-semibold mb-1;
+  }
+
+  .empty-desc {
+    @apply text-sm text-gray-500;
+  }
+
+  /* Interaction页面专用样式 */
+  .main-guess-card {
+    @apply bg-gradient-to-br from-primary-500 to-primary-800 rounded-xl p-5 text-white mb-4 shadow-card;
+  }
+
+  .guess-header {
+    @apply flex justify-between items-center mb-4;
+  }
+
+  .guess-target {
+    @apply text-lg font-bold flex items-center gap-3;
+  }
+
+  .index-select {
+    @apply bg-white bg-opacity-15 border border-white border-opacity-30 rounded-xl px-3 py-2 text-white font-bold text-sm outline-none min-w-36;
+  }
+
+  .index-display {
+    @apply flex justify-between gap-4 mb-5;
+  }
+
+  .index-item {
+    @apply flex-1 bg-white bg-opacity-15 rounded-xl p-4 text-center;
+  }
+
+  .index-name {
+    @apply text-sm opacity-90 mb-2;
+  }
+
+  .index-value {
+    @apply text-xl font-bold mb-1;
+  }
+
+  .index-change {
+    @apply text-lg font-bold px-2 py-1 rounded-lg inline-block;
+  }
+
+  .up {
+    @apply text-red-200 bg-red-500 bg-opacity-20;
+  }
+
+  .down {
+    @apply text-green-200 bg-green-500 bg-opacity-20;
+  }
+
+  .guess-deadline {
+    @apply text-sm opacity-90 bg-white bg-opacity-15 px-3 py-2 rounded-xl;
+  }
+
+  .guess-options {
+    @apply flex gap-4 mb-5;
+  }
+
+  .guess-option {
+    @apply flex-1 p-4 bg-white bg-opacity-15 border-2 border-transparent rounded-xl text-center font-bold text-lg cursor-pointer transition-all duration-300 flex flex-col items-center gap-2;
+  }
+
+  .guess-option:hover {
+    @apply bg-opacity-25 transform -translate-y-1;
+  }
+
+  .guess-option.selected {
+    @apply bg-opacity-30 border-white shadow-lg;
+  }
+
+  .option-icon {
+    @apply text-2xl;
+  }
+
+  .bet-controls {
+    @apply flex items-center gap-3;
+  }
+
+  .bet-amount {
+    @apply flex-1 px-4 py-3 bg-white bg-opacity-15 border border-white border-opacity-30 rounded-xl text-white text-lg text-center placeholder-white placeholder-opacity-70 outline-none;
+  }
+
+  .bet-btn {
+    @apply px-6 py-3 bg-white bg-opacity-25 text-white font-bold rounded-xl hover:bg-opacity-35 disabled:bg-opacity-15 disabled:opacity-50 transition-all duration-300;
+  }
+
+  .active-guesses {
+    @apply space-y-3;
+  }
+
+  .guess-item {
+    @apply bg-white rounded-xl p-4 shadow-card border border-gray-200 flex justify-between items-start;
+  }
+
+  .guess-info {
+    @apply flex-1;
+  }
+
+  .guess-header-info {
+    @apply flex justify-between items-center mb-3;
+  }
+
+  .guess-index {
+    @apply font-bold text-gray-900;
+  }
+
+  .guess-stats {
+    @apply flex gap-4 mb-3;
+  }
+
+  .stat-item {
+    @apply text-center;
+  }
+
+  .stat-label {
+    @apply text-sm text-gray-600 mb-1;
+  }
+
+  .stat-value {
+    @apply font-bold text-gray-900;
+  }
+
+  .my-bet {
+    @apply text-sm bg-gray-100 text-gray-700 px-3 py-2 rounded-lg;
+  }
+
+  .bet-amount {
+    @apply font-bold;
+  }
+
+  .bet-type {
+    @apply font-bold px-2 py-1 rounded ml-1;
+  }
+
+  .bet-type.up {
+    @apply bg-red-100 text-red-700;
+  }
+
+  .bet-type.down {
+    @apply bg-green-100 text-green-700;
+  }
+
+  .join-guess-btn {
+    @apply px-4 py-2 bg-primary-500 text-white font-bold rounded-lg hover:bg-primary-600 transition-colors;
+  }
+
+  .stats-section {
+    @apply grid grid-cols-3 gap-4 mt-6;
+  }
+
+  .stat-card {
+    @apply bg-white rounded-xl p-4 shadow-card border border-gray-200 flex items-center gap-3;
+  }
+
+  .stat-icon {
+    @apply text-2xl;
+  }
+
+  .stat-number {
+    @apply font-bold text-gray-900 text-lg;
+  }
+
+  .stat-label {
+    @apply text-sm text-gray-600;
+  }
+
+  .see-more {
+    @apply text-primary-500 text-sm font-medium cursor-pointer;
+  }
+
+  /* MarketHeader专用样式 */
+  .market-header {
+    @apply absolute top-12 left-0 right-0 bg-gradient-to-r from-primary-500 to-primary-800 px-5 py-4 flex justify-between items-center text-white z-40 h-[68px] shadow-header;
+  }
+
+  .header-left {
+    @apply flex items-center gap-4;
+  }
+
+  .back-btn {
+    @apply w-8 h-8 rounded-full bg-white bg-opacity-15 flex items-center justify-center text-white hover:bg-opacity-25 transition-colors;
+  }
+
+  .page-title {
+    @apply text-xl font-bold;
+  }
+
+  .header-actions {
+    @apply flex items-center;
+  }
+
+  .login-status {
+    @apply flex items-center gap-2 bg-white bg-opacity-15 px-4 py-2 rounded-full cursor-pointer font-medium transition-colors hover:bg-opacity-25;
   }
 }
 

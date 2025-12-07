@@ -1,122 +1,269 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 
 const FriendsPage = () => {
-  const friends = [
+  const [currentTab, setCurrentTab] = useState('messages')
+  const [selectedChat, setSelectedChat] = useState(null)
+  const [messages, setMessages] = useState([])
+  const [newMessage, setNewMessage] = useState('')
+
+  // 模拟好友数据
+  const friendsList = [
     {
-      name: '股市老李',
-      avatar: 'L',
-      bio: '20年投资经验，擅长价值投资',
-      followers: '2.3k',
-      online: true
+      id: '1001',
+      name: '张财经',
+      status: 'online',
+      avatar: '张',
+      lastMessage: '我觉得科技板块下周会有不错的表现，特别是AI概念...',
+      lastTime: '10:23',
+      unread: 3
     },
     {
-      name: '短线高手',
-      avatar: 'D',
-      bio: '专注短线操作，技术分析专家',
-      followers: '1.8k',
-      online: false
+      id: '1002',
+      name: '李股神',
+      status: '2小时前活跃',
+      avatar: '李',
+      lastMessage: '明天准备加仓宁德时代，你觉得这个位置怎么样？',
+      lastTime: '昨天',
+      unread: 0
     },
     {
-      name: '量化小王',
-      avatar: 'W',
-      bio: '量化投资爱好者，分享策略分析',
-      followers: '1.2k',
-      online: true
-    },
-    {
-      name: '医药研究员',
-      avatar: 'M',
-      bio: '医药行业专家，基本面分析',
-      followers: '0.9k',
-      online: false
+      id: '1003',
+      name: '王趋势',
+      status: 'online',
+      avatar: '王',
+      lastMessage: '最近市场波动很大，建议控制仓位',
+      lastTime: '3小时前',
+      unread: 0
     }
   ]
 
-  const recommendations = [
+  // 模拟群组数据
+  const groupsList = [
     {
-      name: '新能源分析师',
-      avatar: 'X',
-      bio: '新能源行业深度研究者',
-      mutualFollowers: 12
+      id: 'group1',
+      name: '价值投资交流群',
+      status: '268人 · 最后活跃: 10:30',
+      avatar: '群',
+      lastMessage: '[股票] 贵州茅台 1688.00 (+2.35%)',
+      lastTime: '09:45',
+      unread: 12
     },
     {
-      name: '价值投资者',
-      avatar: 'V',
-      bio: '长期价值投资实践者',
-      mutualFollowers: 8
+      id: 'group2',
+      name: '科技股投资圈',
+      status: '156人 · 最后活跃: 09:15',
+      avatar: '群',
+      lastMessage: 'AI板块今天表现不错，大家怎么看？',
+      lastTime: '08:30',
+      unread: 0
     }
   ]
 
-  return (
-    <div className="p-4">
-      <div className="text-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">股友</h1>
-        <p className="text-gray-600">发现志同道合的投资伙伴</p>
-      </div>
+  // 模拟聊天记录
+  const chatMessages = {
+    '张财经': [
+      {
+        type: 'received',
+        content: '你好！最近关注什么股票？',
+        time: '10:20'
+      },
+      {
+        type: 'sent',
+        content: '我在看科技板块，特别是AI相关的股票',
+        time: '10:21'
+      },
+      {
+        type: 'received',
+        content: '我觉得科大讯飞不错，最近资金流入明显',
+        time: '10:22'
+      },
+      {
+        type: 'received',
+        content: 'stock:KXF',
+        time: '10:23'
+      }
+    ]
+  }
 
-      <div className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-card p-6 mb-6">
-        <div className="flex items-center">
-          <span className="fas fa-users text-3xl mr-3"></span>
-          <div>
-            <h2 className="text-xl font-bold">投资社区</h2>
-            <p className="text-purple-100">与高手交流，共同成长</p>
+  const handleSendMessage = () => {
+    if (!newMessage.trim() || !selectedChat) return
+
+    const newMsg = {
+      type: 'sent',
+      content: newMessage,
+      time: new Date().toLocaleTimeString('zh-CN', {
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    }
+
+    setMessages(prev => [...prev, newMsg])
+    setNewMessage('')
+
+    // 模拟回复
+    setTimeout(() => {
+      const replies = [
+        '这个观点很有意思！',
+        '我也有同感',
+        '你觉得明天会怎么走？',
+        '可以参考一下技术面'
+      ]
+      const randomReply = replies[Math.floor(Math.random() * replies.length)]
+
+      setMessages(prev => [...prev, {
+        type: 'received',
+        content: randomReply,
+        time: new Date().toLocaleTimeString('zh-CN', {
+          hour: '2-digit',
+          minute: '2-digit'
+        })
+      }])
+    }, 1000)
+  }
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSendMessage()
+    }
+  }
+
+  const openChat = (friend) => {
+    setSelectedChat(friend)
+    setMessages(chatMessages[friend.name] || [])
+  }
+
+  const backToMessageList = () => {
+    setSelectedChat(null)
+    setMessages([])
+  }
+
+  const sendStockCard = () => {
+    if (!selectedChat) return
+
+    const stockCardMsg = {
+      type: 'sent',
+      content: 'stock:KXF',
+      time: new Date().toLocaleTimeString('zh-CN', {
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    }
+
+    setMessages(prev => [...prev, stockCardMsg])
+  }
+
+  if (selectedChat) {
+    return (
+      <div className="chat-container">
+        <div className="chat-header">
+          <div className="chat-user">
+            <div className="chat-user-avatar">
+              {selectedChat.avatar}
+            </div>
+            <div className="chat-user-info">
+              <div className="chat-user-name">{selectedChat.name}</div>
+              <div className="chat-user-status">
+                {selectedChat.status === 'online' ? '在线' : selectedChat.status}
+              </div>
+            </div>
+          </div>
+          <div className="back-btn" onClick={backToMessageList}>
+            <span className="fas fa-arrow-left"></span>
           </div>
         </div>
-      </div>
 
-      <div className="bg-white rounded-card shadow-card p-4 mb-6">
-        <h2 className="text-lg font-bold mb-4">我的股友</h2>
-        <div className="space-y-4">
-          {friends.map((friend, index) => (
-            <div key={index} className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="relative">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-green-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                    {friend.avatar}
+        <div className="chat-messages">
+          {messages.map((msg, index) => (
+            <div key={index} className={`message-bubble ${msg.type}`}>
+              {msg.content.startsWith('stock:') ? (
+                <>
+                  <div className="bubble-content">
+                    <div className="stock-card-message">
+                      <div className="stock-card-header">
+                        <div className="stock-card-name">科大讯飞 (002230)</div>
+                        <div className="stock-card-price">56.78</div>
+                      </div>
+                      <div className="stock-card-change">+4.5%</div>
+                      <div className="stock-card-actions">
+                        <button className="stock-card-btn">加自选</button>
+                        <button className="stock-card-btn">查看详情</button>
+                      </div>
+                    </div>
                   </div>
-                  {friend.online && (
-                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
-                  )}
-                </div>
-                <div className="ml-3">
-                  <div className="font-semibold text-gray-900">{friend.name}</div>
-                  <div className="text-sm text-gray-600">{friend.bio}</div>
-                  <div className="text-xs text-gray-500">{friend.followers} 粉丝</div>
-                </div>
-              </div>
-              <button className="bg-primary-500 text-white px-3 py-1 rounded text-sm font-semibold">
-                私信
-              </button>
+                  <div className="bubble-time">{msg.time}</div>
+                </>
+              ) : (
+                <>
+                  <div className="bubble-content">{msg.content}</div>
+                  <div className="bubble-time">{msg.time}</div>
+                </>
+              )}
             </div>
           ))}
         </div>
-      </div>
 
-      <div className="bg-white rounded-card shadow-card p-4">
-        <h2 className="text-lg font-bold mb-4">推荐关注</h2>
-        <div className="space-y-4">
-          {recommendations.map((item, index) => (
-            <div key={index} className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                  {item.avatar}
-                </div>
-                <div className="ml-3">
-                  <div className="font-semibold text-gray-900">{item.name}</div>
-                  <div className="text-sm text-gray-600">{item.bio}</div>
-                  <div className="text-xs text-gray-500">
-                    {item.mutualFollowers} 个共同关注
-                  </div>
-                </div>
-              </div>
-              <button className="bg-gray-100 text-gray-700 px-3 py-1 rounded text-sm font-semibold hover:bg-gray-200">
-                关注
-              </button>
-            </div>
-          ))}
+        <div className="chat-input-area">
+          <div className="input-tools">
+            <button className="tool-btn" onClick={sendStockCard}>
+              <span className="fas fa-chart-line"></span>
+            </button>
+            <button className="tool-btn">
+              <span className="far fa-smile"></span>
+            </button>
+          </div>
+          <input
+            type="text"
+            className="message-input"
+            placeholder="输入消息..."
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyPress={handleKeyPress}
+          />
+          <button
+            className="send-btn"
+            onClick={handleSendMessage}
+            disabled={!newMessage.trim()}
+          >
+            发送
+          </button>
         </div>
       </div>
-    </div>
+    )
+  }
+
+  return (
+    <>
+      <div className="chat-tabs">
+        <button
+          className={`chat-tab ${currentTab === 'messages' ? 'active' : ''}`}
+          onClick={() => setCurrentTab('messages')}
+        >
+          消息
+        </button>
+      </div>
+
+      <div className="message-list">
+        {friendsList.concat(groupsList).map((friend) => (
+          <div
+            key={friend.id}
+            className="message-item"
+            onClick={() => openChat(friend)}
+          >
+            <div className="message-avatar">{friend.avatar}</div>
+            <div className="message-content">
+              <div className="message-header">
+                <div className="message-name">{friend.name}</div>
+                <div className="message-time">{friend.lastTime}</div>
+              </div>
+              <div className="message-preview">{friend.lastMessage}</div>
+            </div>
+            {friend.unread > 0 && (
+              <div className="unread-badge">{friend.unread}</div>
+            )}
+          </div>
+        ))}
+      </div>
+    </>
   )
 }
 
