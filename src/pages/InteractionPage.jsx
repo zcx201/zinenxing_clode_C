@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from 'react'
+import Modal from '../components/Modal'
 
 const InteractionPage = () => {
   const [selectedIndex, setSelectedIndex] = useState('sh')
   const [selectedOption, setSelectedOption] = useState(null)
   const [betAmount, setBetAmount] = useState('')
   const [activeGuesses, setActiveGuesses] = useState([])
+  const [showBetModal, setShowBetModal] = useState(false)
+  const [showJoinModal, setShowJoinModal] = useState(false)
+  const [selectedGuess, setSelectedGuess] = useState(null)
+  const [joinBetAmount, setJoinBetAmount] = useState('')
+  const [joinBetType, setJoinBetType] = useState('')
 
   // 指数选项
   const indices = [
@@ -63,9 +69,15 @@ const InteractionPage = () => {
     const amount = parseInt(betAmount)
     if (amount <= 0) return
 
-    // 模拟下注逻辑
-    alert(`成功下注${amount}积分，预测${indices.find(i => i.id === selectedIndex)?.name}会${selectedOption === 'up' ? '上涨' : '下跌'}`)
+    // 显示确认弹窗
+    setShowBetModal(true)
+  }
 
+  const confirmBet = () => {
+    const amount = parseInt(betAmount)
+    setShowBetModal(false)
+
+    // 成功提示（这里可以替换为更好的UI提示）
     // 重置选择
     setSelectedOption(null)
     setBetAmount('')
@@ -74,16 +86,139 @@ const InteractionPage = () => {
   const handleJoinGuess = (guessId) => {
     const guess = activeGuesses.find(g => g.id === guessId)
     if (guess?.myBet) {
-      alert('您已参与此竞猜')
       return
     }
 
-    // 模拟参与竞猜
-    alert('参与竞猜成功！')
+    setSelectedGuess(guess)
+    setShowJoinModal(true)
+  }
+
+  const handleJoinBet = () => {
+    if (!joinBetAmount || !joinBetType) return
+
+    const amount = parseInt(joinBetAmount)
+    if (amount <= 0) return
+
+    setShowJoinModal(false)
+
+    // 更新用户的投注信息
+    const updatedGuesses = activeGuesses.map(guess => {
+      if (guess.id === selectedGuess.id) {
+        return {
+          ...guess,
+          myBet: {
+            type: joinBetType,
+            amount: amount
+          }
+        }
+      }
+      return guess
+    })
+    setActiveGuesses(updatedGuesses)
+
+    setJoinBetAmount('')
+    setJoinBetType('')
   }
 
   return (
     <div className="interaction-page">
+      {/* 投注确认弹窗 */}
+      <Modal
+        isOpen={showBetModal}
+        onClose={() => setShowBetModal(false)}
+        title="确认投注"
+      >
+        <div className="text-center">
+          <div className="text-lg mb-4">
+            确认下注 <span className="font-bold text-primary-500">{betAmount}</span> 积分，预测
+            <span className="font-bold">{indices.find(i => i.id === selectedIndex)?.name}</span> 会
+            <span className={`font-bold ${selectedOption === 'up' ? 'text-red-500' : 'text-green-500'}`}>
+              {selectedOption === 'up' ? '上涨' : '下跌'}
+            </span>
+          </div>
+          <div className="flex justify-center gap-4">
+            <button
+              className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+              onClick={() => setShowBetModal(false)}
+            >
+              取消
+            </button>
+            <button
+              className="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
+              onClick={confirmBet}
+            >
+              确认投注
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* 参与竞猜弹窗 */}
+      <Modal
+        isOpen={showJoinModal}
+        onClose={() => setShowJoinModal(false)}
+        title="参与竞猜"
+      >
+        <div>
+          <div className="mb-4 text-lg font-semibold">{selectedGuess?.index}</div>
+
+          <div className="mb-4">
+            <div className="text-sm text-gray-600 mb-2">选择预测方向</div>
+            <div className="flex gap-4">
+              <button
+                className={`flex-1 p-3 border-2 rounded-lg transition-all ${
+                  joinBetType === 'up'
+                    ? 'border-red-500 bg-red-50 text-red-500'
+                    : 'border-gray-300 hover:border-red-500'
+                }`}
+                onClick={() => setJoinBetType('up')}
+              >
+                <div className="text-lg mb-1">📈</div>
+                <div>上涨</div>
+              </button>
+              <button
+                className={`flex-1 p-3 border-2 rounded-lg transition-all ${
+                  joinBetType === 'down'
+                    ? 'border-green-500 bg-green-50 text-green-500'
+                    : 'border-gray-300 hover:border-green-500'
+                }`}
+                onClick={() => setJoinBetType('down')}
+              >
+                <div className="text-lg mb-1">📉</div>
+                <div>下跌</div>
+              </button>
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <div className="text-sm text-gray-600 mb-2">投注积分</div>
+            <input
+              type="number"
+              className="w-full p-3 border border-gray-300 rounded-lg outline-none focus:border-primary-500"
+              placeholder="输入投注积分"
+              value={joinBetAmount}
+              onChange={(e) => setJoinBetAmount(e.target.value)}
+              min="1"
+            />
+          </div>
+
+          <div className="flex justify-center gap-4">
+            <button
+              className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+              onClick={() => setShowJoinModal(false)}
+            >
+              取消
+            </button>
+            <button
+              className="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+              onClick={handleJoinBet}
+              disabled={!joinBetAmount || !joinBetType}
+            >
+              确认参与
+            </button>
+          </div>
+        </div>
+      </Modal>
       {/* 主竞猜卡片 */}
       <div className="main-guess-card">
         <div className="guess-header">

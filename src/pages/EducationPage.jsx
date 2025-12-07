@@ -1,6 +1,9 @@
-import React from 'react'
+import React, { useState } from 'react'
+import Modal from '../components/Modal'
 
 const EducationPage = () => {
+  const [selectedCourse, setSelectedCourse] = useState(null)
+  const [showCourseModal, setShowCourseModal] = useState(false)
   const courses = [
     {
       title: '股票投资入门',
@@ -35,6 +38,44 @@ const EducationPage = () => {
       icon: 'fas fa-shield-alt'
     }
   ]
+
+  // 课程详情内容
+  const courseContents = {
+    '股票投资入门': [
+      '了解股票基本概念和交易规则',
+      '学习如何开立证券账户',
+      '掌握基础的K线图阅读',
+      '了解常见的投资风险',
+      '制定合理的投资计划'
+    ],
+    '技术分析精讲': [
+      '深度解析技术分析三大假设',
+      'K线组合形态详解',
+      '均线系统的实战应用',
+      'MACD、KDJ等指标的应用',
+      '成交量与价格关系分析'
+    ],
+    '价值投资策略': [
+      '价值投资的核心理念',
+      '如何分析企业基本面',
+      '财务数据分析方法',
+      '安全边界概念及应用',
+      '长期投资策略制定'
+    ],
+    '风险管理与止损': [
+      '风险与收益的平衡',
+      '止损策略的制定与执行',
+      '仓位管理技巧',
+      '投资组合分散化原则',
+      '应对市场波动的心理准备'
+    ]
+  }
+
+  // 开始学习函数
+  const handleStartLearning = (course) => {
+    setSelectedCourse(course)
+    setShowCourseModal(true)
+  }
 
   return (
     <div className="p-4">
@@ -80,13 +121,60 @@ const EducationPage = () => {
                 <span className="fas fa-users mr-1"></span>
                 <span>{course.students}人学习</span>
               </div>
-              <button className="bg-primary-500 text-white px-3 py-1 rounded text-sm font-semibold">
+              <button
+                className="bg-primary-500 text-white px-3 py-1 rounded text-sm font-semibold hover:bg-primary-600 transition-colors"
+                onClick={() => handleStartLearning(course)}
+              >
                 开始学习
               </button>
             </div>
           </div>
         ))}
       </div>
+
+      {/* 课程详情弹窗 */}
+      <Modal
+        isOpen={showCourseModal}
+        onClose={() => setShowCourseModal(false)}
+        title={selectedCourse?.title || '课程详情'}
+        size="sm"
+      >
+        {selectedCourse && (
+          <div>
+            <div className="text-center mb-4">
+              <h3 className="font-bold text-gray-900 text-lg">{selectedCourse.title}</h3>
+              <div className="flex justify-center gap-2 mt-1">
+                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
+                  {selectedCourse.level}课程
+                </span>
+                <span className="text-blue-700 text-xs">{selectedCourse.duration}</span>
+              </div>
+              <p className="text-gray-600 text-sm mt-2">{selectedCourse.description}</p>
+            </div>
+
+            <div className="mb-4">
+              <h4 className="font-bold text-gray-900 text-sm mb-2">课程大纲</h4>
+              <div className="space-y-1">
+                {courseContents[selectedCourse.title]?.map((item, index) => (
+                  <div key={index} className="flex items-start">
+                    <span className="text-green-500 mr-2 text-xs">✓</span>
+                    <span className="text-gray-700 text-xs">{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="text-center">
+              <button
+                className="bg-primary-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-primary-600 transition-colors text-sm"
+                onClick={() => setShowCourseModal(false)}
+              >
+                开始学习
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }

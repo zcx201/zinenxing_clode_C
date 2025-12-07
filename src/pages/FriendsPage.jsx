@@ -1,10 +1,39 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
+import Modal from '../components/Modal'
+import Toast from '../components/Toast'
 
 const FriendsPage = () => {
   const [currentTab, setCurrentTab] = useState('messages')
   const [selectedChat, setSelectedChat] = useState(null)
   const [messages, setMessages] = useState([])
   const [newMessage, setNewMessage] = useState('')
+  const [showHeaderDropdown, setShowHeaderDropdown] = useState(false)
+  const [showChatDropdown, setShowChatDropdown] = useState(false)
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [showCreateGroupModal, setShowCreateGroupModal] = useState(false)
+  const [showSearchModal, setShowSearchModal] = useState(false)
+  const [showToast, setShowToast] = useState(false)
+  const [toastMessage, setToastMessage] = useState('')
+  const [toastType, setToastType] = useState('info')
+  const dropdownRef = useRef(null)
+  const chatDropdownRef = useRef(null)
+
+  // 点击外部关闭下拉菜单
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowHeaderDropdown(false)
+      }
+      if (chatDropdownRef.current && !chatDropdownRef.current.contains(event.target)) {
+        setShowChatDropdown(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   // 模拟好友数据
   const friendsList = [
@@ -127,6 +156,67 @@ const FriendsPage = () => {
     }
   }
 
+  const toggleHeaderDropdown = () => {
+    setShowHeaderDropdown(!showHeaderDropdown)
+  }
+
+  const toggleChatDropdown = () => {
+    setShowChatDropdown(!showChatDropdown)
+  }
+
+  // 下拉菜单项处理函数
+  const handleAddFriend = () => {
+    setShowAddModal(true)
+    setShowHeaderDropdown(false)
+  }
+
+  const handleCreateGroup = () => {
+    setShowCreateGroupModal(true)
+    setShowHeaderDropdown(false)
+  }
+
+  const handleSearchUser = () => {
+    setShowSearchModal(true)
+    setShowHeaderDropdown(false)
+  }
+
+  // 显示Toast消息
+  const showToastMessage = (message, type = 'info') => {
+    setToastMessage(message)
+    setToastType(type)
+    setShowToast(true)
+  }
+
+  // 聊天窗口下拉菜单处理函数
+  const [showProfileModal, setShowProfileModal] = useState(false)
+  const [showBlockModal, setShowBlockModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+
+  const handleViewProfile = () => {
+    setShowChatDropdown(false)
+    setShowProfileModal(true)
+  }
+
+  const handleBlockFriend = () => {
+    setShowChatDropdown(false)
+    setShowBlockModal(true)
+  }
+
+  const handleDeleteFriend = () => {
+    setShowChatDropdown(false)
+    setShowDeleteModal(true)
+  }
+
+  const confirmBlockFriend = () => {
+    setShowBlockModal(false)
+    showToastMessage(`已拉黑 ${selectedChat?.name}`, 'warning')
+  }
+
+  const confirmDeleteFriend = () => {
+    setShowDeleteModal(false)
+    showToastMessage(`已删除好友 ${selectedChat?.name}`, 'error')
+  }
+
   const openChat = (friend) => {
     setSelectedChat(friend)
     setMessages(chatMessages[friend.name] || [])
@@ -157,6 +247,9 @@ const FriendsPage = () => {
       <div className="chat-container">
         <div className="chat-header">
           <div className="chat-user">
+            <div className="back-btn" onClick={backToMessageList}>
+              <span className="fas fa-arrow-left"></span>
+            </div>
             <div className="chat-user-avatar">
               {selectedChat.avatar}
             </div>
@@ -167,8 +260,40 @@ const FriendsPage = () => {
               </div>
             </div>
           </div>
-          <div className="back-btn" onClick={backToMessageList}>
-            <span className="fas fa-arrow-left"></span>
+
+          <div className="relative" ref={chatDropdownRef}>
+            <button
+              className="back-btn"
+              onClick={toggleChatDropdown}
+            >
+              <span className="fas fa-ellipsis-v"></span>
+            </button>
+
+            {showChatDropdown && (
+              <div className="absolute right-0 top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-40">
+                <button
+                  className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100"
+                  onClick={handleViewProfile}
+                >
+                  <span className="fas fa-user mr-2 text-primary-500"></span>
+                  查看资料
+                </button>
+                <button
+                  className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100"
+                  onClick={handleBlockFriend}
+                >
+                  <span className="fas fa-ban mr-2 text-primary-500"></span>
+                  拉黑好友
+                </button>
+                <button
+                  className="w-full px-4 py-3 text-left hover:bg-gray-50 text-red-500"
+                  onClick={handleDeleteFriend}
+                >
+                  <span className="fas fa-trash mr-2"></span>
+                  删除好友
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -233,15 +358,52 @@ const FriendsPage = () => {
 
   return (
     <>
-      <div className="chat-tabs">
-        <button
-          className={`chat-tab ${currentTab === 'messages' ? 'active' : ''}`}
-          onClick={() => setCurrentTab('messages')}
-        >
-          消息
-        </button>
+      {/* 页面头部 - 改为普通头部 */}
+      <div className="mb-4">
+        <div className="flex justify-between items-center p-4 bg-white rounded-card shadow-card border border-gray-200">
+          <div className="brand">
+            <div className="app-logo">股</div>
+            <div className="app-title">股友</div>
+          </div>
+
+          <div className="relative" ref={dropdownRef}>
+            <button
+              className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+              onClick={toggleHeaderDropdown}
+            >
+              <span className="fas fa-ellipsis-v text-gray-600"></span>
+            </button>
+
+            {showHeaderDropdown && (
+              <div className="absolute right-0 top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-40">
+                <button
+                  className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100"
+                  onClick={handleAddFriend}
+                >
+                  <span className="fas fa-user-plus mr-2 text-primary-500"></span>
+                  添加好友
+                </button>
+                <button
+                  className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100"
+                  onClick={handleCreateGroup}
+                >
+                  <span className="fas fa-users mr-2 text-primary-500"></span>
+                  建立群聊
+                </button>
+                <button
+                  className="w-full px-4 py-3 text-left hover:bg-gray-50"
+                  onClick={handleSearchUser}
+                >
+                  <span className="fas fa-search mr-2 text-primary-500"></span>
+                  查找好友
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
+      {/* 消息列表 */}
       <div className="message-list">
         {friendsList.concat(groupsList).map((friend) => (
           <div
@@ -263,6 +425,178 @@ const FriendsPage = () => {
           </div>
         ))}
       </div>
+
+      {/* 弹窗组件 */}
+      <Modal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        title="添加好友"
+      >
+        <div>
+          <input
+            type="text"
+            className="w-full p-3 border border-gray-300 rounded-lg mb-4 outline-none focus:border-primary-500"
+            placeholder="请输入用户ID或用户名"
+          />
+          <div className="flex justify-end gap-4">
+            <button
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+              onClick={() => setShowAddModal(false)}
+            >
+              取消
+            </button>
+            <button
+              className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600"
+              onClick={() => setShowAddModal(false)}
+            >
+              发送请求
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={showCreateGroupModal}
+        onClose={() => setShowCreateGroupModal(false)}
+        title="建立群聊"
+      >
+        <div>
+          <input
+            type="text"
+            className="w-full p-3 border border-gray-300 rounded-lg mb-4 outline-none focus:border-primary-500"
+            placeholder="请输入群聊名称"
+          />
+          <div className="flex justify-end gap-4">
+            <button
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+              onClick={() => setShowCreateGroupModal(false)}
+            >
+              取消
+            </button>
+            <button
+              className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600"
+              onClick={() => setShowCreateGroupModal(false)}
+            >
+              创建群聊
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={showSearchModal}
+        onClose={() => setShowSearchModal(false)}
+        title="查找好友"
+      >
+        <div>
+          <input
+            type="text"
+            className="w-full p-3 border border-gray-300 rounded-lg mb-4 outline-none focus:border-primary-500"
+            placeholder="请输入用户ID、用户名或手机号"
+          />
+          <div className="search-results">
+            {/* 这里可以显示搜索结果 */}
+          </div>
+          <div className="flex justify-end gap-4">
+            <button
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+              onClick={() => setShowSearchModal(false)}
+            >
+              取消
+            </button>
+            <button
+              className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600"
+              onClick={() => setShowSearchModal(false)}
+            >
+              搜索
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* 好友资料弹窗 */}
+      <Modal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+        title={`${selectedChat?.name} 的资料`}
+        size="sm"
+      >
+        <div className="text-center p-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center text-blue-600 text-xl font-bold mx-auto mb-3">
+            {selectedChat?.avatar}
+          </div>
+          <h3 className="font-bold text-lg mb-2">{selectedChat?.name}</h3>
+          <div className="text-sm text-gray-600 mb-4">
+            {selectedChat?.status === 'online' ? '在线' : selectedChat?.status}
+          </div>
+          <button
+            className="w-full bg-primary-500 text-white py-2 rounded-lg font-semibold hover:bg-primary-600 transition-colors"
+            onClick={() => setShowProfileModal(false)}
+          >
+            关闭
+          </button>
+        </div>
+      </Modal>
+
+      {/* 拉黑确认弹窗 */}
+      <Modal
+        isOpen={showBlockModal}
+        onClose={() => setShowBlockModal(false)}
+        title="确认拉黑"
+        size="sm"
+      >
+        <div className="p-4">
+          <p className="text-center text-gray-700 mb-4">确认要拉黑 {selectedChat?.name} 吗？</p>
+          <div className="flex gap-2">
+            <button
+              className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 transition-colors"
+              onClick={() => setShowBlockModal(false)}
+            >
+              取消
+            </button>
+            <button
+              className="flex-1 bg-yellow-500 text-white py-2 rounded-lg hover:bg-yellow-600 transition-colors"
+              onClick={confirmBlockFriend}
+            >
+              确认拉黑
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* 删除好友弹窗 */}
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        title="删除好友"
+        size="sm"
+      >
+        <div className="p-4">
+          <p className="text-center text-gray-700 mb-4">确认要删除好友 {selectedChat?.name} 吗？此操作不可撤销。</p>
+          <div className="flex gap-2">
+            <button
+              className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 transition-colors"
+              onClick={() => setShowDeleteModal(false)}
+            >
+              取消
+            </button>
+            <button
+              className="flex-1 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition-colors"
+              onClick={confirmDeleteFriend}
+            >
+              确认删除
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {showToast && (
+        <Toast
+          message={toastMessage}
+          type={toastType}
+          onClose={() => setShowToast(false)}
+        />
+      )}
     </>
   )
 }

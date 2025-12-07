@@ -770,11 +770,11 @@
   }
 
   .bet-amount {
-    @apply flex-1 px-4 py-3 bg-white bg-opacity-15 border border-white border-opacity-30 rounded-xl text-white text-lg text-center placeholder-white placeholder-opacity-70 outline-none;
+    @apply w-32 px-4 py-3 bg-white bg-opacity-15 border border-white border-opacity-30 rounded-xl text-white text-lg text-center placeholder-white placeholder-opacity-70 outline-none;
   }
 
   .bet-btn {
-    @apply px-6 py-3 bg-white bg-opacity-25 text-white font-bold rounded-xl hover:bg-opacity-35 disabled:bg-opacity-15 disabled:opacity-50 transition-all duration-300;
+    @apply px-6 py-3 bg-white bg-opacity-25 text-white font-bold rounded-xl hover:bg-opacity-35 disabled:bg-opacity-15 disabled:opacity-50 transition-all duration-300 whitespace-nowrap;
   }
 
   .active-guesses {

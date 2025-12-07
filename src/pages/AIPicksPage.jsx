@@ -1,10 +1,24 @@
 import React, { useState, useEffect } from 'react'
+import favoritesManager from '../utils/favorites'
+import Modal from '../components/Modal'
+import Toast from '../components/Toast'
 
 const AIPicksPage = () => {
   const [currentTab, setCurrentTab] = useState('strategy')
   const [chatMessage, setChatMessage] = useState('')
   const [chatHistory, setChatHistory] = useState([])
   const [aiResponses, setAiResponses] = useState([])
+  const [showStockDetail, setShowStockDetail] = useState(false)
+  const [selectedStock, setSelectedStock] = useState(null)
+  const [favorites, setFavorites] = useState([])
+  const [showToast, setShowToast] = useState(false)
+  const [toastMessage, setToastMessage] = useState('')
+  const [toastType, setToastType] = useState('info')
+
+  // 初始化时获取自选股列表
+  useEffect(() => {
+    setFavorites(favoritesManager.getFavorites())
+  }, [])
 
   // 示例问题
   const exampleQuestions = [
@@ -129,6 +143,30 @@ const AIPicksPage = () => {
     }
   }
 
+  // 显示Toast消息
+  const showToastMessage = (message, type = 'info') => {
+    setToastMessage(message)
+    setToastType(type)
+    setShowToast(true)
+  }
+
+  // 添加自选股
+  const handleAddToFavorites = (stock) => {
+    const success = favoritesManager.addToFavorites(stock)
+    if (success) {
+      setFavorites(favoritesManager.getFavorites())
+      showToastMessage(`成功添加 ${stock.name} 到自选股`, 'success')
+    } else {
+      showToastMessage(`${stock.name} 已在自选股中`, 'warning')
+    }
+  }
+
+  // 查看股票详情
+  const handleViewDetail = (stock) => {
+    setSelectedStock(stock)
+    setShowStockDetail(true)
+  }
+
   const renderStrategyTab = () => (
     <div className="ai-recommendation">
       {strategies.map((strategy, index) => (
@@ -159,8 +197,18 @@ const AIPicksPage = () => {
                 </div>
                 <div className="ai-reason">{stock.reason}</div>
                 <div className="stock-actions">
-                  <button className="add-favorite-btn">加自选</button>
-                  <button className="view-detail-btn">查看详情</button>
+                  <button
+                    className="add-favorite-btn"
+                    onClick={() => handleAddToFavorites(stock)}
+                  >
+                    加自选
+                  </button>
+                  <button
+                    className="view-detail-btn"
+                    onClick={() => handleViewDetail(stock)}
+                  >
+                    查看详情
+                  </button>
                 </div>
               </div>
             ))}
@@ -250,6 +298,57 @@ const AIPicksPage = () => {
       <div className="tab-content">
         {currentTab === 'strategy' ? renderStrategyTab() : renderHistoryTab()}
       </div>
+
+      {/* 股票详情弹窗 */}
+      <Modal
+        isOpen={showStockDetail}
+        onClose={() => setShowStockDetail(false)}
+        title="股票详情"
+        size="sm"
+      >
+        {selectedStock && (
+          <div>
+            <div className="text-center mb-4">
+              <div className="text-lg font-bold text-gray-900">{selectedStock.name} ({selectedStock.code})</div>
+              <div className="text-2xl font-bold text-gray-900 mt-1">{selectedStock.price}</div>
+              <div className={`text-lg font-semibold ${selectedStock.changeDirection === 'up' ? 'text-red-500' : 'text-green-500'}`}>
+                {selectedStock.change}
+              </div>
+            </div>
+
+            <div className="bg-gray-50 p-3 rounded-lg mb-3">
+              <div className="text-sm font-semibold text-gray-700 mb-2">AI分析</div>
+              <div className="text-xs text-gray-600 leading-relaxed">{selectedStock.reason}</div>
+              <div className="mt-1 text-xs text-gray-500">置信度: {selectedStock.confidence}</div>
+            </div>
+
+            <div className="bg-blue-50 p-3 rounded-lg mb-4">
+              <div className="text-sm font-semibold text-blue-700 mb-1">投资建议</div>
+              <div className="text-xs text-blue-600 leading-relaxed">
+                AI建议关注该股票的基本面和技术面表现，结合市场走势进行投资决策。
+                建议设置合理的止盈止损点控制风险。
+              </div>
+            </div>
+
+            <div className="flex justify-center">
+              <button
+                className="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors text-sm"
+                onClick={() => setShowStockDetail(false)}
+              >
+                关闭
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {showToast && (
+        <Toast
+          message={toastMessage}
+          type={toastType}
+          onClose={() => setShowToast(false)}
+        />
+      )}
     </div>
   )
 }

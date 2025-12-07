@@ -1,13 +1,49 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import Modal from '../components/Modal'
 
 const ProfilePage = () => {
   const navigate = useNavigate()
   const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}')
+  const [showModal, setShowModal] = useState(false)
+  const [modalContent, setModalContent] = useState({ title: '', message: '' })
 
   const handleLogout = () => {
     localStorage.removeItem('currentUser')
     navigate('/login')
+  }
+
+  // 菜单项点击处理函数
+  const handleMenuClick = (menuText) => {
+    const modalContents = {
+      '我的收藏': {
+        title: '我的收藏' + (currentUser.username ? ` - ${currentUser.username}` : ''),
+        message: currentUser.username ?
+          '这里将显示您收藏的股票、文章等内容。\n\n功能正在开发中，敬请期待！' :
+          '请先登录以查看和管理您的收藏'
+      },
+      '浏览记录': {
+        title: '浏览记录' + (currentUser.username ? ` - ${currentUser.username}` : ''),
+        message: currentUser.username ?
+          '这里将显示您的浏览历史记录。\n\n功能正在开发中，敬请期待！' :
+          '请先登录以查看您的浏览记录'
+      },
+      '设置': {
+        title: '设置',
+        message: '这里将包含各种个性化设置选项\n\n功能正在开发中，敬请期待！'
+      },
+      '帮助中心': {
+        title: '帮助中心',
+        message: '欢迎使用智能鑫AI股票投资助手！\n\n如果您有任何问题或建议，请联系我们的客服团队。\n\n客服热线：400-123-4567\n客服邮箱：support@zhinengxin.ai'
+      },
+      '关于我们': {
+        title: '关于我们',
+        message: '智能鑫AI股票投资助手\n\n版本：v1.0.0\n开发团队：智能鑫科技\n\n致力于为广大投资者提供专业的智能投资分析服务，让投资更简单！'
+      }
+    }
+
+    setModalContent(modalContents[menuText])
+    setShowModal(true)
   }
 
   const menuItems = [
@@ -53,7 +89,8 @@ const ProfilePage = () => {
         {menuItems.map((item, index) => (
           <div
             key={index}
-            className="flex justify-between items-center p-4 border-b border-gray-100 last:border-0"
+            className="flex justify-between items-center p-4 border-b border-gray-100 last:border-0 cursor-pointer hover:bg-gray-50 transition-colors"
+            onClick={() => handleMenuClick(item.text)}
           >
             <div className="flex items-center">
               <span className={`${item.icon} text-gray-600 w-5 mr-3`}></span>
@@ -88,6 +125,30 @@ const ProfilePage = () => {
           </button>
         </div>
       )}
+
+      {/* 智能鑫系统标准弹窗 */}
+      <Modal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title={modalContent.title}
+        size="sm"
+      >
+        <div className="p-4">
+          {modalContent.message.split('\n').map((line, index) => (
+            <div key={index} className="mb-2 text-sm text-gray-700 leading-relaxed">
+              {line}
+            </div>
+          ))}
+          <div className="mt-4 text-center">
+            <button
+              className="bg-primary-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-primary-600 transition-colors text-sm"
+              onClick={() => setShowModal(false)}
+            >
+              确定
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }
