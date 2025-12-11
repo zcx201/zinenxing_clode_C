@@ -14,6 +14,9 @@ const AIPicksPage = () => {
   const [showToast, setShowToast] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
   const [toastType, setToastType] = useState('info')
+  // 加自选确认弹窗状态
+  const [showAddFavoriteModal, setShowAddFavoriteModal] = useState(false)
+  const [stockToAdd, setStockToAdd] = useState(null)
 
   // 初始化时获取自选股列表
   useEffect(() => {
@@ -150,15 +153,39 @@ const AIPicksPage = () => {
     setShowToast(true)
   }
 
-  // 添加自选股
+  // 显示加自选确认弹窗
   const handleAddToFavorites = (stock) => {
-    const success = favoritesManager.addToFavorites(stock)
+    setStockToAdd(stock)
+    setShowAddFavoriteModal(true)
+  }
+
+  // 确认添加自选股
+  const confirmAddToFavorites = () => {
+    if (!stockToAdd) return
+    
+    // 确保股票对象有type属性
+    const stockWithType = {
+      ...stockToAdd,
+      type: 'stock'
+    }
+    
+    const success = favoritesManager.addToFavorites(stockWithType)
     if (success) {
       setFavorites(favoritesManager.getFavorites())
-      showToastMessage(`成功添加 ${stock.name} 到自选股`, 'success')
+      showToastMessage(`成功添加 ${stockToAdd.name} 到自选股`, 'success')
     } else {
-      showToastMessage(`${stock.name} 已在自选股中`, 'warning')
+      showToastMessage(`${stockToAdd.name} 已在自选股中`, 'warning')
     }
+    
+    // 关闭弹窗
+    setShowAddFavoriteModal(false)
+    setStockToAdd(null)
+  }
+
+  // 取消添加自选股
+  const cancelAddToFavorites = () => {
+    setShowAddFavoriteModal(false)
+    setStockToAdd(null)
   }
 
   // 查看股票详情
@@ -336,6 +363,47 @@ const AIPicksPage = () => {
                 onClick={() => setShowStockDetail(false)}
               >
                 关闭
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* 加自选确认弹窗 */}
+      <Modal
+        isOpen={showAddFavoriteModal}
+        onClose={cancelAddToFavorites}
+        title="确认加自选"
+        size="sm"
+      >
+        {stockToAdd && (
+          <div>
+            <div className="text-center mb-4">
+              <div className="text-lg font-bold text-gray-900">{stockToAdd.name} ({stockToAdd.code})</div>
+              <div className="text-2xl font-bold text-gray-900 mt-1">{stockToAdd.price}</div>
+              <div className={`text-lg font-semibold ${stockToAdd.changeDirection === 'up' ? 'text-red-500' : 'text-green-500'}`}>
+                {stockToAdd.change}
+              </div>
+            </div>
+
+            <div className="bg-gray-50 p-3 rounded-lg mb-3">
+              <div className="text-sm font-semibold text-gray-700 mb-2">AI推荐理由</div>
+              <div className="text-xs text-gray-600 leading-relaxed">{stockToAdd.reason}</div>
+              <div className="mt-1 text-xs text-gray-500">置信度: {stockToAdd.confidence}</div>
+            </div>
+
+            <div className="flex justify-center gap-4">
+              <button
+                className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm"
+                onClick={cancelAddToFavorites}
+              >
+                取消
+              </button>
+              <button
+                className="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors text-sm"
+                onClick={confirmAddToFavorites}
+              >
+                确认加自选
               </button>
             </div>
           </div>

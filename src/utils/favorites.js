@@ -1,27 +1,35 @@
-// 自选股管理工具类
+// 收藏管理工具类 - 支持股票和新闻
 class FavoritesManager {
   constructor() {
     this.storageKey = 'userFavorites'
   }
 
-  // 获取所有自选股
+  // 获取所有收藏
   getFavorites() {
     const favorites = localStorage.getItem(this.storageKey)
     return favorites ? JSON.parse(favorites) : []
   }
 
-  // 添加自选股
-  addToFavorites(stock) {
+  // 添加收藏（支持股票和新闻）
+  addToFavorites(item) {
     const favorites = this.getFavorites()
 
     // 检查是否已存在
-    const exists = favorites.some(fav => fav.code === stock.code)
+    const exists = favorites.some(fav => {
+      if (item.type === 'stock') {
+        return fav.type === 'stock' && fav.code === item.code
+      } else if (item.type === 'news') {
+        return fav.type === 'news' && fav.title === item.title
+      }
+      return false
+    })
+
     if (exists) {
       return false // 已存在，添加失败
     }
 
     const newFavorite = {
-      ...stock,
+      ...item,
       addedTime: new Date().toISOString(),
       id: Date.now().toString()
     }
@@ -31,24 +39,41 @@ class FavoritesManager {
     return true // 添加成功
   }
 
-  // 从自选股移除
-  removeFromFavorites(stockCode) {
+  // 从收藏中移除
+  removeFromFavorites(id) {
     const favorites = this.getFavorites()
-    const newFavorites = favorites.filter(fav => fav.code !== stockCode)
+    const newFavorites = favorites.filter(fav => fav.id !== id)
     localStorage.setItem(this.storageKey, JSON.stringify(newFavorites))
 
     return newFavorites.length !== favorites.length // 返回是否成功移除
   }
 
-  // 检查是否在自选股中
-  isInFavorites(stockCode) {
+  // 检查是否在收藏中
+  isInFavorites(item) {
     const favorites = this.getFavorites()
-    return favorites.some(fav => fav.code === stockCode)
+    if (item.type === 'stock') {
+      return favorites.some(fav => fav.type === 'stock' && fav.code === item.code)
+    } else if (item.type === 'news') {
+      return favorites.some(fav => fav.type === 'news' && fav.title === item.title)
+    }
+    return false
   }
 
-  // 清空自选股
+  // 清空收藏
   clearFavorites() {
     localStorage.removeItem(this.storageKey)
+  }
+
+  // 获取收藏的新闻
+  getFavoriteNews() {
+    const favorites = this.getFavorites()
+    return favorites.filter(fav => fav.type === 'news')
+  }
+
+  // 获取收藏的股票
+  getFavoriteStocks() {
+    const favorites = this.getFavorites()
+    return favorites.filter(fav => fav.type === 'stock')
   }
 }
 

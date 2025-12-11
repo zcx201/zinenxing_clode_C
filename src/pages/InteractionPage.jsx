@@ -11,6 +11,9 @@ const InteractionPage = () => {
   const [selectedGuess, setSelectedGuess] = useState(null)
   const [joinBetAmount, setJoinBetAmount] = useState('')
   const [joinBetType, setJoinBetType] = useState('')
+  // 竞猜列表弹窗状态
+  const [showGuessListModal, setShowGuessListModal] = useState(false)
+  const [guessListTab, setGuessListTab] = useState('ongoing') // 'ongoing', 'history', 'all'
 
   // 指数选项
   const indices = [
@@ -37,7 +40,9 @@ const InteractionPage = () => {
       upVotes: 1245,
       downVotes: 789,
       myBet: { type: 'up', amount: 50 },
-      totalPool: 2034
+      totalPool: 2034,
+      betTime: '今天 10:30',
+      status: 'ongoing'
     },
     {
       id: 2,
@@ -46,7 +51,9 @@ const InteractionPage = () => {
       upVotes: 567,
       downVotes: 892,
       myBet: null,
-      totalPool: 1459
+      totalPool: 1459,
+      betTime: '今天 09:45',
+      status: 'ongoing'
     },
     {
       id: 3,
@@ -55,7 +62,54 @@ const InteractionPage = () => {
       upVotes: 987,
       downVotes: 654,
       myBet: { type: 'down', amount: 30 },
-      totalPool: 1641
+      totalPool: 1641,
+      betTime: '今天 11:20',
+      status: 'ongoing'
+    },
+    {
+      id: 4,
+      index: '深证成指',
+      deadline: '今日收盘后',
+      upVotes: 892,
+      downVotes: 1103,
+      myBet: { type: 'down', amount: 100 },
+      totalPool: 1995,
+      betTime: '今天 10:00',
+      status: 'ongoing'
+    }
+  ]
+
+  // 模拟历史竞猜
+  const mockHistoryGuesses = [
+    {
+      id: 5,
+      index: '创业板指',
+      deadline: '昨日收盘后',
+      myBet: { type: 'up', amount: 200 },
+      result: 'win',
+      profit: 150,
+      betTime: '昨天 14:30',
+      status: 'ended'
+    },
+    {
+      id: 6,
+      index: '沪深300',
+      deadline: '前日收盘后',
+      myBet: { type: 'down', amount: 80 },
+      result: 'lose',
+      profit: -80,
+      betTime: '前天 13:45',
+      status: 'ended'
+    },
+    {
+      id: 7,
+      index: '上证指数',
+      deadline: '前日收盘后',
+      myBet: { type: 'up', amount: 150 },
+      result: 'win',
+      profit: 120,
+      betTime: '前天 10:15',
+      status: 'ended'
     }
   ]
 
@@ -219,84 +273,361 @@ const InteractionPage = () => {
           </div>
         </div>
       </Modal>
+
+      {/* 竞猜列表弹窗 */}
+      <Modal
+        isOpen={showGuessListModal}
+        onClose={() => setShowGuessListModal(false)}
+        title="竞猜列表"
+        size="lg"
+      >
+        <div>
+          {/* 标签栏 */}
+          <div className="flex justify-around h-12 border-b border-gray-200 flex-shrink-0 mb-4">
+            <button
+              className={`flex-1 text-center flex items-center justify-center font-medium ${guessListTab === 'ongoing' ? 'text-primary-500 border-b-2 border-primary-500' : 'text-gray-500'}`}
+              onClick={() => setGuessListTab('ongoing')}
+            >
+              进行中
+            </button>
+            <button
+              className={`flex-1 text-center flex items-center justify-center font-medium ${guessListTab === 'history' ? 'text-primary-500 border-b-2 border-primary-500' : 'text-gray-500'}`}
+              onClick={() => setGuessListTab('history')}
+            >
+              历史记录
+            </button>
+            <button
+              className={`flex-1 text-center flex items-center justify-center font-medium ${guessListTab === 'all' ? 'text-primary-500 border-b-2 border-primary-500' : 'text-gray-500'}`}
+              onClick={() => setGuessListTab('all')}
+            >
+              全部
+            </button>
+          </div>
+          {/* 根据当前标签显示对应的竞猜列表 */}
+          <div className="space-y-3">
+              {guessListTab === 'ongoing' && (
+                mockActiveGuesses.map(guess => (
+                  <div key={guess.id} className="bg-white rounded-xl shadow-sm p-4 mx-0">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="font-bold text-gray-900 text-lg">{guess.index}</div>
+                      <span className="bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs">
+                        进行中
+                      </span>
+                    </div>
+                    
+                    {guess.myBet && (
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="flex items-center gap-1">
+                          <span className={`text-lg ${
+                            guess.myBet.type === 'up' ? 'text-red-500' : 'text-green-500'
+                          }`}>
+                            {guess.myBet.type === 'up' ? '📈' : '📉'}
+                          </span>
+                          <span className="text-sm font-medium">
+                            {guess.myBet.type === 'up' ? '看涨' : '看跌'}
+                          </span>
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          投注: {guess.myBet.amount}积分
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {guess.betTime}
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div className="text-sm text-gray-600 mb-3">
+                      <span className="fas fa-clock mr-1"></span>
+                      截止: {guess.deadline}
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <div className="flex gap-4">
+                        <div className="text-center">
+                          <div className="text-sm text-gray-500">涨支持者</div>
+                          <div className="font-semibold text-red-500">{guess.upVotes}人</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-sm text-gray-500">跌支持者</div>
+                          <div className="font-semibold text-green-500">{guess.downVotes}人</div>
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-sm text-gray-500">总奖池</div>
+                        <div className="font-semibold text-primary-500">{guess.totalPool}积分</div>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+
+              {guessListTab === 'history' && (
+                mockHistoryGuesses.map(guess => (
+                  <div key={guess.id} className="bg-white rounded-xl shadow-sm p-4 mx-0">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="font-bold text-gray-900 text-lg">{guess.index}</div>
+                      <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">
+                        已结束
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="flex items-center gap-1">
+                        <span className={`text-lg ${
+                          guess.myBet.type === 'up' ? 'text-red-500' : 'text-green-500'
+                        }`}>
+                          {guess.myBet.type === 'up' ? '📈' : '📉'}
+                        </span>
+                        <span className="text-sm font-medium">
+                          {guess.myBet.type === 'up' ? '看涨' : '看跌'}
+                        </span>
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        投注: {guess.myBet.amount}积分
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {guess.betTime}
+                      </div>
+                    </div>
+                    
+                    <div className="mb-3">
+                      <div className="text-sm text-gray-600 mb-1">结果</div>
+                      <div className="flex items-center gap-2">
+                        <span className={`font-semibold ${
+                          guess.result === 'win' ? 'text-green-500' : 'text-red-500'
+                        }`}>
+                          {guess.result === 'win' ? '盈利' : '亏损'}
+                        </span>
+                        <span className={`text-sm font-medium ${
+                          guess.result === 'win' ? 'text-green-500' : 'text-red-500'
+                        }`}>
+                          {guess.result === 'win' ? '+' : ''}{guess.profit}积分
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-end">
+                      <button className="text-primary-500 text-sm font-medium">
+                        查看详情 →
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+
+              {guessListTab === 'all' && (
+                <>
+                  {/* 先显示进行中的竞猜 */}
+                  {mockActiveGuesses.map(guess => (
+                    <div key={guess.id} className="bg-white rounded-xl shadow-sm p-4 mx-0">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="font-bold text-gray-900 text-lg">{guess.index}</div>
+                        <span className="bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs">
+                          进行中
+                        </span>
+                      </div>
+                      
+                      {guess.myBet && (
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="flex items-center gap-1">
+                            <span className={`text-lg ${
+                              guess.myBet.type === 'up' ? 'text-red-500' : 'text-green-500'
+                            }`}>
+                              {guess.myBet.type === 'up' ? '📈' : '📉'}
+                            </span>
+                            <span className="text-sm font-medium">
+                              {guess.myBet.type === 'up' ? '看涨' : '看跌'}
+                            </span>
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            投注: {guess.myBet.amount}积分
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {guess.betTime}
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div className="text-sm text-gray-600 mb-3">
+                        <span className="fas fa-clock mr-1"></span>
+                        截止: {guess.deadline}
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <div className="flex gap-4">
+                          <div className="text-center">
+                            <div className="text-sm text-gray-500">涨支持者</div>
+                            <div className="font-semibold text-red-500">{guess.upVotes}人</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-sm text-gray-500">跌支持者</div>
+                            <div className="font-semibold text-green-500">{guess.downVotes}人</div>
+                          </div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-sm text-gray-500">总奖池</div>
+                          <div className="font-semibold text-primary-500">{guess.totalPool}积分</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {/* 再显示历史竞猜 */}
+                  {mockHistoryGuesses.map(guess => (
+                    <div key={guess.id} className="bg-white rounded-xl shadow-sm p-4 mx-0">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="font-bold text-gray-900 text-lg">{guess.index}</div>
+                        <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">
+                          已结束
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="flex items-center gap-1">
+                          <span className={`text-lg ${
+                            guess.myBet.type === 'up' ? 'text-red-500' : 'text-green-500'
+                          }`}>
+                            {guess.myBet.type === 'up' ? '📈' : '📉'}
+                          </span>
+                          <span className="text-sm font-medium">
+                            {guess.myBet.type === 'up' ? '看涨' : '看跌'}
+                          </span>
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          投注: {guess.myBet.amount}积分
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {guess.betTime}
+                        </div>
+                      </div>
+                      
+                      <div className="mb-3">
+                        <div className="text-sm text-gray-600 mb-1">结果</div>
+                        <div className="flex items-center gap-2">
+                          <span className={`font-semibold ${
+                            guess.result === 'win' ? 'text-green-500' : 'text-red-500'
+                          }`}>
+                            {guess.result === 'win' ? '盈利' : '亏损'}
+                          </span>
+                          <span className={`text-sm font-medium ${
+                            guess.result === 'win' ? 'text-green-500' : 'text-red-500'
+                          }`}>
+                            {guess.result === 'win' ? '+' : ''}{guess.profit}积分
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-end">
+                        <button className="text-primary-500 text-sm font-medium">
+                          查看详情 →
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+        </div>
+      </Modal>
       {/* 主竞猜卡片 */}
       <div className="main-guess-card">
-        <div className="guess-header">
-          <div className="guess-target">
-            <span className="fas fa-chart-line"></span>
-            <span>今日竞猜</span>
-          </div>
-
-          {/* 指数选择下拉菜单 */}
+        {/* 顶部操作区：下拉选择菜单改为顶部横条居中布局 */}
+        <div className="guess-header mb-4">
           <select
-            className="index-select"
+            className="index-select w-full bg-primary-500 border border-white border-opacity-30 rounded-xl px-4 py-3 text-white font-bold text-sm outline-none text-center"
+            style={{
+              backgroundColor: '#1e40af', // 不透明的深蓝色背景
+              color: '#ffffff', // 白色文字
+              option: {
+                backgroundColor: '#ffffff', // 选项背景为白色
+                color: '#1e40af', // 选项文字为深蓝色
+              }
+            }}
             value={selectedIndex}
             onChange={(e) => setSelectedIndex(e.target.value)}
           >
             {indices.map(index => (
-              <option key={index.id} value={index.id}>{index.name}</option>
+              <option key={index.id} value={index.id} style={{ color: '#1e40af', backgroundColor: '#ffffff' }}>{index.name}</option>
             ))}
           </select>
         </div>
 
-        {/* 指数显示区域 */}
-        <div className="index-display">
-          <div className="index-item">
-            <div className="index-name">当前点位</div>
-            <div className="index-value">{indexData[selectedIndex].value}</div>
-            <div className="index-change">
+        {/* 指数信息区域：两个卡片左右排列 */}
+        <div className="index-info-area flex gap-3 mb-5">
+          {/* 第一个卡片：指数信息 */}
+          <div className="index-card bg-white bg-opacity-15 rounded-xl p-4 flex-1">
+            <div className="index-name text-sm opacity-90 mb-2">{indices.find(i => i.id === selectedIndex)?.name}</div>
+            <div className={`index-value text-2xl font-bold mb-1 ${indexData[selectedIndex].direction === 'up' ? 'text-red-200' : 'text-green-200'}`}>
+              {indexData[selectedIndex].value}
+            </div>
+            <div className={`index-change text-lg font-bold px-2 py-1 rounded-lg inline-block ${indexData[selectedIndex].direction === 'up' ? 'up' : 'down'}`}>
               {indexData[selectedIndex].change}
             </div>
           </div>
 
-          <div className="guess-deadline">
-            <span className="fas fa-clock"></span> 竞猜截止: 今日收盘后
+          {/* 第二个卡片：创建新竞猜按钮 */}
+          <div className="create-guess-card bg-white bg-opacity-15 rounded-xl p-4 flex-1 flex items-center justify-center cursor-pointer hover:bg-opacity-20 transition-all duration-300">
+            <button 
+              className="w-full h-full flex items-center justify-center text-white font-bold text-lg"
+              onClick={handlePlaceBet}
+            >
+              创建新的竞猜
+            </button>
           </div>
         </div>
 
-        {/* 竞猜选项 */}
-        <div className="guess-options">
-          <div
-            className={`guess-option up ${selectedOption === 'up' ? 'selected' : ''}`}
-            onClick={() => setSelectedOption('up')}
-          >
-            <div className="option-icon">📈</div>
-            <div>上涨</div>
+        {/* 竞猜操作区域 */}
+        <div className="guess-options-area">
+          {/* 看涨/看跌按钮 */}
+          <div className="guess-options flex gap-4 mb-4">
+            <button
+              className={`guess-option up flex-1 p-4 bg-white bg-opacity-15 border-2 border-transparent rounded-xl text-center font-bold text-lg cursor-pointer transition-all duration-300 flex flex-col items-center gap-2 ${selectedOption === 'up' ? 'selected' : ''}`}
+              onClick={() => setSelectedOption('up')}
+            >
+              <div className="option-icon">✅</div>
+              <div>看涨</div>
+            </button>
+
+            <button
+              className={`guess-option down flex-1 p-4 bg-white bg-opacity-15 border-2 border-transparent rounded-xl text-center font-bold text-lg cursor-pointer transition-all duration-300 flex flex-col items-center gap-2 ${selectedOption === 'down' ? 'selected' : ''}`}
+              onClick={() => setSelectedOption('down')}
+            >
+              <div className="option-icon">❌</div>
+              <div>看跌</div>
+            </button>
           </div>
 
-          <div
-            className={`guess-option down ${selectedOption === 'down' ? 'selected' : ''}`}
-            onClick={() => setSelectedOption('down')}
-          >
-            <div className="option-icon">📉</div>
-            <div>下跌</div>
+          {/* 积分和投注按钮 */}
+          <div className="bet-controls flex gap-4">
+            <input
+              type="number"
+              className="points-input flex-1 bg-white bg-opacity-15 border border-white border-opacity-30 rounded-xl px-4 py-3 text-white text-center text-xl font-bold outline-none"
+              placeholder="100"
+              value={betAmount}
+              onChange={(e) => setBetAmount(e.target.value)}
+              min="1"
+            />
+            <button 
+              className="bet-btn flex-1 p-4 bg-white bg-opacity-25 text-white font-bold rounded-xl hover:bg-opacity-35 transition-all duration-300"
+              onClick={handlePlaceBet}
+              disabled={!selectedOption || !betAmount}
+            >
+              投注
+            </button>
           </div>
         </div>
 
-        {/* 投注控制 */}
-        <div className="bet-controls">
-          <input
-            type="number"
-            className="bet-amount"
-            placeholder="投注积分"
-            value={betAmount}
-            onChange={(e) => setBetAmount(e.target.value)}
-            min="1"
-          />
-          <button
-            className="bet-btn"
-            onClick={handlePlaceBet}
-            disabled={!selectedOption || !betAmount}
-          >
-            立即投注
-          </button>
+        {/* 参与信息区域 */}
+        <div className="participation-info mt-5 flex justify-between items-center text-sm opacity-90">
+          <div className="participants">已有 2,348 人参与</div>
+          <div className="total-points">总奖池 234,800 积分</div>
         </div>
       </div>
 
       {/* 进行中的竞猜 */}
       <div className="section-title">
         <span>进行中的竞猜</span>
-        <span className="see-more">查看全部</span>
+        <span className="see-more cursor-pointer" onClick={() => setShowGuessListModal(true)}>查看全部</span>
       </div>
 
       <div className="active-guesses">

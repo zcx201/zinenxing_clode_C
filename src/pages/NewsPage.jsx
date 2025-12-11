@@ -1,34 +1,78 @@
-import React from 'react'
+import React, { useState } from 'react'
+import Modal from '../components/Modal'
+import favoritesManager from '../utils/favorites'
 
 const NewsPage = () => {
+  const [selectedNews, setSelectedNews] = useState(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [showToast, setShowToast] = useState(false)
+  const [toastMessage, setToastMessage] = useState('')
+
   const newsItems = [
     {
+      id: 1,
       title: 'A股市场迎来政策利好，券商板块集体拉升',
+      content: '证监会发布多项利好政策，资本市场改革加速推进。此次政策调整将进一步优化市场环境，提升市场活力，为投资者创造更好的投资机会。券商板块作为市场的重要组成部分，将直接受益于此次政策利好，预计未来一段时间内将保持活跃态势。',
       summary: '证监会发布多项利好政策，资本市场改革加速推进...',
       time: '2小时前',
       source: '财经日报',
-      hot: true
+      hot: true,
+      tags: ['政策', '券商', '市场']
     },
     {
+      id: 2,
       title: '新能源板块再度活跃，光伏产业迎政策春风',
+      content: '国家能源局发布光伏产业支持政策，产业链全面受益。政策明确指出，将加大对光伏产业的支持力度，推动产业升级和技术创新。这将为新能源板块带来新的发展机遇，特别是光伏产业链相关企业将迎来快速发展期。',
       summary: '国家能源局发布光伏产业支持政策，产业链全面受益...',
       time: '4小时前',
       source: '投资快报',
-      hot: true
+      hot: true,
+      tags: ['新能源', '光伏', '政策']
     },
     {
+      id: 3,
       title: '人工智能概念股集体大涨，AI应用场景逐步落地',
+      content: '各大AI公司发布最新产品，AI+应用前景广阔。随着人工智能技术的不断成熟，AI应用场景正在逐步落地，涵盖了医疗、金融、教育等多个领域。人工智能概念股因此受到市场青睐，股价表现强劲。',
       summary: '各大AI公司发布最新产品，AI+应用前景广阔...',
       time: '6小时前',
-      source: '科技前沿'
+      source: '科技前沿',
+      tags: ['人工智能', '科技', '应用']
     },
     {
+      id: 4,
       title: '央行降准释放流动性，市场预期稳中向好',
+      content: '央行宣布降准0.5个百分点，释放长期资金约1.2万亿。此次降准将有效缓解市场流动性压力，支持实体经济发展。市场预期经济将保持稳中向好的发展态势，投资者信心得到进一步提升。',
       summary: '央行宣布降准0.5个百分点，释放长期资金约1.2万亿...',
       time: '8小时前',
-      source: '金融时报'
+      source: '金融时报',
+      tags: ['央行', '降准', '流动性']
     }
   ]
+
+  const handleNewsClick = (news) => {
+    setSelectedNews(news)
+    setIsModalOpen(true)
+  }
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+  }
+
+  const handleFavorite = () => {
+    if (selectedNews) {
+      const success = favoritesManager.addToFavorites({
+        ...selectedNews,
+        type: 'news'
+      })
+      if (success) {
+        setToastMessage('收藏成功')
+      } else {
+        setToastMessage('已收藏')
+      }
+      setShowToast(true)
+      setTimeout(() => setShowToast(false), 2000)
+    }
+  }
 
   return (
     <div className="p-4">
@@ -39,21 +83,28 @@ const NewsPage = () => {
 
       <div className="space-y-4">
         {newsItems.map((news, index) => (
-          <div key={index} className="bg-white rounded-card shadow-card p-4">
-            <div className="flex justify-between items-start mb-2">
-              <h3 className="font-bold text-gray-900 text-lg flex-1">{news.title}</h3>
-              {news.hot && (
-                <span className="bg-red-100 text-red-600 px-2 py-1 rounded text-xs font-semibold ml-2">
-                  热门
-                </span>
-              )}
-            </div>
-
-            <p className="text-gray-600 text-sm mb-3">{news.summary}</p>
-
-            <div className="flex justify-between items-center text-xs text-gray-500">
-              <span>{news.source}</span>
-              <span>{news.time}</span>
+          <div 
+            key={index} 
+            className="bg-white rounded-card shadow-card p-5 pt-6 cursor-pointer hover:shadow-md transition-all duration-300 transform hover:-translate-y-1"
+            onClick={() => handleNewsClick(news)}
+          >
+            <div className="flex flex-col items-center">
+              <div className="w-16 h-16 flex items-center justify-center bg-blue-50 rounded-full mb-3">
+                <span className="fas fa-newspaper text-blue-600 text-xl"></span>
+              </div>
+              <h3 className="font-bold text-gray-900 text-lg mb-2">{news.title}</h3>
+              <p className="text-gray-500 text-xs leading-loose h-10 flex items-center justify-center">
+                {news.summary.split('').reduce((acc, char, idx) => {
+                  if (idx > 0 && idx % 3 === 0) {
+                    return acc + '\n' + char
+                  }
+                  return acc + char
+                }, '')}
+              </p>
+              <div className="flex justify-between items-center text-xs text-gray-500 mt-2 w-full">
+                <span>{news.source}</span>
+                <span>{news.time}</span>
+              </div>
             </div>
           </div>
         ))}
@@ -64,6 +115,62 @@ const NewsPage = () => {
           加载更多
         </button>
       </div>
+
+      {/* 新闻详情弹窗 - 居中显示 */}
+      <Modal isOpen={isModalOpen} onClose={handleCloseModal} title="新闻详情" size="lg">
+        {selectedNews && (
+          <div className="text-gray-900">
+            {/* 新闻标题 */}
+            <h2 className="text-xl font-bold leading-tight mb-3">{selectedNews.title}</h2>
+            
+            {/* 来源信息 */}
+            <div className="text-sm text-gray-500 mb-4">
+              <span>{selectedNews.source}</span>
+              <span className="mx-2">·</span>
+              <span>{selectedNews.time}</span>
+            </div>
+            
+            {/* 分隔线 */}
+            <div className="border-b border-gray-200 mb-5"></div>
+            
+            {/* 新闻内容区域 - 可滚动 */}
+            <div className="text-gray-700 leading-relaxed text-base mb-6">
+              {selectedNews.content}
+            </div>
+            
+            {/* 标签区域 */}
+            <div className="flex flex-wrap gap-2 mb-6">
+              {selectedNews.tags.map((tag, idx) => (
+                <span key={idx} className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-xs">
+                  {tag}
+                </span>
+              ))}
+            </div>
+            
+            {/* 操作按钮区域 */}
+            <div className="flex gap-3">
+              <button 
+                className="flex-1 bg-primary-500 text-white py-3 rounded-lg font-semibold hover:bg-primary-600 transition-colors"
+                onClick={handleFavorite}
+              >
+                <span className="fas fa-star mr-2"></span>收藏
+              </button>
+              <button 
+                className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
+              >
+                <span className="fas fa-share-alt mr-2"></span>分享
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Toast提示 */}
+      {showToast && (
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-70 text-white px-4 py-2 rounded-lg text-sm z-50">
+          {toastMessage}
+        </div>
+      )}
     </div>
   )
 }

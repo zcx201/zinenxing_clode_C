@@ -10,16 +10,22 @@ const HomePage = () => {
 
   const functions = [
     {
-      icon: 'fas fa-chalkboard-teacher',
+      icon: 'fas fa-book',
       name: '谈股论经',
       desc: '股票投资知识与技巧',
       path: '/education'
     },
     {
-      icon: 'fas fa-chart-line',
+      icon: 'fas fa-wave-square',
       name: '股海波涛',
       desc: '实时行情与市场分析',
       path: '/market'
+    },
+    {
+      icon: 'fas fa-robot',
+      name: 'AI智能选股',
+      desc: '大数据AI发现投资机会',
+      path: '/aipicks'
     },
     {
       icon: 'fas fa-star',
@@ -28,16 +34,10 @@ const HomePage = () => {
       path: '/favorites'
     },
     {
-      icon: 'fas fa-newspaper',
+      icon: 'fas fa-bolt',
       name: '速递时事',
       desc: 'AI推送财经新闻',
       path: '/news'
-    },
-    {
-      icon: 'fas fa-robot',
-      name: 'AI智能选股',
-      desc: '大数据AI发现投资机会',
-      path: '/aipicks'
     }
   ]
 
