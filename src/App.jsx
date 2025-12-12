@@ -26,15 +26,9 @@ function App() {
           </div>
         } />
         <Route path="/market" element={
-          <div className="phone-container">
-            <div className="phone-screen">
-              <MarketHeader />
-              <div className="scrollable-content">
-                <MarketPage />
-              </div>
-              <Navigation />
-            </div>
-          </div>
+          <PhoneLayout>
+            <MarketPage />
+          </PhoneLayout>
         } />
         <Route path="*" element={
           <PhoneLayout>

@@ -7,6 +7,10 @@ const NewsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [showToast, setShowToast] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
+  // 加载更多状态管理
+  const [displayedNews, setDisplayedNews] = useState(4)
+  const [isLoading, setIsLoading] = useState(false)
+  const [hasMore, setHasMore] = useState(true)
 
   const newsItems = [
     {
@@ -46,6 +50,60 @@ const NewsPage = () => {
       time: '8小时前',
       source: '金融时报',
       tags: ['央行', '降准', '流动性']
+    },
+    {
+      id: 5,
+      title: '证监会发布投资者保护新规',
+      content: '进一步完善投资者适当性管理，提升市场透明度，保护中小投资者合法权益。新规将从信息披露、风险提示、适当性匹配等多个方面加强投资者保护。',
+      summary: '进一步完善投资者适当性管理，提升市场透明度...',
+      time: '2小时前',
+      source: '证券时报',
+      tags: ['政策', '监管', '投资者保护']
+    },
+    {
+      id: 6,
+      title: '外资持续加仓A股，本月净流入超500亿',
+      content: '北向资金连续10日净买入，重点布局消费和科技板块。分析人士认为，外资流入反映了国际投资者对中国经济和A股市场的长期信心。',
+      summary: '北向资金连续10日净买入，重点布局消费和科技板块...',
+      time: '1小时前',
+      source: '财经网',
+      tags: ['外资', '北向资金', '市场']
+    },
+    {
+      id: 7,
+      title: '房地产板块触底反弹，多家房企获融资支持',
+      content: '政策支持下，房地产板块连续三日上涨。多家房企获得银行融资支持，市场预期行业将逐步企稳回升。',
+      summary: '政策支持下，房地产板块连续三日上涨...',
+      time: '30分钟前',
+      source: '地产观察',
+      tags: ['房地产', '政策', '融资']
+    },
+    {
+      id: 8,
+      title: '科技股领涨，半导体板块涨幅超5%',
+      content: '半导体板块集体大涨，多只个股涨停。受益于全球芯片需求复苏和国内自主可控政策推动，板块表现强劲。',
+      summary: '半导体板块集体大涨，多只个股涨停...',
+      time: '45分钟前',
+      source: '科技日报',
+      tags: ['科技', '半导体', '芯片']
+    },
+    {
+      id: 9,
+      title: '消费板块回暖，白酒股表现亮眼',
+      content: '消费板块迎来反弹，白酒股涨幅居前。市场预期随着经济复苏，消费需求将逐步释放，板块有望持续走强。',
+      summary: '消费板块迎来反弹，白酒股涨幅居前...',
+      time: '1小时前',
+      source: '消费观察',
+      tags: ['消费', '白酒', '经济复苏']
+    },
+    {
+      id: 10,
+      title: '碳中和政策持续推进，环保板块迎来机遇',
+      content: '国家发改委发布多项碳中和相关政策，环保板块受益明显。市场预期环保产业将迎来长期发展机遇。',
+      summary: '国家发改委发布多项碳中和相关政策...',
+      time: '2小时前',
+      source: '环保时报',
+      tags: ['环保', '碳中和', '政策']
     }
   ]
 
@@ -74,6 +132,32 @@ const NewsPage = () => {
     }
   }
 
+  // 加载更多新闻
+  const loadMoreNews = () => {
+    // 如果正在加载或没有更多内容，不执行
+    if (isLoading || !hasMore) return
+    
+    // 设置加载状态
+    setIsLoading(true)
+    
+    // 模拟网络请求延迟（0.7秒）
+    setTimeout(() => {
+      // 计算新的显示数量
+      const newDisplayedNews = displayedNews + 3
+      
+      // 更新显示数量
+      setDisplayedNews(newDisplayedNews)
+      
+      // 检查是否还有更多新闻
+      if (newDisplayedNews >= newsItems.length) {
+        setHasMore(false)
+      }
+      
+      // 结束加载状态
+      setIsLoading(false)
+    }, 700)
+  }
+
   return (
     <div className="p-4">
       <div className="text-center mb-6">
@@ -82,7 +166,7 @@ const NewsPage = () => {
       </div>
 
       <div className="space-y-4">
-        {newsItems.map((news, index) => (
+        {newsItems.slice(0, displayedNews).map((news, index) => (
           <div 
             key={index} 
             className="bg-white rounded-card shadow-card p-5 pt-6 cursor-pointer hover:shadow-md transition-all duration-300 transform hover:-translate-y-1"
@@ -110,10 +194,27 @@ const NewsPage = () => {
         ))}
       </div>
 
-      <div className="mt-6 text-center">
-        <button className="bg-primary-500 text-white px-6 py-2 rounded-lg font-semibold">
-          加载更多
-        </button>
+      <div className="mt-6 text-center pb-4">
+        {hasMore ? (
+          <button 
+            className="bg-primary-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-primary-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+            onClick={loadMoreNews}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="animate-spin">⏳</span>
+                正在加载...
+              </span>
+            ) : (
+              '加载更多'
+            )}
+          </button>
+        ) : (
+          <div className="text-gray-500 text-sm">
+            没有更多内容
+          </div>
+        )}
       </div>
 
       {/* 新闻详情弹窗 - 居中显示 */}
