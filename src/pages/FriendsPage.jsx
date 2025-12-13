@@ -44,7 +44,13 @@ const FriendsPage = () => {
       avatar: '张',
       lastMessage: '我觉得科技板块下周会有不错的表现，特别是AI概念...',
       lastTime: '10:23',
-      unread: 3
+      unread: 3,
+      gender: '男',
+      birthDate: '1990-05-15',
+      location: '北京',
+      contact: 'zhanggcaijing@example.com',
+      investmentPhilosophy: '价值投资，长期持有',
+      hobbies: '阅读、健身、旅游'
     },
     {
       id: '1002',
@@ -53,7 +59,13 @@ const FriendsPage = () => {
       avatar: '李',
       lastMessage: '明天准备加仓宁德时代，你觉得这个位置怎么样？',
       lastTime: '昨天',
-      unread: 0
+      unread: 0,
+      gender: '男',
+      birthDate: '1985-08-20',
+      location: '上海',
+      contact: 'ligushen@example.com',
+      investmentPhilosophy: '技术分析，波段操作',
+      hobbies: '炒股、钓鱼、下棋'
     },
     {
       id: '1003',
@@ -62,7 +74,13 @@ const FriendsPage = () => {
       avatar: '王',
       lastMessage: '最近市场波动很大，建议控制仓位',
       lastTime: '3小时前',
-      unread: 0
+      unread: 0,
+      gender: '女',
+      birthDate: '1992-12-05',
+      location: '深圳',
+      contact: 'wangqushi@example.com',
+      investmentPhilosophy: '趋势投资，顺势而为',
+      hobbies: '瑜伽、美食、摄影'
     }
   ]
 
@@ -270,26 +288,26 @@ const FriendsPage = () => {
             </button>
 
             {showChatDropdown && (
-              <div className="absolute right-0 top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-40">
+              <div className="absolute right-0 top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-40 shadow-lg">
                 <button
-                  className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100"
+                  className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 flex items-center text-gray-800 font-medium"
                   onClick={handleViewProfile}
                 >
-                  <span className="fas fa-user mr-2 text-primary-500"></span>
+                  <span className="fas fa-user mr-3 text-primary-500 text-sm"></span>
                   查看资料
                 </button>
                 <button
-                  className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100"
+                  className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 flex items-center text-gray-800 font-medium"
                   onClick={handleBlockFriend}
                 >
-                  <span className="fas fa-ban mr-2 text-primary-500"></span>
+                  <span className="fas fa-ban mr-3 text-yellow-500 text-sm"></span>
                   拉黑好友
                 </button>
                 <button
-                  className="w-full px-4 py-3 text-left hover:bg-gray-50 text-red-500"
+                  className="w-full px-4 py-3 text-left hover:bg-gray-50 text-red-500 flex items-center text-red-600 font-medium"
                   onClick={handleDeleteFriend}
                 >
-                  <span className="fas fa-trash mr-2"></span>
+                  <span className="fas fa-trash mr-3 text-sm"></span>
                   删除好友
                 </button>
               </div>
@@ -518,24 +536,83 @@ const FriendsPage = () => {
       <Modal
         isOpen={showProfileModal}
         onClose={() => setShowProfileModal(false)}
-        title={`${selectedChat?.name} 的资料`}
-        size="sm"
+        title={selectedChat ? `${selectedChat.name} 的资料` : "好友资料"}
+        size="lg"
       >
-        <div className="text-center p-4">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center text-blue-600 text-xl font-bold mx-auto mb-3">
-            {selectedChat?.avatar}
+        {selectedChat && (
+          <div className="p-4">
+            <div className="text-center mb-6">
+              <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center text-blue-600 text-3xl font-bold mx-auto mb-4">
+                {selectedChat.avatar}
+              </div>
+              <h3 className="font-bold text-2xl mb-2">{selectedChat.name}</h3>
+              <div className={`text-sm font-medium mb-2 ${selectedChat.status === 'online' ? 'text-green-500' : 'text-gray-500'}`}>
+                {selectedChat.status === 'online' ? '在线' : selectedChat.status}
+              </div>
+            </div>
+
+            {/* 好友详细信息 */}
+            <div className="bg-gray-50 rounded-xl p-6 mb-6">
+              <div className="space-y-4">
+                {/* 基本信息 */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-sm text-gray-500 mb-1">性别</div>
+                    <div className="text-base font-medium">{selectedChat.gender || '未设置'}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-500 mb-1">出生年月日</div>
+                    <div className="text-base font-medium">{selectedChat.birthDate || '未设置'}</div>
+                  </div>
+                </div>
+
+                {/* 联系信息 */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-sm text-gray-500 mb-1">所在地</div>
+                    <div className="text-base font-medium">{selectedChat.location || '未设置'}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-500 mb-1">联系方式</div>
+                    <div className="text-base font-medium truncate">{selectedChat.contact || '未设置'}</div>
+                  </div>
+                </div>
+
+                {/* ID和活跃状态 */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-sm text-gray-500 mb-1">用户ID</div>
+                    <div className="text-base font-medium">{selectedChat.id}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-500 mb-1">最后活跃</div>
+                    <div className={`text-base font-medium ${selectedChat.status === 'online' ? 'text-green-500' : ''}`}>
+                      {selectedChat.status === 'online' ? '在线' : selectedChat.status || '未知'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 个人兴趣 */}
+                <div>
+                  <div className="text-sm text-gray-500 mb-1">理财感悟</div>
+                  <div className="text-base font-medium leading-relaxed">{selectedChat.investmentPhilosophy || '未设置'}</div>
+                </div>
+
+                <div>
+                  <div className="text-sm text-gray-500 mb-1">个人爱好</div>
+                  <div className="text-base font-medium leading-relaxed">{selectedChat.hobbies || '未设置'}</div>
+                </div>
+              </div>
+            </div>
+
+            <button
+              className="w-full bg-primary-500 text-white py-3 rounded-lg font-semibold hover:bg-primary-600 transition-colors"
+              onClick={() => setShowProfileModal(false)}
+            >
+              关闭
+            </button>
           </div>
-          <h3 className="font-bold text-lg mb-2">{selectedChat?.name}</h3>
-          <div className="text-sm text-gray-600 mb-4">
-            {selectedChat?.status === 'online' ? '在线' : selectedChat?.status}
-          </div>
-          <button
-            className="w-full bg-primary-500 text-white py-2 rounded-lg font-semibold hover:bg-primary-600 transition-colors"
-            onClick={() => setShowProfileModal(false)}
-          >
-            关闭
-          </button>
-        </div>
+        )}
       </Modal>
 
       {/* 拉黑确认弹窗 */}

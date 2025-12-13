@@ -157,8 +157,8 @@ const Modal = ({ isOpen, onClose, title, children, size = 'md', type = 'center' 
   const sizeClasses = {
     sm: 'max-w-xs',
     md: 'max-w-sm',
-    lg: 'max-w-[358px]', // 适配iPhone 13/14宽度
-    xl: 'max-w-lg'
+    lg: 'max-w-[360px]', // 适配iPhone 13/14宽度
+    xl: 'max-w-[390px]'
   }
 
   return (
