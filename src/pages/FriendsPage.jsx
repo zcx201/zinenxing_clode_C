@@ -206,10 +206,19 @@ const FriendsPage = () => {
   }
 
   // 聊天窗口下拉菜单处理函数
+  // 好友相关
   const [showProfileModal, setShowProfileModal] = useState(false)
   const [showBlockModal, setShowBlockModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
 
+  // 群组相关
+  const [showGroupProfileModal, setShowGroupProfileModal] = useState(false)
+  const [showMemberManagementModal, setShowMemberManagementModal] = useState(false)
+  const [showMessageSettingsModal, setShowMessageSettingsModal] = useState(false)
+  const [showExitGroupModal, setShowExitGroupModal] = useState(false)
+  const [showReportGroupModal, setShowReportGroupModal] = useState(false)
+
+  // 好友菜单处理函数
   const handleViewProfile = () => {
     setShowChatDropdown(false)
     setShowProfileModal(true)
@@ -233,6 +242,43 @@ const FriendsPage = () => {
   const confirmDeleteFriend = () => {
     setShowDeleteModal(false)
     showToastMessage(`已删除好友 ${selectedChat?.name}`, 'error')
+  }
+
+  // 群组菜单处理函数
+  const handleViewGroupProfile = () => {
+    setShowChatDropdown(false)
+    setShowGroupProfileModal(true)
+  }
+
+  const handleMemberManagement = () => {
+    setShowChatDropdown(false)
+    setShowMemberManagementModal(true)
+  }
+
+  const handleMessageSettings = () => {
+    setShowChatDropdown(false)
+    setShowMessageSettingsModal(true)
+  }
+
+  const handleExitGroup = () => {
+    setShowChatDropdown(false)
+    setShowExitGroupModal(true)
+  }
+
+  const handleReportGroup = () => {
+    setShowChatDropdown(false)
+    setShowReportGroupModal(true)
+  }
+
+  const confirmExitGroup = () => {
+    setShowExitGroupModal(false)
+    showToastMessage(`已退出群组 ${selectedChat?.name}`, 'info')
+    backToMessageList()
+  }
+
+  const confirmReportGroup = () => {
+    setShowReportGroupModal(false)
+    showToastMessage('群组举报已提交，我们会尽快处理', 'info')
   }
 
   const openChat = (friend) => {
@@ -291,27 +337,81 @@ const FriendsPage = () => {
 
               {showChatDropdown && (
                 <div className="absolute right-0 top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-40 shadow-lg">
-                  <button
-                    className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 flex items-center text-gray-800 font-medium"
-                    onClick={handleViewProfile}
-                  >
-                    <span className="fas fa-user mr-3 text-primary-500 text-sm"></span>
-                    查看资料
-                  </button>
-                  <button
-                    className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 flex items-center text-gray-800 font-medium"
-                    onClick={handleBlockFriend}
-                  >
-                    <span className="fas fa-ban mr-3 text-yellow-500 text-sm"></span>
-                    拉黑好友
-                  </button>
-                  <button
-                    className="w-full px-4 py-3 text-left hover:bg-gray-50 text-red-500 flex items-center text-red-600 font-medium"
-                    onClick={handleDeleteFriend}
-                  >
-                    <span className="fas fa-trash mr-3 text-sm"></span>
-                    删除好友
-                  </button>
+                  {/* 判断是好友聊天还是群组聊天 */}
+                  {selectedChat.id.startsWith('group') ? (
+                    /* 群组聊天下拉菜单 */
+                    <>
+                      {/* 选项一：群组资料 */}
+                      <button
+                        className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 flex items-center text-gray-800 font-medium"
+                        onClick={handleViewGroupProfile}
+                      >
+                        <span className="fas fa-users mr-3 text-primary-500 text-sm"></span>
+                        群组资料
+                      </button>
+                      
+                      {/* 选项二：群成员管理 */}
+                      <button
+                        className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 flex items-center text-gray-800 font-medium"
+                        onClick={handleMemberManagement}
+                      >
+                        <span className="fas fa-user-friends mr-3 text-primary-500 text-sm"></span>
+                        成员管理
+                      </button>
+                      
+                      {/* 选项三：消息设置 */}
+                      <button
+                        className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 flex items-center text-gray-800 font-medium"
+                        onClick={handleMessageSettings}
+                      >
+                        <span className="fas fa-bell-slash mr-3 text-primary-500 text-sm"></span>
+                        消息设置
+                      </button>
+                      
+                      {/* 选项四：退出群聊 */}
+                      <button
+                        className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 flex items-center text-gray-800 font-medium"
+                        onClick={handleExitGroup}
+                      >
+                        <span className="fas fa-sign-out-alt mr-3 text-primary-500 text-sm"></span>
+                        退出群聊
+                      </button>
+                      
+                      {/* 选项五：举报群组 */}
+                      <button
+                        className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center text-gray-800 font-medium"
+                        onClick={handleReportGroup}
+                      >
+                        <span className="fas fa-exclamation-triangle mr-3 text-red-500 text-sm"></span>
+                        举报群组
+                      </button>
+                    </>
+                  ) : (
+                    /* 好友聊天下拉菜单（保持不变） */
+                    <>
+                      <button
+                        className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 flex items-center text-gray-800 font-medium"
+                        onClick={handleViewProfile}
+                      >
+                        <span className="fas fa-user mr-3 text-primary-500 text-sm"></span>
+                        查看资料
+                      </button>
+                      <button
+                        className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 flex items-center text-gray-800 font-medium"
+                        onClick={handleBlockFriend}
+                      >
+                        <span className="fas fa-ban mr-3 text-yellow-500 text-sm"></span>
+                        拉黑好友
+                      </button>
+                      <button
+                        className="w-full px-4 py-3 text-left hover:bg-gray-50 text-red-500 flex items-center text-red-600 font-medium"
+                        onClick={handleDeleteFriend}
+                      >
+                        <span className="fas fa-trash mr-3 text-sm"></span>
+                        删除好友
+                      </button>
+                    </>
+                  )}
                 </div>
               )}
             </div>
@@ -663,6 +763,327 @@ const FriendsPage = () => {
               onClick={confirmDeleteFriend}
             >
               确认删除
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* 群组相关弹窗 */}
+      
+      {/* A. 群组资料弹窗 */}
+      <Modal
+        isOpen={showGroupProfileModal}
+        onClose={() => setShowGroupProfileModal(false)}
+        title="群组资料"
+        size="lg"
+      >
+        <div className="p-4">
+          {/* 群组基本信息 */}
+          <div className="text-center mb-6">
+            <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center text-blue-600 text-3xl font-bold mx-auto mb-4">
+              {selectedChat?.avatar}
+            </div>
+            <h3 className="font-bold text-2xl mb-2">{selectedChat?.name}</h3>
+            <div className="text-sm text-gray-500 mb-2">{selectedChat?.status}</div>
+          </div>
+
+          {/* 群组详细信息 */}
+          <div className="bg-gray-50 rounded-xl p-6 mb-6">
+            <div className="space-y-4">
+              <div>
+                <div className="text-sm text-gray-500 mb-1">群组名称</div>
+                <div className="text-base font-medium">{selectedChat?.name}</div>
+              </div>
+              
+              <div>
+                <div className="text-sm text-gray-500 mb-1">群主</div>
+                <div className="text-base font-medium">张财经</div>
+              </div>
+              
+              <div>
+                <div className="text-sm text-gray-500 mb-1">群成员</div>
+                <div className="text-base font-medium">
+                  {selectedChat?.status?.match(/\d+/)?[0]:''}人
+                </div>
+              </div>
+              
+              <div>
+                <div className="text-sm text-gray-500 mb-1">创建时间</div>
+                <div className="text-base font-medium">2024-01-15</div>
+              </div>
+              
+              <div>
+                <div className="text-sm text-gray-500 mb-1">群公告</div>
+                <div className="text-base font-medium leading-relaxed">
+                  欢迎大家分享投资心得，禁止广告和敏感话题
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-4">
+            <button
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+              onClick={() => setShowGroupProfileModal(false)}
+            >
+              关闭
+            </button>
+            <button
+              className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600"
+              onClick={() => setShowGroupProfileModal(false)}
+            >
+              修改资料
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* B. 成员管理弹窗 */}
+      <Modal
+        isOpen={showMemberManagementModal}
+        onClose={() => setShowMemberManagementModal(false)}
+        title="群成员管理"
+        size="lg"
+      >
+        <div className="p-4">
+          <div className="mb-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-bold text-lg">成员列表</h3>
+              <div className="text-sm text-gray-500">
+                共 {selectedChat?.status?.match(/\d+/)?[0]:''} 人
+              </div>
+            </div>
+            
+            {/* 成员搜索框 */}
+            <div className="mb-4">
+              <input
+                type="text"
+                className="w-full p-2 border border-gray-300 rounded-lg outline-none focus:border-primary-500"
+                placeholder="搜索成员..."
+              />
+            </div>
+            
+            {/* 成员列表 */}
+            <div className="space-y-3 max-h-64 overflow-y-auto">
+              {/* 群主 */}
+              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold mr-3">
+                    张
+                  </div>
+                  <div>
+                    <div className="font-medium">张财经</div>
+                    <div className="text-xs text-gray-500">群主</div>
+                  </div>
+                </div>
+                <div className="text-xs text-gray-500">不可移除</div>
+              </div>
+              
+              {/* 普通成员 */}
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 font-bold mr-3">
+                    李
+                  </div>
+                  <div>
+                    <div className="font-medium">李股神</div>
+                    <div className="text-xs text-gray-500">成员</div>
+                  </div>
+                </div>
+                <button className="text-xs text-red-500 hover:text-red-700">移除</button>
+              </div>
+              
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 font-bold mr-3">
+                    王
+                  </div>
+                  <div>
+                    <div className="font-medium">王趋势</div>
+                    <div className="text-xs text-gray-500">成员</div>
+                  </div>
+                </div>
+                <button className="text-xs text-red-500 hover:text-red-700">移除</button>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-4">
+            <button
+              className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 transition-colors"
+              onClick={() => setShowMemberManagementModal(false)}
+            >
+              取消
+            </button>
+            <button
+              className="flex-1 bg-primary-500 text-white py-2 rounded-lg hover:bg-primary-600 transition-colors"
+              onClick={() => setShowMemberManagementModal(false)}
+            >
+              保存
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* C. 消息设置弹窗 */}
+      <Modal
+        isOpen={showMessageSettingsModal}
+        onClose={() => setShowMessageSettingsModal(false)}
+        title="消息设置"
+        size="lg"
+      >
+        <div className="p-4">
+          <div className="space-y-6">
+            {/* 消息免打扰 */}
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-medium">消息免打扰</div>
+                <div className="text-sm text-gray-500">开启后将不会收到群消息通知</div>
+              </div>
+              <div className="relative inline-block w-12 h-6 transition duration-200 ease-in-out rounded-full bg-gray-300">
+                <span className="absolute left-1 top-1 w-4 h-4 transform transition-transform duration-200 ease-in-out rounded-full bg-white"></span>
+              </div>
+            </div>
+            
+            {/* 置顶聊天 */}
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-medium">置顶聊天</div>
+                <div className="text-sm text-gray-500">将聊天置顶显示</div>
+              </div>
+              <div className="relative inline-block w-12 h-6 transition duration-200 ease-in-out rounded-full bg-primary-500">
+                <span className="absolute left-7 top-1 w-4 h-4 transform transition-transform duration-200 ease-in-out rounded-full bg-white"></span>
+              </div>
+            </div>
+            
+            {/* 保存到通讯录 */}
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-medium">保存到通讯录</div>
+                <div className="text-sm text-gray-500">在通讯录中显示该群组</div>
+              </div>
+              <div className="relative inline-block w-12 h-6 transition duration-200 ease-in-out rounded-full bg-primary-500">
+                <span className="absolute left-7 top-1 w-4 h-4 transform transition-transform duration-200 ease-in-out rounded-full bg-white"></span>
+              </div>
+            </div>
+            
+            {/* 聊天背景 */}
+            <div>
+              <div className="font-medium mb-3">聊天背景</div>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="h-16 bg-blue-100 rounded-lg cursor-pointer border-2 border-primary-500"></div>
+                <div className="h-16 bg-green-100 rounded-lg cursor-pointer border-2 border-transparent hover:border-primary-500"></div>
+                <div className="h-16 bg-yellow-100 rounded-lg cursor-pointer border-2 border-transparent hover:border-primary-500"></div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-4 mt-6">
+            <button
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+              onClick={() => setShowMessageSettingsModal(false)}
+            >
+              取消
+            </button>
+            <button
+              className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600"
+              onClick={() => setShowMessageSettingsModal(false)}
+            >
+              保存设置
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* D. 退出群聊确认弹窗 */}
+      <Modal
+        isOpen={showExitGroupModal}
+        onClose={() => setShowExitGroupModal(false)}
+        title="退出群聊"
+        size="sm"
+      >
+        <div className="p-4">
+          <p className="text-center text-gray-700 mb-4">
+            确定要退出"{selectedChat?.name}"群聊吗？<br/>
+            退出后将不再接收此群消息。
+          </p>
+          <div className="flex gap-2">
+            <button
+              className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 transition-colors"
+              onClick={() => setShowExitGroupModal(false)}
+            >
+              取消
+            </button>
+            <button
+              className="flex-1 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition-colors"
+              onClick={confirmExitGroup}
+            >
+              确认退出
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* E. 举报群组弹窗 */}
+      <Modal
+        isOpen={showReportGroupModal}
+        onClose={() => setShowReportGroupModal(false)}
+        title="举报群组"
+        size="lg"
+      >
+        <div className="p-4">
+          <div className="mb-6">
+            <div className="text-sm text-gray-500 mb-3">
+              请选择举报原因（可多选）
+            </div>
+            
+            <div className="space-y-3">
+              <label className="flex items-center p-3 bg-gray-50 rounded-lg cursor-pointer">
+                <input type="checkbox" className="mr-3 w-4 h-4 text-primary-500 rounded" />
+                <div>
+                  <div className="font-medium">发布广告</div>
+                  <div className="text-xs text-gray-500">群组内频繁发送广告信息</div>
+                </div>
+              </label>
+              
+              <label className="flex items-center p-3 bg-gray-50 rounded-lg cursor-pointer">
+                <input type="checkbox" className="mr-3 w-4 h-4 text-primary-500 rounded" />
+                <div>
+                  <div className="font-medium">垃圾信息</div>
+                  <div className="text-xs text-gray-500">发布骚扰、欺诈等垃圾信息</div>
+                </div>
+              </label>
+              
+              <label className="flex items-center p-3 bg-gray-50 rounded-lg cursor-pointer">
+                <input type="checkbox" className="mr-3 w-4 h-4 text-primary-500 rounded" />
+                <div>
+                  <div className="font-medium">违法违规</div>
+                  <div className="text-xs text-gray-500">发布违法违规内容</div>
+                </div>
+              </label>
+              
+              <label className="flex items-center p-3 bg-gray-50 rounded-lg cursor-pointer">
+                <input type="checkbox" className="mr-3 w-4 h-4 text-primary-500 rounded" />
+                <div>
+                  <div className="font-medium">其他原因</div>
+                  <div className="text-xs text-gray-500">其他违规行为</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-4">
+            <button
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+              onClick={() => setShowReportGroupModal(false)}
+            >
+              取消
+            </button>
+            <button
+              className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600"
+              onClick={confirmReportGroup}
+            >
+              提交举报
             </button>
           </div>
         </div>
