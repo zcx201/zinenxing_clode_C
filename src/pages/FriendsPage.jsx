@@ -260,191 +260,192 @@ const FriendsPage = () => {
     setMessages(prev => [...prev, stockCardMsg])
   }
 
-  if (selectedChat) {
-    return (
-      <div className="chat-container">
-        <div className="chat-header">
-          <div className="chat-user">
-            <div className="back-btn" onClick={backToMessageList}>
-              <span className="fas fa-arrow-left"></span>
-            </div>
-            <div className="chat-user-avatar">
-              {selectedChat.avatar}
-            </div>
-            <div className="chat-user-info">
-              <div className="chat-user-name">{selectedChat.name}</div>
-              <div className="chat-user-status">
-                {selectedChat.status === 'online' ? '在线' : selectedChat.status}
-              </div>
-            </div>
-          </div>
-
-          <div className="relative" ref={chatDropdownRef}>
-            <button
-              className="back-btn"
-              onClick={toggleChatDropdown}
-            >
-              <span className="fas fa-ellipsis-v"></span>
-            </button>
-
-            {showChatDropdown && (
-              <div className="absolute right-0 top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-40 shadow-lg">
-                <button
-                  className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 flex items-center text-gray-800 font-medium"
-                  onClick={handleViewProfile}
-                >
-                  <span className="fas fa-user mr-3 text-primary-500 text-sm"></span>
-                  查看资料
-                </button>
-                <button
-                  className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 flex items-center text-gray-800 font-medium"
-                  onClick={handleBlockFriend}
-                >
-                  <span className="fas fa-ban mr-3 text-yellow-500 text-sm"></span>
-                  拉黑好友
-                </button>
-                <button
-                  className="w-full px-4 py-3 text-left hover:bg-gray-50 text-red-500 flex items-center text-red-600 font-medium"
-                  onClick={handleDeleteFriend}
-                >
-                  <span className="fas fa-trash mr-3 text-sm"></span>
-                  删除好友
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="chat-messages">
-          {messages.map((msg, index) => (
-            <div key={index} className={`message-bubble ${msg.type}`}>
-              {msg.content.startsWith('stock:') ? (
-                <>
-                  <div className="bubble-content">
-                    <div className="stock-card-message">
-                      <div className="stock-card-header">
-                        <div className="stock-card-name">科大讯飞 (002230)</div>
-                        <div className="stock-card-price">56.78</div>
-                      </div>
-                      <div className="stock-card-change">+4.5%</div>
-                      <div className="stock-card-actions">
-                        <button className="stock-card-btn">加自选</button>
-                        <button className="stock-card-btn">查看详情</button>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="bubble-time">{msg.time}</div>
-                </>
-              ) : (
-                <>
-                  <div className="bubble-content">{msg.content}</div>
-                  <div className="bubble-time">{msg.time}</div>
-                </>
-              )}
-            </div>
-          ))}
-        </div>
-
-        <div className="chat-input-area">
-          <div className="input-tools">
-            <button className="tool-btn" onClick={sendStockCard}>
-              <span className="fas fa-chart-line"></span>
-            </button>
-            <button className="tool-btn">
-              <span className="far fa-smile"></span>
-            </button>
-          </div>
-          <input
-            type="text"
-            className="message-input"
-            placeholder="输入消息..."
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
-          />
-          <button
-            className="send-btn"
-            onClick={handleSendMessage}
-            disabled={!newMessage.trim()}
-          >
-            发送
-          </button>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <>
-      {/* 页面头部 - 改为普通头部 */}
-      <div className="mb-4">
-        <div className="flex justify-between items-center p-4 bg-white rounded-card shadow-card border border-gray-200">
-          <div className="brand">
-            <div className="app-logo">股</div>
-            <div className="app-title">股友</div>
+      {/* 条件渲染聊天窗口或好友列表 */}
+      {selectedChat ? (
+        <div className="chat-container">
+          <div className="chat-header">
+            <div className="chat-user">
+              <div className="back-btn" onClick={backToMessageList}>
+                <span className="fas fa-arrow-left"></span>
+              </div>
+              <div className="chat-user-avatar">
+                {selectedChat.avatar}
+              </div>
+              <div className="chat-user-info">
+                <div className="chat-user-name">{selectedChat.name}</div>
+                <div className="chat-user-status">
+                  {selectedChat.status === 'online' ? '在线' : selectedChat.status}
+                </div>
+              </div>
+            </div>
+
+            <div className="relative" ref={chatDropdownRef}>
+              <button
+                className="back-btn"
+                onClick={toggleChatDropdown}
+              >
+                <span className="fas fa-ellipsis-v"></span>
+              </button>
+
+              {showChatDropdown && (
+                <div className="absolute right-0 top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-40 shadow-lg">
+                  <button
+                    className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 flex items-center text-gray-800 font-medium"
+                    onClick={handleViewProfile}
+                  >
+                    <span className="fas fa-user mr-3 text-primary-500 text-sm"></span>
+                    查看资料
+                  </button>
+                  <button
+                    className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 flex items-center text-gray-800 font-medium"
+                    onClick={handleBlockFriend}
+                  >
+                    <span className="fas fa-ban mr-3 text-yellow-500 text-sm"></span>
+                    拉黑好友
+                  </button>
+                  <button
+                    className="w-full px-4 py-3 text-left hover:bg-gray-50 text-red-500 flex items-center text-red-600 font-medium"
+                    onClick={handleDeleteFriend}
+                  >
+                    <span className="fas fa-trash mr-3 text-sm"></span>
+                    删除好友
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="relative" ref={dropdownRef}>
-            <button
-              className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
-              onClick={toggleHeaderDropdown}
-            >
-              <span className="fas fa-ellipsis-v text-gray-600"></span>
-            </button>
-
-            {showHeaderDropdown && (
-              <div className="absolute right-0 top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-40">
-                <button
-                  className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100"
-                  onClick={handleAddFriend}
-                >
-                  <span className="fas fa-user-plus mr-2 text-primary-500"></span>
-                  添加好友
-                </button>
-                <button
-                  className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100"
-                  onClick={handleCreateGroup}
-                >
-                  <span className="fas fa-users mr-2 text-primary-500"></span>
-                  建立群聊
-                </button>
-                <button
-                  className="w-full px-4 py-3 text-left hover:bg-gray-50"
-                  onClick={handleSearchUser}
-                >
-                  <span className="fas fa-search mr-2 text-primary-500"></span>
-                  查找好友
-                </button>
+          <div className="chat-messages">
+            {messages.map((msg, index) => (
+              <div key={index} className={`message-bubble ${msg.type}`}>
+                {msg.content.startsWith('stock:') ? (
+                  <>
+                    <div className="bubble-content">
+                      <div className="stock-card-message">
+                        <div className="stock-card-header">
+                          <div className="stock-card-name">科大讯飞 (002230)</div>
+                          <div className="stock-card-price">56.78</div>
+                        </div>
+                        <div className="stock-card-change">+4.5%</div>
+                        <div className="stock-card-actions">
+                          <button className="stock-card-btn">加自选</button>
+                          <button className="stock-card-btn">查看详情</button>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="bubble-time">{msg.time}</div>
+                  </>
+                ) : (
+                  <>
+                    <div className="bubble-content">{msg.content}</div>
+                    <div className="bubble-time">{msg.time}</div>
+                  </>
+                )}
               </div>
-            )}
+            ))}
+          </div>
+
+          <div className="chat-input-area">
+            <div className="input-tools">
+              <button className="tool-btn" onClick={sendStockCard}>
+                <span className="fas fa-chart-line"></span>
+              </button>
+              <button className="tool-btn">
+                <span className="far fa-smile"></span>
+              </button>
+            </div>
+            <input
+              type="text"
+              className="message-input"
+              placeholder="输入消息..."
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
+            />
+            <button
+              className="send-btn"
+              onClick={handleSendMessage}
+              disabled={!newMessage.trim()}
+            >
+              发送
+            </button>
           </div>
         </div>
-      </div>
-
-      {/* 消息列表 */}
-      <div className="message-list">
-        {friendsList.concat(groupsList).map((friend) => (
-          <div
-            key={friend.id}
-            className="message-item"
-            onClick={() => openChat(friend)}
-          >
-            <div className="message-avatar">{friend.avatar}</div>
-            <div className="message-content">
-              <div className="message-header">
-                <div className="message-name">{friend.name}</div>
-                <div className="message-time">{friend.lastTime}</div>
+      ) : (
+        <>
+          {/* 页面头部 - 改为普通头部 */}
+          <div className="mb-4">
+            <div className="flex justify-between items-center p-4 bg-white rounded-card shadow-card border border-gray-200">
+              <div className="brand">
+                <div className="app-logo">股</div>
+                <div className="app-title">股友</div>
               </div>
-              <div className="message-preview">{friend.lastMessage}</div>
-            </div>
-            {friend.unread > 0 && (
-              <div className="unread-badge">{friend.unread}</div>
-            )}
-          </div>
-        ))}
-      </div>
 
-      {/* 弹窗组件 */}
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+                  onClick={toggleHeaderDropdown}
+                >
+                  <span className="fas fa-ellipsis-v text-gray-600"></span>
+                </button>
+
+                {showHeaderDropdown && (
+                  <div className="absolute right-0 top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-40">
+                    <button
+                      className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100"
+                      onClick={handleAddFriend}
+                    >
+                      <span className="fas fa-user-plus mr-2 text-primary-500"></span>
+                      添加好友
+                    </button>
+                    <button
+                      className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100"
+                      onClick={handleCreateGroup}
+                    >
+                      <span className="fas fa-users mr-2 text-primary-500"></span>
+                      建立群聊
+                    </button>
+                    <button
+                      className="w-full px-4 py-3 text-left hover:bg-gray-50"
+                      onClick={handleSearchUser}
+                    >
+                      <span className="fas fa-search mr-2 text-primary-500"></span>
+                      查找好友
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* 消息列表 */}
+          <div className="message-list">
+            {friendsList.concat(groupsList).map((friend) => (
+              <div
+                key={friend.id}
+                className="message-item"
+                onClick={() => openChat(friend)}
+              >
+                <div className="message-avatar">{friend.avatar}</div>
+                <div className="message-content">
+                  <div className="message-header">
+                    <div className="message-name">{friend.name}</div>
+                    <div className="message-time">{friend.lastTime}</div>
+                  </div>
+                  <div className="message-preview">{friend.lastMessage}</div>
+                </div>
+                {friend.unread > 0 && (
+                  <div className="unread-badge">{friend.unread}</div>
+                )}
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* 所有弹窗组件 - 始终渲染在DOM中 */}
       <Modal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
@@ -667,6 +668,7 @@ const FriendsPage = () => {
         </div>
       </Modal>
 
+      {/* Toast组件 */}
       {showToast && (
         <Toast
           message={toastMessage}
