@@ -1,288 +1,222 @@
 -- 智能鑫AI系统种子数据脚本
--- 生成时间: 2024-12-07
--- 描述: 为开发测试环境生成完整的测试数据
+-- 版本: 20251215_000000
+-- 生成时间: 2025-12-15 00:00:00
+-- 描述: 为智能鑫AI系统生成种子数据，包含10个用户、股票、好友关系、聊天消息等
+-- 幂等性: 使用 ON CONFLICT DO NOTHING 实现，可重复执行
 
--- === 1. 清空现有数据（可选，用于重置测试环境） === --
---
--- 如果需要清空现有数据，取消注释以下代码块
--- 注意：此操作将删除所有数据，操作不可逆！
-/*
-TRUNCATE TABLE admin_logs CASCADE;
-TRUNCATE TABLE market_data CASCADE;
-TRUNCATE TABLE user_sessions CASCADE;
-TRUNCATE TABLE ai_recommendations CASCADE;
-TRUNCATE TABLE friend_messages CASCADE;
-TRUNCATE TABLE friend_relationships CASCADE;
-TRUNCATE TABLE favorites CASCADE;
-TRUNCATE TABLE stocks CASCADE;
-TRUNCATE TABLE users CASCADE;
-TRUNCATE TABLE migration_history CASCADE;
-*/
+-- 确保脚本在事务中执行
+BEGIN;
 
--- === 2. 生成测试用户数据 === --
-INSERT INTO users (username, email, password_hash, phone, avatar, status, created_at) VALUES
-('张财经', 'zhang@zhinengxin.ai', '$2b$12$abc123def456ghi789jkl', '13800138001', '张', 'active', '2024-01-15 08:30:00'),
-('李股神', 'li@zhinengxin.ai', '$2b$12$mno345pqr678stu901vwx', '13800138002', '李', 'active', '2024-01-16 09:15:00'),
-('王趋势', 'wang@zhinengxin.ai', '$2b$12$yzab567cde890fgh123ij', '13800138003', '王', 'active', '2024-01-17 10:20:00'),
-('赵价值', 'zhao@zhinengxin.ai', '$2b$12$klm901nop234qrs567tuv', '13800138004', '赵', 'inactive', '2024-01-18 11:30:00'),
-('钱技术', 'qian@zhinengxin.ai', '$2b$12$wxy345zab678cde901fgh', '13800138005', '钱', 'active', '2024-01-19 14:45:00'),
-('孙成长', 'sun@zhinengxin.ai', '$2b$12$ijk567lmn890opq123rst', '13800138006', '孙', 'active', '2024-01-20 16:00:00'),
-('周稳健', 'zhou@zhinengxin.ai', '$2b$12$uvw901xyz234abc567def', '13800138007', '周', 'active', '2024-01-21 17:30:00'),
-('吴激进', 'wu@zhinengxin.ai', '$2b$12$ghi123jkl456mno789pqr', '13800138008', '吴', 'banned', '2024-01-22 18:45:00'),
-('郑新手', 'zheng@zhinengxin.ai', '$2b$12$stu901vwx234yza567bcd', '13800138009', '郑', 'active', '2024-01-23 20:00:00'),
-('测试用户', 'test@zhinengxin.ai', '$2b$12$efg123hij456klm789nop', '13800138100', '测', 'active', '2024-01-24 21:15:00')
-ON CONFLICT (username) DO UPDATE SET
-    email = EXCLUDED.email,
-    password_hash = EXCLUDED.password_hash,
-    phone = EXCLUDED.phone,
-    avatar = EXCLUDED.avatar,
-    status = EXCLUDED.status;
+-- 1. 插入股票数据
+INSERT INTO stocks (stock_code, stock_name, market_type, industry, listing_date, is_active)
+VALUES 
+    ('000001', '平安银行', 'A股', '银行', '1991-04-03', true),
+    ('000002', '万科A', 'A股', '房地产', '1991-01-29', true),
+    ('600000', '浦发银行', 'A股', '银行', '1999-11-10', true),
+    ('600001', '邯郸钢铁', 'A股', '钢铁', '1998-01-22', true),
+    ('600004', '白云机场', 'A股', '交通运输', '2003-04-28', true),
+    ('000063', '中兴通讯', 'A股', '通信设备', '1997-11-18', true),
+    ('000157', '中联重科', 'A股', '工程机械', '2000-10-12', true),
+    ('600036', '招商银行', 'A股', '银行', '2002-04-09', true),
+    ('600031', '三一重工', 'A股', '工程机械', '2003-07-03', true),
+    ('600030', '中信证券', 'A股', '证券', '2003-01-06', true)
+ON CONFLICT (stock_code) DO NOTHING;
 
--- 更新最后登录时间
-UPDATE users SET last_login = '2024-12-07 09:00:00' WHERE username = '张财经';
-UPDATE users SET last_login = '2024-12-07 08:45:00' WHERE username = '李股神';
-UPDATE users SET last_login = '2024-12-07 10:20:00' WHERE username = '王趋势';
+-- 2. 插入用户数据
+INSERT INTO users (username, email, password_hash, phone, avatar, status, created_at, last_login)
+VALUES 
+    ('zhangsan', 'zhangsan@example.com', '$2a$10$eXAMPLEHASH1234567890abcdef', '13800138001', 'user1', 'active', '2025-01-01 10:00:00', '2025-12-14 15:30:00'),
+    ('lisi', 'lisi@example.com', '$2a$10$eXAMPLEHASH1234567890abcdef', '13800138002', 'user2', 'active', '2025-01-02 11:00:00', '2025-12-14 16:00:00'),
+    ('wangwu', 'wangwu@example.com', '$2a$10$eXAMPLEHASH1234567890abcdef', '13800138003', 'user3', 'active', '2025-01-03 12:00:00', '2025-12-14 17:00:00'),
+    ('zhaoliu', 'zhaoliu@example.com', '$2a$10$eXAMPLEHASH1234567890abcdef', '13800138004', 'user4', 'active', '2025-01-04 13:00:00', '2025-12-14 18:00:00'),
+    ('sunqi', 'sunqi@example.com', '$2a$10$eXAMPLEHASH1234567890abcdef', '13800138005', 'user5', 'active', '2025-01-05 14:00:00', '2025-12-14 19:00:00'),
+    ('zhouba', 'zhouba@example.com', '$2a$10$eXAMPLEHASH1234567890abcdef', '13800138006', 'user6', 'active', '2025-01-06 15:00:00', '2025-12-14 20:00:00'),
+    ('wujin', 'wujin@example.com', '$2a$10$eXAMPLEHASH1234567890abcdef', '13800138007', 'user7', 'active', '2025-01-07 16:00:00', '2025-12-14 21:00:00'),
+    ('zhengshi', 'zhengshi@example.com', '$2a$10$eXAMPLEHASH1234567890abcdef', '13800138008', 'user8', 'active', '2025-01-08 17:00:00', '2025-12-14 22:00:00'),
+    ('wangshi', 'wangshi@example.com', '$2a$10$eXAMPLEHASH1234567890abcdef', '13800138009', 'user9', 'active', '2025-01-09 18:00:00', '2025-12-14 23:00:00'),
+    ('chenshi', 'chenshi@example.com', '$2a$10$eXAMPLEHASH1234567890abcdef', '13800138010', 'user10', 'active', '2025-01-10 19:00:00', '2025-12-15 00:00:00')
+ON CONFLICT (username) DO NOTHING;
 
--- === 3. 生成股票数据 === --
-INSERT INTO stocks (stock_code, stock_name, market_type, industry, listing_date, is_active) VALUES
-('600519', '贵州茅台', 'A股', '食品饮料', '2001-08-27', true),
-('300750', '宁德时代', 'A股', '电力设备', '2011-12-16', true),
-('000858', '五粮液', 'A股', '食品饮料', '1998-04-27', true),
-('601318', '中国平安', 'A股', '非银金融', '2007-03-01', true),
-('000333', '美的集团', 'A股', '家用电器', '2013-09-18', true),
-('002415', '海康威视', 'A股', '计算机', '2010-05-28', true),
-('600036', '招商银行', 'A股', '银行', '2002-04-09', true),
-('000001', '平安银行', 'A股', '银行', '1991-04-03', true),
-('601888', '中国中免', 'A股', '商贸零售', '2009-10-15', true),
-('000651', '格力电器', 'A股', '家用电器', '1996-11-18', true),
-('002230', '科大讯飞', 'A股', '计算机', '2008-05-12', true),
-('600887', '伊利股份', 'A股', '食品饮料', '1996-03-12', true),
-('000725', '京东方A', 'A股', '电子', '2001-01-12', true),
-('601766', '中国中车', 'A股', '机械设备', '2008-08-18', true),
-('601628', '中国人寿', 'A股', '非银金融', '2007-01-09', true)
-ON CONFLICT (stock_code) DO UPDATE SET
-    stock_name = EXCLUDED.stock_name,
-    market_type = EXCLUDED.market_type,
-    industry = EXCLUDED.industry,
-    listing_date = EXCLUDED.listing_date,
-    is_active = EXCLUDED.is_active;
+-- 3. 插入管理员用户数据
+INSERT INTO admin_users (username, email, password_hash, role, status, created_at, last_login)
+VALUES 
+    ('admin', 'admin@smartxin.com', '$2a$10$eXAMPLEHASH1234567890abcdef', 'super_admin', 'active', '2025-01-01 00:00:00', '2025-12-15 00:00:00'),
+    ('moderator', 'moderator@smartxin.com', '$2a$10$eXAMPLEHASH1234567890abcdef', 'moderator', 'active', '2025-01-01 00:00:00', '2025-12-14 23:00:00')
+ON CONFLICT (username) DO NOTHING;
 
--- === 4. 生成市场行情数据 === --
-WITH stock_ids AS (
-    SELECT stock_id, stock_code FROM stocks
-)
-INSERT INTO market_data (stock_id, price, change_percent, change_amount, volume, timestamp) VALUES
-((SELECT stock_id FROM stocks WHERE stock_code = '600519'), 1688.50, 2.15, 35.50, 1250000, '2024-12-07 15:00:00'),
-((SELECT stock_id FROM stocks WHERE stock_code = '300750'), 214.80, -1.23, -2.68, 2560000, '2024-12-07 15:00:00'),
-((SELECT stock_id FROM stocks WHERE stock_code = '000858'), 152.30, 0.85, 1.28, 1870000, '2024-12-07 15:00:00'),
-((SELECT stock_id FROM stocks WHERE stock_code = '601318'), 48.92, -0.56, -0.28, 3250000, '2024-12-07 15:00:00'),
-((SELECT stock_id FROM stocks WHERE stock_code = '000333'), 56.78, 1.45, 0.81, 1430000, '2024-12-07 15:00:00'),
-((SELECT stock_id FROM stocks WHERE stock_code = '002415'), 32.15, 3.25, 1.01, 2180000, '2024-12-07 15:00:00'),
-((SELECT stock_id FROM stocks WHERE stock_code = '600036'), 35.67, 0.85, 0.30, 1860000, '2024-12-07 15:00:00'),
-((SELECT stock_id FROM stocks WHERE stock_code = '000001'), 12.34, -0.32, -0.04, 2450000, '2024-12-07 15:00:00'),
-((SELECT stock_id FROM stocks WHERE stock_code = '601888'), 95.60, 4.28, 3.92, 1290000, '2024-12-07 15:00:00'),
-((SELECT stock_id FROM stocks WHERE stock_code = '000651'), 38.45, -2.15, -0.85, 1670000, '2024-12-07 15:00:00'),
-((SELECT stock_id FROM stocks WHERE stock_code = '002230'), 56.78, 8.20, 4.30, 890000, '2024-12-07 15:00:00'),
-((SELECT stock_id FROM stocks WHERE stock_code = '600887'), 28.90, 1.05, 0.30, 1340000, '2024-12-07 15:00:00'),
-((SELECT stock_id FROM stocks WHERE stock_code = '000725'), 4.12, 0.24, 0.01, 4560000, '2024-12-07 15:00:00'),
-((SELECT stock_id FROM stocks WHERE stock_code = '601766'), 6.78, -1.45, -0.10, 3210000, '2024-12-07 15:00:00'),
-((SELECT stock_id FROM stocks WHERE stock_code = '601628'), 30.25, 0.83, 0.25, 1980000, '2024-12-07 15:00:00');
-
--- === 5. 生成自选股数据 === --
-WITH user_stock_pairs AS (
-    SELECT u.user_id, s.stock_id
-    FROM users u
-    CROSS JOIN stocks s
-    WHERE u.username IN ('张财经', '李股神', '王趋势', '测试用户')
-    AND s.stock_code IN ('600519', '300750', '000858', '002230', '002415', '601318')
-)
-INSERT INTO favorites (user_id, stock_id, added_at, notes, alert_price)
-SELECT
-    user_id,
-    stock_id,
-    CURRENT_TIMESTAMP - (random() * interval '30 days'),
-    CASE
-        WHEN stock_id = (SELECT stock_id FROM stocks WHERE stock_code = '600519') THEN '长期持有，价值投资'
-        WHEN stock_id = (SELECT stock_id FROM stocks WHERE stock_code = '300750') THEN '新能源汽车龙头'
-        WHEN stock_id = (SELECT stock_id FROM stocks WHERE stock_code = '002230') THEN 'AI概念股，有潜力'
-        ELSE '关注中'
-    END,
-    CASE
-        WHEN random() > 0.7 THEN (SELECT price * 1.1 FROM market_data WHERE stock_id = s.stock_id)
-        WHEN random() < 0.3 THEN (SELECT price * 0.9 FROM market_data WHERE stock_id = s.stock_id)
-        ELSE NULL
-    END
-FROM user_stock_pairs usp
-JOIN stocks s ON usp.stock_id = s.stock_id
-ON CONFLICT (user_id, stock_id) DO UPDATE SET
-    notes = EXCLUDED.notes,
-    alert_price = EXCLUDED.alert_price;
-
--- === 6. 生成好友关系数据 === --
-WITH user_pairs AS (
-    SELECT u1.user_id as user_id, u2.user_id as friend_id
-    FROM users u1, users u2
-    WHERE u1.username = '张财经' AND u2.username IN ('李股神', '王趋势', '赵价值')
-    UNION ALL
-    SELECT u1.user_id, u2.user_id
-    FROM users u1, users u2
-    WHERE u1.username = '李股神' AND u2.username IN ('王趋势', '钱技术')
-    UNION ALL
-    SELECT u1.user_id, u2.user_id
-    FROM users u1, users u2
-    WHERE u1.username = '王趋势' AND u2.username IN ('孙成长', '周稳健')
-    UNION ALL
-    SELECT u1.user_id, u2.user_id
-    FROM users u1, users u2
-    WHERE u1.username = '测试用户' AND u2.username IN ('张财经', '李股神', '王趋势')
-)
+-- 4. 插入好友关系数据
 INSERT INTO friend_relationships (user_id, friend_id, status, created_at, accepted_at)
-SELECT
-    user_id,
-    friend_id,
-    CASE
-        WHEN random() > 0.2 THEN 'accepted'
-        ELSE 'pending'
-    END as status,
-    CURRENT_TIMESTAMP - (random() * interval '15 days'),
-    CASE
-        WHEN random() > 0.2 THEN CURRENT_TIMESTAMP - (random() * interval '10 days')
-        ELSE NULL
-    END
-FROM user_pairs
-WHERE user_id != friend_id
-ON CONFLICT (user_id, friend_id) DO UPDATE SET
-    status = EXCLUDED.status,
-    accepted_at = EXCLUDED.accepted_at;
+VALUES 
+    (1, 2, 'accepted', '2025-02-01 10:00:00', '2025-02-01 10:30:00'),
+    (1, 3, 'accepted', '2025-02-02 11:00:00', '2025-02-02 11:15:00'),
+    (1, 4, 'accepted', '2025-02-03 12:00:00', '2025-02-03 12:45:00'),
+    (2, 3, 'accepted', '2025-02-04 13:00:00', '2025-02-04 13:20:00'),
+    (2, 5, 'accepted', '2025-02-05 14:00:00', '2025-02-05 14:30:00'),
+    (3, 6, 'accepted', '2025-02-06 15:00:00', '2025-02-06 15:10:00'),
+    (4, 7, 'accepted', '2025-02-07 16:00:00', '2025-02-07 16:50:00'),
+    (5, 8, 'accepted', '2025-02-08 17:00:00', '2025-02-08 17:25:00'),
+    (6, 9, 'accepted', '2025-02-09 18:00:00', '2025-02-09 18:35:00'),
+    (7, 10, 'accepted', '2025-02-10 19:00:00', '2025-02-10 19:40:00'),
+    (8, 1, 'accepted', '2025-02-11 20:00:00', '2025-02-11 20:15:00'),
+    (9, 2, 'accepted', '2025-02-12 21:00:00', '2025-02-12 21:30:00'),
+    (10, 3, 'pending', '2025-02-13 22:00:00', NULL),
+    (10, 4, 'accepted', '2025-02-14 23:00:00', '2025-02-15 00:00:00')
+ON CONFLICT (user_id, friend_id) DO NOTHING;
 
--- === 7. 生成聊天消息数据 === --
-WITH chat_pairs AS (
-    -- 张财经和李股神的对话
-    SELECT
-        (SELECT user_id FROM users WHERE username = '张财经') as sender_id,
-        (SELECT user_id FROM users WHERE username = '李股神') as receiver_id,
-        ARRAY[
-            '你好！最近关注什么股票？',
-            '我在看科技板块，特别是AI相关的股票',
-            '我觉得科大讯飞不错，最近资金流入明显',
-            'stock:002230'
-        ] as messages
-    UNION ALL
-    -- 李股神和王趋势的对话
-    SELECT
-        (SELECT user_id FROM users WHERE username = '李股神'),
-        (SELECT user_id FROM users WHERE username = '王趋势'),
-        ARRAY[
-            '明天准备加仓宁德时代，你觉得这个位置怎么样？',
-            '这个位置相对安全，可以分批建仓',
-            '我也在关注新能源板块的调整机会'
-        ]
-    UNION ALL
-    -- 王趋势和张财经的对话
-    SELECT
-        (SELECT user_id FROM users WHERE username = '王趋势'),
-        (SELECT user_id FROM users WHERE username = '张财经'),
-        ARRAY[
-            '最近市场波动很大，建议控制仓位',
-            '是的，我也在观望，等企稳信号'
-        ]
-)
+-- 5. 插入好友聊天消息数据
 INSERT INTO friend_messages (sender_id, receiver_id, content, message_type, stock_reference, sent_at, is_read)
-SELECT
-    sender_id,
-    receiver_id,
-    unnest(messages) as content,
-    CASE
-        WHEN unnest(messages) LIKE 'stock:%' THEN 'stock_card'
-        ELSE 'text'
-    END as message_type,
-    CASE
-        WHEN unnest(messages) LIKE 'stock:%' THEN
-            (SELECT stock_id FROM stocks WHERE stock_code = substring(unnest(messages) from 'stock:(\w+)'))
-        ELSE NULL
-    END as stock_reference,
-    CURRENT_TIMESTAMP - (random() * interval '7 days') as sent_at,
-    random() > 0.3 as is_read
-FROM chat_pairs;
+VALUES 
+    (1, 2, '你好，最近股票行情怎么样？', 'text', NULL, '2025-03-01 10:00:00', true),
+    (2, 1, '还不错，我最近买了平安银行，表现挺好的。', 'text', 1, '2025-03-01 10:05:00', true),
+    (1, 2, '平安银行确实是个不错的选择，我也关注很久了。', 'text', NULL, '2025-03-01 10:10:00', true),
+    (3, 1, '张三，你觉得中兴通讯怎么样？', 'text', 6, '2025-03-02 14:30:00', true),
+    (1, 3, '中兴通讯最近表现不错，5G领域有很大潜力。', 'text', NULL, '2025-03-02 14:35:00', true),
+    (4, 1, '推荐你关注一下招商银行，我觉得它的财报很亮眼。', 'text', 8, '2025-03-03 09:15:00', true),
+    (1, 4, '好的，我会关注的，谢谢你的推荐！', 'text', NULL, '2025-03-03 09:20:00', true),
+    (5, 2, '最近A股行情回暖，你有什么看好的板块？', 'text', NULL, '2025-03-04 15:45:00', true),
+    (2, 5, '我看好工程机械板块，三一重工和中联重科都不错。', 'text', NULL, '2025-03-04 15:50:00', true),
+    (6, 3, '中信证券的研报说近期大盘会上涨，你怎么看？', 'text', 10, '2025-03-05 11:20:00', false)
+ON CONFLICT DO NOTHING;
 
--- === 8. 生成AI推荐记录 === --
-WITH recommendations AS (
-    SELECT
-        u.user_id,
-        s.stock_id,
-        ARRAY[
-            '与苹果合作关系稳固，消费电子复苏',
-            '医药外包龙头，海外业务增长强劲',
-            '全球动力电池龙头，新能源汽车需求旺盛',
-            '5G建设加速，通信设备需求增加',
-            'AI语音技术领先，行业前景广阔',
-            '智能安防龙头，AI应用深入'
-        ] as reasons
-    FROM users u
-    CROSS JOIN stocks s
-    WHERE u.username IN ('张财经', '李股神', '王趋势', '测试用户')
-    AND s.stock_code IN ('002475', '603259', '300750', '000063', '002230', '002415')
-)
+-- 6. 插入群组数据
+INSERT INTO groups (group_name, group_type, creator_id, avatar, description, status, created_at)
+VALUES 
+    ('股票投资交流群', 'public', 1, '群1', '交流股票投资经验和技巧', 'active', '2025-04-01 10:00:00'),
+    ('科技股讨论组', 'private', 2, '群2', '专注于科技股的讨论和分析', 'active', '2025-04-02 11:00:00'),
+    ('价值投资俱乐部', 'private', 3, '群3', '价值投资理念分享和实践', 'active', '2025-04-03 12:00:00')
+ON CONFLICT DO NOTHING;
+
+-- 7. 插入群成员数据
+INSERT INTO group_members (group_id, user_id, role, status, joined_at)
+VALUES 
+    (1, 1, 'owner', 'active', '2025-04-01 10:00:00'),
+    (1, 2, 'admin', 'active', '2025-04-01 10:05:00'),
+    (1, 3, 'member', 'active', '2025-04-01 10:10:00'),
+    (1, 4, 'member', 'active', '2025-04-01 10:15:00'),
+    (1, 5, 'member', 'active', '2025-04-01 10:20:00'),
+    (2, 2, 'owner', 'active', '2025-04-02 11:00:00'),
+    (2, 1, 'member', 'active', '2025-04-02 11:05:00'),
+    (2, 6, 'member', 'active', '2025-04-02 11:10:00'),
+    (2, 7, 'member', 'active', '2025-04-02 11:15:00'),
+    (3, 3, 'owner', 'active', '2025-04-03 12:00:00'),
+    (3, 1, 'member', 'active', '2025-04-03 12:05:00'),
+    (3, 2, 'member', 'active', '2025-04-03 12:10:00'),
+    (3, 8, 'member', 'active', '2025-04-03 12:15:00'),
+    (3, 9, 'member', 'active', '2025-04-03 12:20:00')
+ON CONFLICT (group_id, user_id) DO NOTHING;
+
+-- 8. 插入群聊消息数据
+INSERT INTO group_messages (group_id, sender_id, content, message_type, stock_reference, sent_at)
+VALUES 
+    (1, 1, '欢迎大家加入股票投资交流群！', 'text', NULL, '2025-04-01 10:00:00'),
+    (1, 2, '大家好，我是管理员李四，有什么问题可以问我。', 'text', NULL, '2025-04-01 10:05:00'),
+    (1, 3, '最近有什么推荐的股票吗？', 'text', NULL, '2025-04-01 10:10:00'),
+    (1, 1, '我觉得平安银行和招商银行都不错，可以关注一下。', 'text', NULL, '2025-04-01 10:15:00'),
+    (2, 2, '欢迎来到科技股讨论组！', 'text', NULL, '2025-04-02 11:00:00'),
+    (2, 1, '大家好，我是张三，很高兴加入这个群组。', 'text', NULL, '2025-04-02 11:05:00'),
+    (2, 6, '最近中兴通讯的财报出来了，表现很好！', 'text', 6, '2025-04-02 11:10:00'),
+    (3, 3, '欢迎加入价值投资俱乐部！', 'text', NULL, '2025-04-03 12:00:00'),
+    (3, 1, '价值投资是长期的，需要耐心和坚持。', 'text', NULL, '2025-04-03 12:05:00'),
+    (3, 2, '我同意，短期波动不代表什么，要看公司的基本面。', 'text', NULL, '2025-04-03 12:10:00')
+ON CONFLICT DO NOTHING;
+
+-- 9. 插入AI推荐记录数据
 INSERT INTO ai_recommendations (user_id, stock_id, confidence_score, reasoning, recommended_at, user_feedback)
-SELECT
-    user_id,
-    stock_id,
-    (75 + random() * 20)::decimal(5,2) as confidence_score,
-    reasons[1 + floor(random() * array_length(reasons, 1))] as reasoning,
-    CURRENT_TIMESTAMP - (random() * interval '30 days') as recommended_at,
-    CASE
-        WHEN random() > 0.7 THEN 'positive'
-        WHEN random() < 0.2 THEN 'negative'
-        ELSE NULL
-    END as user_feedback
-FROM recommendations
-LIMIT 20;
+VALUES 
+    (1, 1, 95.50, '平安银行估值合理，不良贷款率持续下降，股息率较高。', '2025-05-01 10:00:00', 'positive'),
+    (1, 8, 92.00, '招商银行资产质量优秀，盈利能力强，创新业务发展迅速。', '2025-05-02 11:00:00', NULL),
+    (2, 6, 90.50, '中兴通讯在5G领域处于领先地位，海外市场拓展顺利。', '2025-05-03 12:00:00', 'positive'),
+    (3, 10, 88.00, '中信证券作为行业龙头，投行业务表现优异，市场份额稳定。', '2025-05-04 13:00:00', NULL),
+    (4, 9, 85.50, '三一重工在工程机械领域处于领先地位，海外订单增长迅速。', '2025-05-05 14:00:00', 'positive'),
+    (5, 7, 83.00, '中联重科研发投入大，产品竞争力强，新能源业务发展前景广阔。', '2025-05-06 15:00:00', NULL),
+    (6, 2, 80.50, '万科A作为房地产龙头，财务稳健，转型进展顺利。', '2025-05-07 16:00:00', 'negative'),
+    (7, 5, 78.00, '白云机场客流量恢复增长，免税业务发展迅速。', '2025-05-08 17:00:00', NULL),
+    (8, 4, 75.50, '邯郸钢铁成本控制良好，产品结构优化，盈利能力提升。', '2025-05-09 18:00:00', 'positive'),
+    (9, 3, 73.00, '浦发银行资产规模大，风控能力强，股息率较高。', '2025-05-10 19:00:00', NULL)
+ON CONFLICT DO NOTHING;
 
--- === 9. 生成用户会话数据 === --
-INSERT INTO user_sessions (user_id, session_token, login_time, last_activity, ip_address, device_info)
-SELECT
-    user_id,
-    md5(user_id::text || extract(epoch from CURRENT_TIMESTAMP)::text || random()::text) as session_token,
-    CURRENT_TIMESTAMP - (random() * interval '2 hours') as login_time,
-    CURRENT_TIMESTAMP - (random() * interval '30 minutes') as last_activity,
-    '192.168.1.' || (100 + floor(random() * 50))::text as ip_address,
-    CASE
-        WHEN random() > 0.5 THEN 'iPhone 15 Pro iOS 17.2'
-        ELSE 'Xiaomi 13 Android 14'
-    END as device_info
-FROM users
-WHERE status = 'active'
-LIMIT 5;
+-- 10. 插入自选股数据
+INSERT INTO favorites (user_id, stock_id, added_at, notes, alert_price)
+VALUES 
+    (1, 1, '2025-06-01 10:00:00', '长期持有', 15.00),
+    (1, 8, '2025-06-02 11:00:00', '关注中', 40.00),
+    (1, 6, '2025-06-03 12:00:00', '科技股龙头', 30.00),
+    (2, 6, '2025-06-04 13:00:00', '重点关注', 28.00),
+    (2, 9, '2025-06-05 14:00:00', '工程机械龙头', 20.00),
+    (3, 10, '2025-06-06 15:00:00', '证券龙头', 25.00),
+    (3, 3, '2025-06-07 16:00:00', '银行股', 10.00),
+    (4, 9, '2025-06-08 17:00:00', '看好未来发展', 22.00),
+    (4, 7, '2025-06-09 18:00:00', '新能源概念', 18.00),
+    (5, 2, '2025-06-10 19:00:00', '房地产龙头', 18.00)
+ON CONFLICT (user_id, stock_id) DO NOTHING;
 
--- === 10. 生成管理员操作日志 === --
-INSERT INTO admin_logs (admin_id, action_type, target_user_id, details, ip_address, created_at)
-VALUES
-('admin001', 'user_ban', (SELECT user_id FROM users WHERE username = '吴激进'), '用户发布违规内容，暂时封禁', '10.0.0.1', '2024-12-06 14:30:00'),
-('admin001', 'user_activate', (SELECT user_id FROM users WHERE username = '赵价值'), '重新激活用户账号', '10.0.0.1', '2024-12-05 10:15:00'),
-('admin002', 'data_export', NULL, '导出用户行为分析报告', '10.0.0.2', '2024-12-07 09:00:00'),
-('admin001', 'system_maintenance', NULL, '执行数据库备份操作', '10.0.0.1', '2024-12-07 02:00:00');
+-- 11. 插入市场行情数据
+INSERT INTO market_data (stock_id, price, change_percent, change_amount, volume, timestamp)
+VALUES 
+    (1, 14.50, 2.11, 0.30, 12500000, '2025-12-15 09:30:00'),
+    (2, 17.80, -1.66, -0.30, 8900000, '2025-12-15 09:30:00'),
+    (3, 8.90, 0.56, 0.05, 6700000, '2025-12-15 09:30:00'),
+    (4, 3.20, 1.59, 0.05, 15600000, '2025-12-15 09:30:00'),
+    (5, 12.30, -0.81, -0.10, 4500000, '2025-12-15 09:30:00'),
+    (6, 29.50, 3.14, 0.90, 23400000, '2025-12-15 09:30:00'),
+    (7, 16.70, 2.46, 0.40, 11200000, '2025-12-15 09:30:00'),
+    (8, 38.90, 1.30, 0.50, 9800000, '2025-12-15 09:30:00'),
+    (9, 21.50, -0.92, -0.20, 7600000, '2025-12-15 09:30:00'),
+    (10, 24.80, 1.64, 0.40, 13400000, '2025-12-15 09:30:00')
+ON CONFLICT DO NOTHING;
 
--- === 11. 数据插入完成统计 === --
-SELECT '🎉 种子数据插入完成！' as completion_message;
+-- 12. 插入用户兴趣标签数据
+INSERT INTO user_interests (user_id, interest_type, interest_value, weight, updated_at)
+VALUES 
+    (1, 'industry', '银行', 80, '2025-07-01 10:00:00'),
+    (1, 'industry', '通信设备', 70, '2025-07-01 10:00:00'),
+    (1, 'style', '价值投资', 90, '2025-07-01 10:00:00'),
+    (2, 'industry', '通信设备', 90, '2025-07-02 11:00:00'),
+    (2, 'industry', '工程机械', 80, '2025-07-02 11:00:00'),
+    (2, 'style', '成长投资', 85, '2025-07-02 11:00:00'),
+    (3, 'industry', '证券', 85, '2025-07-03 12:00:00'),
+    (3, 'industry', '银行', 75, '2025-07-03 12:00:00'),
+    (3, 'style', '价值投资', 90, '2025-07-03 12:00:00'),
+    (4, 'industry', '工程机械', 90, '2025-07-04 13:00:00'),
+    (4, 'style', '成长投资', 80, '2025-07-04 13:00:00'),
+    (5, 'industry', '房地产', 70, '2025-07-05 14:00:00'),
+    (5, 'style', '价值投资', 75, '2025-07-05 14:00:00'),
+    (6, 'industry', '通信设备', 80, '2025-07-06 15:00:00'),
+    (6, 'style', '成长投资', 85, '2025-07-06 15:00:00'),
+    (7, 'industry', '交通运输', 75, '2025-07-07 16:00:00'),
+    (7, 'style', '价值投资', 80, '2025-07-07 16:00:00'),
+    (8, 'industry', '钢铁', 80, '2025-07-08 17:00:00'),
+    (8, 'style', '周期投资', 85, '2025-07-08 17:00:00'),
+    (9, 'industry', '银行', 85, '2025-07-09 18:00:00'),
+    (9, 'style', '价值投资', 90, '2025-07-09 18:00:00'),
+    (10, 'industry', '证券', 70, '2025-07-10 19:00:00'),
+    (10, 'style', '成长投资', 75, '2025-07-10 19:00:00')
+ON CONFLICT (user_id, interest_type, interest_value) DO NOTHING;
 
--- 统计插入的数据量
-WITH stats AS (
-    SELECT 'users' as table_name, COUNT(*) as record_count FROM users
-    UNION ALL SELECT 'stocks', COUNT(*) FROM stocks
-    UNION ALL SELECT 'market_data', COUNT(*) FROM market_data
-    UNION ALL SELECT 'favorites', COUNT(*) FROM favorites
-    UNION ALL SELECT 'friend_relationships', COUNT(*) FROM friend_relationships
-    UNION ALL SELECT 'friend_messages', COUNT(*) FROM friend_messages
-    UNION ALL SELECT 'ai_recommendations', COUNT(*) FROM ai_recommendations
-    UNION ALL SELECT 'user_sessions', COUNT(*) FROM user_sessions
-    UNION ALL SELECT 'admin_logs', COUNT(*) FROM admin_logs
-)
-SELECT
-    table_name,
-    record_count,
-    CASE
-        WHEN record_count > 0 THEN '✅ 数据已插入'
-        ELSE '⚠️ 无数据'
-    END as status
-FROM stats
-ORDER BY table_name;
+-- 13. 插入系统通知数据
+INSERT INTO system_notifications (user_id, notification_type, title, content, is_read, created_at, read_at)
+VALUES 
+    (1, 'system', '系统更新通知', '智能鑫AI系统已更新至最新版本，新增了AI选股功能。', true, '2025-08-01 10:00:00', '2025-08-01 10:05:00'),
+    (1, 'friend', '好友请求', '李四请求添加您为好友。', false, '2025-08-02 14:30:00', NULL),
+    (1, 'stock', '股票预警', '平安银行已达到您设置的预警价格15.00元。', true, '2025-08-03 09:30:00', '2025-08-03 09:35:00'),
+    (2, 'ai_recommendation', 'AI推荐', 'AI为您推荐了一只新股票：中兴通讯。', false, '2025-08-04 16:00:00', NULL),
+    (2, 'group', '群组邀请', '张三邀请您加入股票投资交流群。', true, '2025-08-05 11:00:00', '2025-08-05 11:05:00'),
+    (3, 'system', '重要公告', '平台将于2025年8月10日进行系统维护，期间服务可能中断。', true, '2025-08-06 15:00:00', '2025-08-06 15:10:00'),
+    (4, 'stock', '股票资讯', '三一重工发布了2025年中期财报，净利润同比增长20%。', false, '2025-08-07 14:00:00', NULL),
+    (5, 'ai_recommendation', 'AI推荐', 'AI为您推荐了一只新股票：中联重科。', false, '2025-08-08 17:00:00', NULL),
+    (6, 'group', '群组消息', '科技股讨论组有新消息，快去看看吧！', true, '2025-08-09 18:00:00', '2025-08-09 18:05:00'),
+    (7, 'system', '账户安全提醒', '您的账户已连续30天未登录，请及时登录以确保账户安全。', true, '2025-08-10 19:00:00', '2025-08-10 19:10:00')
+ON CONFLICT DO NOTHING;
+
+-- 提交事务
+COMMIT;
+
+-- 输出结果
+SELECT '✅ 智能鑫AI系统种子数据插入完成！' as result;
+SELECT '插入了 ' || COUNT(*) || ' 条股票数据' as stocks_count FROM stocks;
+SELECT '插入了 ' || COUNT(*) || ' 条用户数据' as users_count FROM users;
+SELECT '插入了 ' || COUNT(*) || ' 条好友关系数据' as friend_relationships_count FROM friend_relationships;
+SELECT '插入了 ' || COUNT(*) || ' 条聊天消息数据' as messages_count FROM (
+    SELECT message_id FROM friend_messages UNION ALL SELECT message_id FROM group_messages
+) as all_messages;
+SELECT '插入了 ' || COUNT(*) || ' 条AI推荐数据' as ai_recommendations_count FROM ai_recommendations;
