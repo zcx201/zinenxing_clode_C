@@ -1,8 +1,6 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import PhoneLayout from './components/PhoneLayout'
-import MarketHeader from './components/MarketHeader'
-import Navigation from './components/Navigation'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import MarketPage from './pages/MarketPage'
@@ -13,6 +11,7 @@ import FavoritesPage from './pages/FavoritesPage'
 import ProfilePage from './pages/ProfilePage'
 import InteractionPage from './pages/InteractionPage'
 import FriendsPage from './pages/FriendsPage'
+import StockDetailPage from './pages/StockDetailPage'
 
 function App() {
   return (
@@ -41,6 +40,9 @@ function App() {
               <Route path="/interaction" element={<InteractionPage />} />
               <Route path="/friends" element={<FriendsPage />} />
               <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/stock/:code" element={<StockDetailPage />} />
+              <Route path="/index/:id" element={<StockDetailPage />} />
+              <Route path="/sector/:name" element={<StockDetailPage />} />
             </Routes>
           </PhoneLayout>
         } />

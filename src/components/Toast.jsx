@@ -1,17 +1,34 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 
 const Toast = ({ message, type = 'info', duration = 3000, onClose }) => {
   const [visible, setVisible] = useState(false)
+  const visibleTimerRef = useRef(null)
+  const closeCallbackTimerRef = useRef(null)
 
   useEffect(() => {
     setVisible(true)
 
-    const timer = setTimeout(() => {
+    const hideTimer = setTimeout(() => {
       setVisible(false)
-      setTimeout(onClose, 300)
+      // 延迟触发 onClose，以配合动画
+      if (typeof onClose === 'function') {
+        closeCallbackTimerRef.current = setTimeout(onClose, 300)
+      }
     }, duration)
 
-    return () => clearTimeout(timer)
+    // 保存引用以便卸载时清理
+    visibleTimerRef.current = hideTimer
+
+    return () => {
+      if (visibleTimerRef.current) {
+        clearTimeout(visibleTimerRef.current)
+        visibleTimerRef.current = null
+      }
+      if (closeCallbackTimerRef.current) {
+        clearTimeout(closeCallbackTimerRef.current)
+        closeCallbackTimerRef.current = null
+      }
+    }
   }, [duration, onClose])
 
   const typeStyles = {
@@ -39,3 +56,5 @@ const Toast = ({ message, type = 'info', duration = 3000, onClose }) => {
 }
 
 export default Toast
+
+// 定时器引用（模块级，仅在组件实例内部使用的 ref 将在组件中创建）

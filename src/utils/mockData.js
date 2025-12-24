@@ -890,6 +890,10 @@ export const mockFavorites = [
     alert_price: 18.00
   }
 ];
+  // 模拟新闻收藏（用于前端测试）
+  export const mockNewsFavorites = [
+    // 示例结构：{ favorite_id, user_id, title, source, time, added_at }
+  ]
 
 // 模拟市场行情数据
 export const mockMarketData = [

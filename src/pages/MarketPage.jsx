@@ -1,9 +1,16 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import Toast from '../components/Toast'
 
 const MarketPage = () => {
   const [currentTab, setCurrentTab] = useState('market')
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState([])
+  
+  const navigate = useNavigate()
+  const [showToast, setShowToast] = useState(false)
+  const [toastMessage, setToastMessage] = useState('')
+  const [toastType, setToastType] = useState('info')
 
   // 模拟指数数据
   const indices = [
@@ -104,6 +111,67 @@ const MarketPage = () => {
     }
   }, [searchQuery])
 
+  // 交互处理：路由跳转至详情页（优先通过 location.state 传递数据）
+  const handleViewDetail = (stock) => {
+    const code = stock.code || stock.stock_code || stock.id || stock.name
+    navigate(`/stock/${encodeURIComponent(code)}`, { state: { item: stock } })
+  }
+
+  const handleViewIndex = (idx) => {
+    navigate(`/index/${encodeURIComponent(idx.id)}`, { state: { item: idx } })
+  }
+
+  const handleViewSector = (sector) => {
+    navigate(`/sector/${encodeURIComponent(sector.name)}`, { state: { item: sector } })
+  }
+
+  // 点击排行项：跳转到股票详情（使用 rank.code）
+  const handleViewRank = (rankItem) => {
+    if (rankItem && rankItem.code) {
+      navigate(`/stock/${encodeURIComponent(rankItem.code)}`, { state: { item: { name: rankItem.name, code: rankItem.code } } })
+    } else {
+      setToastMessage('无法定位股票详情')
+      setToastType('warning')
+      setShowToast(true)
+    }
+  }
+
+  // 点击资金流项：尝试把市场名映射到指数 id 并跳转
+  const handleViewCapital = (flow) => {
+    if (!flow) return
+    const map = {
+      '上证': 'sh',
+      '上证指数': 'sh',
+      '深证': 'sz',
+      '深证成指': 'sz',
+      '创业板': 'cy',
+      '创业板指': 'cy',
+      '沪深300': 'hs300',
+      'A股': 'sh'
+    }
+
+    // 先尝试直接匹配 map key
+    let idxId = null
+    Object.keys(map).forEach(k => {
+      if (flow.market && flow.market.includes(k)) idxId = map[k]
+    })
+
+    // 如果找到了对应指数 id，导航到 index 详情
+    if (idxId) {
+      const idxObj = indices.find(i => i.id === idxId)
+      if (idxObj) {
+        navigate(`/index/${encodeURIComponent(idxObj.id)}`, { state: { item: idxObj } })
+        return
+      }
+    }
+
+    // 回退：导航到行情页并提示
+    setToastMessage('未找到对应指数，已打开行情页')
+    setToastType('info')
+    setShowToast(true)
+    navigate('/market')
+  }
+
   const renderContent = () => {
     switch (currentTab) {
       case 'market':
@@ -114,7 +182,7 @@ const MarketPage = () => {
             </div>
             <div className="stock-list">
               {hotStocks.map((stock, index) => (
-                <div key={index} className="stock-item">
+                <div key={index} className="stock-item" onClick={() => handleViewDetail(stock)}>
                   <div className="stock-info">
                     <div className="stock-name-code">
                       <div className="stock-name">{stock.name}</div>
@@ -145,7 +213,7 @@ const MarketPage = () => {
             </div>
             <div className="sector-list">
               {sectors.map((sector, index) => (
-                <div key={index} className="sector-item">
+                <div key={index} className="sector-item" onClick={() => handleViewSector(sector)}>
                   <div className="sector-info">
                     <div className="sector-name">{sector.name}</div>
                     <div className="sector-leader">领涨: {sector.leadingStock}</div>
@@ -167,7 +235,7 @@ const MarketPage = () => {
             </div>
             <div className="rank-list">
               {rankings.map((rank, index) => (
-                <div key={index} className="rank-item">
+                <div key={index} className="rank-item" onClick={() => handleViewRank(rank)}>
                   <div className="rank-info">
                     <div className="rank-number">{rank.rank}</div>
                     <div className="rank-name-code">
@@ -192,7 +260,7 @@ const MarketPage = () => {
             </div>
             <div className="capital-list">
               {capitalFlows.map((flow, index) => (
-                <div key={index} className="capital-item">
+                <div key={index} className="capital-item" onClick={() => handleViewCapital(flow)}>
                   <div className="capital-info">
                     <div className="capital-name">{flow.name}</div>
                     <div className="capital-market">{flow.market}</div>
@@ -228,7 +296,7 @@ const MarketPage = () => {
         {searchResults.length > 0 && (
           <div className="search-results">
             {searchResults.map((result, index) => (
-              <div key={index} className="search-result-item">
+              <div key={index} className="search-result-item" onClick={() => handleViewDetail(result)}>
                 <div className="search-result-info">
                   <div className="search-result-name">{result.name}</div>
                   <div className="search-result-code">{result.code}</div>
@@ -274,13 +342,13 @@ const MarketPage = () => {
 
       {/* 指数卡片横向滚动 */}
       <div className="index-scroll-container">
-        <div className="index-cards">
-          {indices.map((index) => (
-            <div key={index.id} className="index-card">
-              <div className="index-name">{index.name}</div>
-              <div className="index-point">{index.value}</div>
-              <div className={`index-change ${index.isPositive ? 'change-up' : 'change-down'}`}>
-                {index.change}
+          <div className="index-cards">
+          {indices.map((idx) => (
+            <div key={idx.id} className="index-card" onClick={() => handleViewIndex(idx)}>
+              <div className="index-name">{idx.name}</div>
+              <div className="index-point">{idx.value}</div>
+              <div className={`index-change ${idx.isPositive ? 'change-up' : 'change-down'}`}>
+                {idx.change}
               </div>
             </div>
           ))}
@@ -289,6 +357,11 @@ const MarketPage = () => {
 
       {/* 当前标签内容 */}
       {renderContent()}
+
+      {/* 详情页已改为路由跳转（/stock/:code, /index/:id, /sector/:name） */}
+      {showToast && (
+        <Toast message={toastMessage} type={toastType} onClose={() => setShowToast(false)} />
+      )}
     </div>
   )
 }

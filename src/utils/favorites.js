@@ -1,7 +1,19 @@
 // 收藏管理工具类 - 支持股票和新闻
 class FavoritesManager {
   constructor() {
-    this.storageKey = 'userFavorites'
+    // storageKey 会基于当前用户 id 生成，默认 guest
+    this.userId = null
+    this.storageKey = this._calcKey(null)
+  }
+
+  _calcKey(userId) {
+    return userId ? `userFavorites_${userId}` : 'userFavorites_guest'
+  }
+
+  // 在 AuthContext 中调用以切换当前用户的收藏命名空间
+  setUserId(userId) {
+    this.userId = userId
+    this.storageKey = this._calcKey(userId)
   }
 
   // 获取所有收藏

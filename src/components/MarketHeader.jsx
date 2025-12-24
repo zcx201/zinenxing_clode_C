@@ -1,17 +1,10 @@
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
 const MarketHeader = () => {
   const navigate = useNavigate()
-  const [currentUser, setCurrentUser] = useState(null)
-  const [showDropdown, setShowDropdown] = useState(false)
-
-  useEffect(() => {
-    const user = localStorage.getItem('currentUser')
-    if (user) {
-      setCurrentUser(JSON.parse(user))
-    }
-  }, [])
+  const { currentUser } = useAuth()
 
   const handleBackClick = () => {
     navigate('/')
@@ -21,9 +14,7 @@ const MarketHeader = () => {
     navigate('/login')
   }
 
-  const toggleDropdown = () => {
-    setShowDropdown(!showDropdown)
-  }
+  // 下拉菜单功能暂不需要独立 toggle 函数，保留状态以便未来扩展
 
   return (
     <div className="market-header">

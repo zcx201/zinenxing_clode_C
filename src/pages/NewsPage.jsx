@@ -1,12 +1,42 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import Modal from '../components/Modal'
 import favoritesManager from '../utils/favorites'
+import api from '../utils/api'
+import { useAuth } from '../context/AuthContext'
 
 const NewsPage = () => {
   const [selectedNews, setSelectedNews] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [showToast, setShowToast] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
+  const toastTimerRef = useRef(null)
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) {
+        clearTimeout(toastTimerRef.current)
+        toastTimerRef.current = null
+      }
+    }
+  }, [])
+
+  const { currentUser } = useAuth()
+
+  // 确保 favoritesManager 与当前用户保持一致（AuthContext 已做一次注入，这里以防）
+  useEffect(() => {
+    if (currentUser) {
+      try {
+        if (typeof favoritesManager.setUserId === 'function') favoritesManager.setUserId(currentUser.user_id)
+      } catch (e) {
+        // ignore
+      }
+    } else {
+      try {
+        if (typeof favoritesManager.setUserId === 'function') favoritesManager.setUserId(null)
+      } catch (e) {
+        // ignore
+      }
+    }
+  }, [currentUser])
   // 加载更多状态管理
   const [displayedNews, setDisplayedNews] = useState(4)
   const [isLoading, setIsLoading] = useState(false)
@@ -116,20 +146,25 @@ const NewsPage = () => {
     setIsModalOpen(false)
   }
 
-  const handleFavorite = () => {
-    if (selectedNews) {
-      const success = favoritesManager.addToFavorites({
-        ...selectedNews,
-        type: 'news'
-      })
-      if (success) {
-        setToastMessage('收藏成功')
-      } else {
-        setToastMessage('已收藏')
+  const handleFavorite = async () => {
+    if (!selectedNews) return
+    try {
+      // 尝试使用 API 添加新闻收藏
+      await api.favorites.addFavorite({ type: 'news', title: selectedNews.title, source: selectedNews.source, time: selectedNews.time })
+      setToastMessage('收藏成功')
+    } catch (e) {
+      // 回退到本地实现以保证兼容性
+      try {
+        if (typeof favoritesManager.setUserId === 'function') favoritesManager.setUserId(currentUser ? currentUser.user_id : null)
+        const success = favoritesManager.addToFavorites({ ...selectedNews, type: 'news' })
+        setToastMessage(success ? '收藏成功' : '已收藏')
+      } catch (err) {
+        setToastMessage('收藏失败，请稍后再试')
       }
-      setShowToast(true)
-      setTimeout(() => setShowToast(false), 2000)
     }
+    setShowToast(true)
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+    toastTimerRef.current = setTimeout(() => setShowToast(false), 2000)
   }
 
   // 加载更多新闻
@@ -274,6 +309,7 @@ const NewsPage = () => {
       )}
     </div>
   )
+
 }
 
 export default NewsPage

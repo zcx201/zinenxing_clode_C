@@ -128,7 +128,6 @@ const InteractionPage = () => {
   }
 
   const confirmBet = () => {
-    const amount = parseInt(betAmount)
     setShowBetModal(false)
 
     // 成功提示（这里可以替换为更好的UI提示）

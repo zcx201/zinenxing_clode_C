@@ -2,13 +2,29 @@
 // 实现模拟API，用于前端开发和测试
 
 // 模拟数据
-import { mockUsers, mockStocks, mockFriendRelationships, mockFriendMessages, mockGroups, mockGroupMembers, mockGroupMessages, mockAIPicks, mockFavorites, mockMarketData, mockUserInterests, mockNotifications, mockAdminUsers, mockStockComments } from './mockData';
+import { mockUsers, mockStocks, mockFriendRelationships, mockFriendMessages, mockGroups, mockGroupMembers, mockGroupMessages, mockAIPicks, mockFavorites, mockNewsFavorites, mockMarketData, mockUserInterests, mockNotifications, mockStockComments } from './mockData';
 
 // 模拟延迟
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 // 生成随机ID
 const generateId = () => Math.floor(Math.random() * 1000000);
+
+// 可选的授权 token（模拟）
+// 可选的授权 token（模拟）
+let authToken = null;
+const setAuthToken = (token) => {
+  authToken = token
+}
+
+// 当前 mock 层的 "当前用户 id"，可由外部注入以与 AuthContext 同步
+let apiCurrentUserId = 1
+const setCurrentUserId = (id) => {
+  apiCurrentUserId = id || null
+}
+const getCurrentUserId = () => apiCurrentUserId || 1
+//
+const getAuthToken = () => authToken
 
 // 认证相关API
 const authApi = {
@@ -25,9 +41,8 @@ const authApi = {
       email: userData.email,
       password_hash: userData.password, // 实际项目中应该使用密码哈希
       phone: userData.phone,
-      avatar: '用户',
-      status: 'active',
-      created_at: new Date().toISOString(),
+  avatar: '用户',
+  created_at: new Date().toISOString(),
       last_login: null
     };
     mockUsers.push(newUser);
@@ -173,7 +188,7 @@ const stockApi = {
   },
 
   // 获取股票行情数据
-  getStockMarketData: async (stockId, params) => {
+  getStockMarketData: async (stockId, _params) => {
     await delay(300);
     const stock = mockStocks.find(stock => stock.stock_id === stockId);
     if (!stock) {
@@ -267,7 +282,7 @@ const friendApi = {
   getFriends: async (params) => {
     await delay(300);
     const { status = 'accepted', page = 1, limit = 20 } = params;
-    const currentUserId = 1; // 当前用户ID
+  const currentUserId = getCurrentUserId();
     const friendRelations = mockFriendRelationships.filter(
       relation => (relation.user_id === currentUserId || relation.friend_id === currentUserId) && relation.status === status
     );
@@ -297,7 +312,7 @@ const friendApi = {
   getFriendRequests: async (params) => {
     await delay(300);
     const { status = 'pending', page = 1, limit = 20 } = params;
-    const currentUserId = 1; // 当前用户ID
+  const currentUserId = getCurrentUserId();
     const friendRequests = mockFriendRelationships.filter(
       relation => relation.friend_id === currentUserId && relation.status === status
     );
@@ -325,7 +340,7 @@ const friendApi = {
   // 发送好友请求
   sendFriendRequest: async (friendId) => {
     await delay(500);
-    const currentUserId = 1; // 当前用户ID
+  const currentUserId = getCurrentUserId();
     const existingRequest = mockFriendRelationships.find(
       relation => (relation.user_id === currentUserId && relation.friend_id === friendId) ||
                   (relation.user_id === friendId && relation.friend_id === currentUserId)
@@ -376,7 +391,7 @@ const friendApi = {
   // 删除好友
   removeFriend: async (friendId) => {
     await delay(300);
-    const currentUserId = 1; // 当前用户ID
+  const currentUserId = getCurrentUserId();
     const friendRelationIndex = mockFriendRelationships.findIndex(
       relation => ((relation.user_id === currentUserId && relation.friend_id === friendId) ||
                   (relation.user_id === friendId && relation.friend_id === currentUserId)) &&
@@ -392,7 +407,7 @@ const friendApi = {
   // 拉黑/取消拉黑好友
   toggleBlockFriend: async (friendId) => {
     await delay(500);
-    const currentUserId = 1; // 当前用户ID
+  const currentUserId = getCurrentUserId();
     let friendRelation = mockFriendRelationships.find(
       relation => ((relation.user_id === currentUserId && relation.friend_id === friendId) ||
                   (relation.user_id === friendId && relation.friend_id === currentUserId))
@@ -424,7 +439,7 @@ const messageApi = {
   // 获取与指定好友的聊天记录
   getFriendMessages: async (friendId, params) => {
     await delay(500);
-    const currentUserId = 1; // 当前用户ID
+  const currentUserId = getCurrentUserId();
     const { page = 1, limit = 50, direction = 'desc' } = params;
     const messages = mockFriendMessages.filter(
       message => (message.sender_id === currentUserId && message.receiver_id === friendId) ||
@@ -449,7 +464,7 @@ const messageApi = {
   // 发送好友消息
   sendFriendMessage: async (friendId, messageData) => {
     await delay(300);
-    const currentUserId = 1; // 当前用户ID
+  const currentUserId = getCurrentUserId();
     const newMessage = {
       message_id: generateId(),
       sender_id: currentUserId,
@@ -467,7 +482,7 @@ const messageApi = {
   // 标记好友消息为已读
   markFriendMessagesAsRead: async (friendId) => {
     await delay(300);
-    const currentUserId = 1; // 当前用户ID
+  const currentUserId = getCurrentUserId();
     mockFriendMessages.forEach(message => {
       if (message.sender_id === friendId && message.receiver_id === currentUserId) {
         message.is_read = true;
@@ -479,7 +494,7 @@ const messageApi = {
   // 获取未读好友消息数量
   getUnreadFriendMessagesCount: async () => {
     await delay(200);
-    const currentUserId = 1; // 当前用户ID
+  const currentUserId = getCurrentUserId();
     const unreadCount = mockFriendMessages.filter(
       message => message.receiver_id === currentUserId && !message.is_read
     ).length;
@@ -510,7 +525,7 @@ const messageApi = {
   // 发送群组消息
   sendGroupMessage: async (groupId, messageData) => {
     await delay(300);
-    const currentUserId = 1; // 当前用户ID
+  const currentUserId = getCurrentUserId();
     const newMessage = {
       message_id: generateId(),
       group_id: groupId,
@@ -525,7 +540,7 @@ const messageApi = {
   },
 
   // 标记群组消息为已读
-  markGroupMessagesAsRead: async (groupId) => {
+  markGroupMessagesAsRead: async (_groupId) => {
     await delay(300);
     // 群组消息的已读状态通常需要一个单独的表来跟踪，这里简化处理
     return { success: true, message: 'Messages marked as read' };
@@ -538,8 +553,8 @@ const groupApi = {
   getGroups: async (params) => {
     await delay(300);
     const { page = 1, limit = 20 } = params;
-    const currentUserId = 1; // 当前用户ID
-    const userGroups = mockGroupMembers.filter(member => member.user_id === currentUserId).map(member => member.group_id);
+  const currentUserId = getCurrentUserId();
+  const userGroups = mockGroupMembers.filter(member => member.user_id === currentUserId).map(member => member.group_id);
     const groups = mockGroups.filter(group => userGroups.includes(group.group_id));
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
@@ -555,7 +570,7 @@ const groupApi = {
   // 创建群组
   createGroup: async (groupData) => {
     await delay(500);
-    const currentUserId = 1; // 当前用户ID
+  const currentUserId = getCurrentUserId();
     const newGroup = {
       group_id: generateId(),
       group_name: groupData.group_name,
@@ -608,9 +623,14 @@ const groupApi = {
       throw new Error('群组不存在');
     }
     mockGroups.splice(groupIndex, 1);
-    // 删除群成员和群消息
-    mockGroupMembers = mockGroupMembers.filter(member => member.group_id !== groupId);
-    mockGroupMessages = mockGroupMessages.filter(message => message.group_id !== groupId);
+  // 删除群成员和群消息（就地修改导入数组，避免重赋值导入绑定）
+  const remainingMembers = mockGroupMembers.filter(member => member.group_id !== groupId);
+  mockGroupMembers.length = 0;
+  mockGroupMembers.push(...remainingMembers);
+
+  const remainingMessages = mockGroupMessages.filter(message => message.group_id !== groupId);
+  mockGroupMessages.length = 0;
+  mockGroupMessages.push(...remainingMessages);
     return { success: true, message: 'Group disbanded successfully' };
   },
 
@@ -689,7 +709,7 @@ const groupApi = {
   // 加入群组
   joinGroup: async (groupId) => {
     await delay(500);
-    const currentUserId = 1; // 当前用户ID
+  const currentUserId = getCurrentUserId();
     const existingMember = mockGroupMembers.find(
       member => member.group_id === groupId && member.user_id === currentUserId
     );
@@ -711,7 +731,7 @@ const groupApi = {
   // 退出群组
   leaveGroup: async (groupId) => {
     await delay(300);
-    const currentUserId = 1; // 当前用户ID
+  const currentUserId = getCurrentUserId();
     const memberIndex = mockGroupMembers.findIndex(
       member => member.group_id === groupId && member.user_id === currentUserId
     );
@@ -723,7 +743,7 @@ const groupApi = {
   },
 
   // 邀请用户加入群组
-  inviteToGroup: async (groupId, userId) => {
+  inviteToGroup: async (_groupId, _userId) => {
     await delay(500);
     // 实际项目中，这里应该发送邀请通知
     return { success: true, message: 'Invitation sent successfully' };
@@ -773,8 +793,17 @@ const favoritesApi = {
   // 获取自选股列表
   getFavorites: async (params) => {
     await delay(300);
-    const { page = 1, limit = 50 } = params;
-    const currentUserId = 1; // 当前用户ID
+    const { page = 1, limit = 50, type } = params || {};
+  const currentUserId = getCurrentUserId();
+    if (type === 'news') {
+      // 新闻收藏
+      const userNews = mockNewsFavorites.filter(fav => fav.user_id === currentUserId);
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      const paginated = userNews.slice(startIndex, endIndex);
+      return { total: userNews.length, page, limit, favorites: paginated };
+    }
+    // 默认：股票自选
     const userFavorites = mockFavorites.filter(fav => fav.user_id === currentUserId);
     const favoritesWithStockInfo = userFavorites.map(fav => {
       const stock = mockStocks.find(stock => stock.stock_id === fav.stock_id);
@@ -794,7 +823,23 @@ const favoritesApi = {
   // 添加自选股
   addFavorite: async (favoriteData) => {
     await delay(500);
-    const currentUserId = 1; // 当前用户ID
+  const currentUserId = getCurrentUserId();
+    // 支持新闻与股票两种类型
+    if (favoriteData && favoriteData.type === 'news') {
+      const existing = mockNewsFavorites.find(fav => fav.user_id === currentUserId && fav.title === favoriteData.title);
+      if (existing) throw new Error('新闻已收藏');
+      const newFav = {
+        favorite_id: generateId(),
+        user_id: currentUserId,
+        title: favoriteData.title,
+        source: favoriteData.source || null,
+        time: favoriteData.time || new Date().toISOString(),
+        added_at: new Date().toISOString()
+      };
+      mockNewsFavorites.push(newFav);
+      return newFav;
+    }
+    // 默认走股票自选逻辑
     const existingFavorite = mockFavorites.find(
       fav => fav.user_id === currentUserId && fav.stock_id === favoriteData.stock_id
     );
@@ -827,18 +872,25 @@ const favoritesApi = {
   // 删除自选股
   deleteFavorite: async (favoriteId) => {
     await delay(300);
+    // 先尝试在股票自选中删除
     const favoriteIndex = mockFavorites.findIndex(fav => fav.favorite_id === favoriteId);
-    if (favoriteIndex === -1) {
-      throw new Error('自选股不存在');
+    if (favoriteIndex !== -1) {
+      mockFavorites.splice(favoriteIndex, 1);
+      return { success: true, message: 'Favorite removed successfully' };
     }
-    mockFavorites.splice(favoriteIndex, 1);
-    return { success: true, message: 'Favorite removed successfully' };
+    // 再尝试新闻收藏
+    const newsIndex = mockNewsFavorites.findIndex(fav => fav.favorite_id === favoriteId);
+    if (newsIndex !== -1) {
+      mockNewsFavorites.splice(newsIndex, 1);
+      return { success: true, message: 'Favorite removed successfully' };
+    }
+    throw new Error('自选/收藏不存在');
   },
 
   // 检查股票是否在自选股中
   checkFavorite: async (stockId) => {
     await delay(200);
-    const currentUserId = 1; // 当前用户ID
+  const currentUserId = getCurrentUserId();
     const isFavorite = mockFavorites.some(fav => fav.user_id === currentUserId && fav.stock_id === stockId);
     return { is_favorite: isFavorite };
   }
@@ -882,9 +934,8 @@ const marketApi = {
   },
 
   // 获取股票历史行情
-  getStockHistoryData: async (stockId, params) => {
+  getStockHistoryData: async (stockId, _params) => {
     await delay(500);
-    const { start_date, end_date, interval = '1d' } = params;
     // 模拟历史数据，实际项目中应该从数据库或API获取
     const historyData = mockMarketData.filter(data => data.stock_id === stockId);
     const stock = mockStocks.find(stock => stock.stock_id === stockId);
@@ -953,7 +1004,7 @@ const interestApi = {
   // 获取用户兴趣标签
   getInterests: async () => {
     await delay(300);
-    const currentUserId = 1; // 当前用户ID
+  const currentUserId = getCurrentUserId();
     const userInterests = mockUserInterests.filter(interest => interest.user_id === currentUserId);
     return { interests: userInterests };
   },
@@ -961,7 +1012,7 @@ const interestApi = {
   // 添加用户兴趣标签
   addInterest: async (interestData) => {
     await delay(500);
-    const currentUserId = 1; // 当前用户ID
+  const currentUserId = getCurrentUserId();
     const existingInterest = mockUserInterests.find(
       interest => interest.user_id === currentUserId &&
                   interest.interest_type === interestData.interest_type &&
@@ -1012,7 +1063,7 @@ const notificationApi = {
   getNotifications: async (params) => {
     await delay(300);
     const { is_read = false, page = 1, limit = 20 } = params;
-    const currentUserId = 1; // 当前用户ID
+  const currentUserId = getCurrentUserId();
     let userNotifications = mockNotifications.filter(notification => notification.user_id === currentUserId);
     if (is_read !== undefined) {
       userNotifications = userNotifications.filter(notification => notification.is_read === is_read);
@@ -1054,7 +1105,7 @@ const notificationApi = {
   // 标记所有通知为已读
   markAllNotificationsAsRead: async () => {
     await delay(500);
-    const currentUserId = 1; // 当前用户ID
+  const currentUserId = getCurrentUserId();
     mockNotifications.forEach(notification => {
       if (notification.user_id === currentUserId) {
         notification.is_read = true;
@@ -1067,7 +1118,7 @@ const notificationApi = {
   // 获取未读通知数量
   getUnreadNotificationCount: async () => {
     await delay(200);
-    const currentUserId = 1; // 当前用户ID
+  const currentUserId = getCurrentUserId();
     const unreadCount = mockNotifications.filter(
       notification => notification.user_id === currentUserId && !notification.is_read
     ).length;
@@ -1089,5 +1140,12 @@ const api = {
   interest: interestApi,
   notification: notificationApi
 };
+
+// 暴露用于注入 token 的方法
+api.setToken = setAuthToken
+// 暴露用于设置/获取当前用户 id（mock 用）
+api.setCurrentUserId = setCurrentUserId
+api.getCurrentUserId = getCurrentUserId
+api.getAuthToken = getAuthToken
 
 export default api;

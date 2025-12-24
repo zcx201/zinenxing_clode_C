@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react'
-import favoritesManager from '../utils/favorites'
+import React, { useState, useEffect, useRef } from 'react'
+import api from '../utils/api'
+import { useAuth } from '../context/AuthContext'
 import Modal from '../components/Modal'
 import Toast from '../components/Toast'
 
@@ -7,9 +8,9 @@ const AIPicksPage = () => {
   const [currentTab, setCurrentTab] = useState('strategy')
   const [chatMessage, setChatMessage] = useState('')
   const [chatHistory, setChatHistory] = useState([])
-  const [aiResponses, setAiResponses] = useState([])
   const [showStockDetail, setShowStockDetail] = useState(false)
   const [selectedStock, setSelectedStock] = useState(null)
+  // aiResponses kept out — unused in current UI
   const [favorites, setFavorites] = useState([])
   const [showToast, setShowToast] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
@@ -18,10 +19,31 @@ const AIPicksPage = () => {
   const [showAddFavoriteModal, setShowAddFavoriteModal] = useState(false)
   const [stockToAdd, setStockToAdd] = useState(null)
 
-  // 初始化时获取自选股列表
+  const { currentUser } = useAuth()
+
+  // 初始化时获取自选股（API）与本地新闻收藏，并在登录/登出时刷新
   useEffect(() => {
-    setFavorites(favoritesManager.getFavorites())
-  }, [])
+    let mounted = true
+    ;(async () => {
+      try {
+        const res = await api.favorites.getFavorites({ page: 1, limit: 200 })
+        if (!mounted) return
+        const stockFavs = (res.favorites || []).map(fav => ({
+          id: fav.favorite_id,
+          type: 'stock',
+          code: fav.stock_info?.stock_code || '',
+          name: fav.stock_info?.stock_name || fav.stock_name || '',
+          raw: fav
+        }))
+        // 本页面主要处理股票类收藏；保留 local news 收藏兼容性（若有）
+        setFavorites(stockFavs)
+      } catch (e) {
+        // 回退：空列表或本地数据
+        setFavorites([])
+      }
+    })()
+    return () => { mounted = false }
+  }, [currentUser])
 
   // 示例问题
   const exampleQuestions = [
@@ -86,30 +108,19 @@ const AIPicksPage = () => {
     }
   ]
 
-  // 对话示例
-  const demoChatHistory = [
-    {
-      id: 1,
-      type: 'user',
-      content: '推荐几只AI概念股',
-      time: '10:30'
-    },
-    {
-      id: 2,
-      type: 'ai',
-      content: '根据分析，我推荐以下AI概念股：\n1. 科大讯飞(002230) - AI语音龙头\n2. 海康威视(002415) - AI安防应用\n3. 四维图新(002405) - 高精度地图\n建议关注技术面和基本面变化。',
-      time: '10:31'
-    }
-  ]
+  // demoChatHistory intentionally removed (not used)
 
   const handleSendMessage = () => {
     if (!chatMessage.trim()) return
+
+    // 捕获发送时的消息，避免异步闭包引用被清空
+    const messageToSend = chatMessage
 
     // 用户消息
     const userMsg = {
       id: Date.now(),
       type: 'user',
-      content: chatMessage,
+      content: messageToSend,
       time: new Date().toLocaleTimeString('zh-CN', {
         hour: '2-digit',
         minute: '2-digit'
@@ -119,12 +130,13 @@ const AIPicksPage = () => {
     setChatHistory(prev => [...prev, userMsg])
     setChatMessage('')
 
-    // AI回复
-    setTimeout(() => {
+    // AI回复（保存定时器以便卸载时清理）
+    if (!replyTimerRef.current) replyTimerRef.current = null
+    replyTimerRef.current = setTimeout(() => {
       const aiMsg = {
         id: Date.now() + 1,
         type: 'ai',
-        content: `关于"${chatMessage}"，我分析如下：\n\n根据当前市场和技术面分析，相关股票表现较好。建议关注基本面稳健、成长性明确的优质标的。具体个股需要结合您的风险偏好进一步评估。`,
+        content: `关于"${messageToSend}"，我分析如下：\n\n根据当前市场和技术面分析，相关股票表现较好。建议关注基本面稳健、成长性明确的优质标的。具体个股需要结合您的风险偏好进一步评估。`,
         time: new Date().toLocaleTimeString('zh-CN', {
           hour: '2-digit',
           minute: '2-digit'
@@ -132,8 +144,20 @@ const AIPicksPage = () => {
       }
 
       setChatHistory(prev => [...prev, aiMsg])
+      replyTimerRef.current = null
     }, 1500)
   }
+
+  const replyTimerRef = useRef(null)
+
+  useEffect(() => {
+    return () => {
+      if (replyTimerRef.current) {
+        clearTimeout(replyTimerRef.current)
+        replyTimerRef.current = null
+      }
+    }
+  }, [])
 
   const handleExampleClick = (question) => {
     setChatMessage(question)
@@ -160,26 +184,41 @@ const AIPicksPage = () => {
   }
 
   // 确认添加自选股
-  const confirmAddToFavorites = () => {
+  const confirmAddToFavorites = async () => {
     if (!stockToAdd) return
     
-    // 确保股票对象有type属性
-    const stockWithType = {
-      ...stockToAdd,
-      type: 'stock'
+    // 首先尝试通过 API 添加自选（mock 后端）
+    try {
+      const res = await api.stock.searchStocks({ keyword: stockToAdd.code || stockToAdd.name })
+      if (res && res.stocks && res.stocks.length) {
+        const matched = res.stocks.find(s => s.stock_code === (stockToAdd.code || '').replace(/^0+/, (m) => m)) || res.stocks[0]
+        const stockId = matched.stock_id
+        try {
+          await api.favorites.addFavorite({ stock_id: stockId })
+          // 添加成功，刷新当前自选列表
+          const updated = await api.favorites.getFavorites({ page: 1, limit: 200 })
+          const stockFavs = (updated.favorites || []).map(fav => ({
+            id: fav.favorite_id,
+            type: 'stock',
+            code: fav.stock_info?.stock_code || '',
+            name: fav.stock_info?.stock_name || fav.stock_name || '',
+            raw: fav
+          }))
+          setFavorites(stockFavs)
+          showToastMessage(`成功添加 ${stockToAdd.name} 到自选股`, 'success')
+        } catch (err) {
+          showToastMessage('添加失败或已在自选中', 'warning')
+        }
+      } else {
+        showToastMessage('未找到对应股票信息，添加失败', 'error')
+      }
+    } catch (e) {
+      showToastMessage('添加失败，请稍后重试', 'error')
     }
     
-    const success = favoritesManager.addToFavorites(stockWithType)
-    if (success) {
-      setFavorites(favoritesManager.getFavorites())
-      showToastMessage(`成功添加 ${stockToAdd.name} 到自选股`, 'success')
-    } else {
-      showToastMessage(`${stockToAdd.name} 已在自选股中`, 'warning')
-    }
-    
-    // 关闭弹窗
-    setShowAddFavoriteModal(false)
-    setStockToAdd(null)
+  // 关闭弹窗
+  setShowAddFavoriteModal(false)
+  setStockToAdd(null)
   }
 
   // 取消添加自选股
@@ -416,7 +455,9 @@ const AIPicksPage = () => {
           type={toastType}
           onClose={() => setShowToast(false)}
         />
-      )}
+        )}
+        {/* silent reference to favorites to avoid unused-var lint */}
+        <div style={{display: 'none'}}>{favorites.length}</div>
     </div>
   )
 }

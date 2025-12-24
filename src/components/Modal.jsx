@@ -1,20 +1,28 @@
 import React, { useEffect, useRef } from 'react'
 
-const Modal = ({ isOpen, onClose, title, children, size = 'md', type = 'center' }) => {
+const Modal = ({ isOpen, onClose, title, children, size = 'md', type = 'center', guessListTab, setGuessListTab }) => {
   const modalRef = useRef(null)
   const startYRef = useRef(0)
   const currentYRef = useRef(0)
   const isDraggingRef = useRef(false)
 
+  // 支持多 modal 时 body overflow 管理（计数器）
   useEffect(() => {
+    const count = Number(document.body.dataset.modalCount || 0)
     if (isOpen) {
+      document.body.dataset.modalCount = count + 1
       document.body.style.overflow = 'hidden'
     } else {
-      document.body.style.overflow = 'unset'
+      const next = Math.max(0, count - 1)
+      document.body.dataset.modalCount = next
+      if (next === 0) document.body.style.overflow = 'unset'
     }
 
     return () => {
-      document.body.style.overflow = 'unset'
+      const cur = Number(document.body.dataset.modalCount || 0)
+      const next = Math.max(0, cur - 1)
+      document.body.dataset.modalCount = next
+      if (next === 0) document.body.style.overflow = 'unset'
     }
   }, [isOpen])
 
@@ -67,6 +75,11 @@ const Modal = ({ isOpen, onClose, title, children, size = 'md', type = 'center' 
   }
 
   if (type === 'bottom') {
+    // 计算 tab 状态的安全来源（优先 Modal props，其次 children.props）
+    const effectiveGuessListTab = guessListTab ?? children?.props?.guessListTab
+    const effectiveSetGuessListTab = typeof setGuessListTab === 'function'
+      ? setGuessListTab
+      : (typeof children?.props?.setGuessListTab === 'function' ? children.props.setGuessListTab : null)
     return (
       <div className="fixed inset-0 z-50 flex items-end justify-center p-0 bg-black bg-opacity-50" onClick={onClose}>
         <div 
@@ -94,50 +107,50 @@ const Modal = ({ isOpen, onClose, title, children, size = 'md', type = 'center' 
 
           {/* 标签栏 - 固定高度48px */}
           <div className="flex justify-around h-12 border-b border-gray-200 flex-shrink-0">
-            {children.props?.guessListTab === 'ongoing' && (
+            {effectiveGuessListTab === 'ongoing' && (
               <button
                 className="flex-1 text-center flex items-center justify-center font-medium text-primary-500 border-b-2 border-primary-500"
-                onClick={() => children.props?.setGuessListTab('ongoing')}
+                onClick={() => effectiveSetGuessListTab && effectiveSetGuessListTab('ongoing')}
               >
                 进行中
               </button>
             )}
-            {children.props?.guessListTab === 'history' && (
+            {effectiveGuessListTab === 'history' && (
               <button
                 className="flex-1 text-center flex items-center justify-center font-medium text-primary-500 border-b-2 border-primary-500"
-                onClick={() => children.props?.setGuessListTab('history')}
+                onClick={() => effectiveSetGuessListTab && effectiveSetGuessListTab('history')}
               >
                 历史记录
               </button>
             )}
-            {children.props?.guessListTab === 'all' && (
+            {effectiveGuessListTab === 'all' && (
               <button
                 className="flex-1 text-center flex items-center justify-center font-medium text-primary-500 border-b-2 border-primary-500"
-                onClick={() => children.props?.setGuessListTab('all')}
+                onClick={() => effectiveSetGuessListTab && effectiveSetGuessListTab('all')}
               >
                 全部
               </button>
             )}
-            {children.props?.guessListTab !== 'ongoing' && (
+            {effectiveGuessListTab !== 'ongoing' && (
               <button
                 className="flex-1 text-center flex items-center justify-center font-medium text-gray-500"
-                onClick={() => children.props?.setGuessListTab('ongoing')}
+                onClick={() => effectiveSetGuessListTab && effectiveSetGuessListTab('ongoing')}
               >
                 进行中
               </button>
             )}
-            {children.props?.guessListTab !== 'history' && (
+            {effectiveGuessListTab !== 'history' && (
               <button
                 className="flex-1 text-center flex items-center justify-center font-medium text-gray-500"
-                onClick={() => children.props?.setGuessListTab('history')}
+                onClick={() => effectiveSetGuessListTab && effectiveSetGuessListTab('history')}
               >
                 历史记录
               </button>
             )}
-            {children.props?.guessListTab !== 'all' && (
+            {effectiveGuessListTab !== 'all' && (
               <button
                 className="flex-1 text-center flex items-center justify-center font-medium text-gray-500"
-                onClick={() => children.props?.setGuessListTab('all')}
+                onClick={() => effectiveSetGuessListTab && effectiveSetGuessListTab('all')}
               >
                 全部
               </button>

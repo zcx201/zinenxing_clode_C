@@ -1,15 +1,16 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Modal from '../components/Modal'
+import { useAuth } from '../context/AuthContext'
 
 const ProfilePage = () => {
   const navigate = useNavigate()
-  const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}')
+  const { currentUser, logout } = useAuth()
   const [showModal, setShowModal] = useState(false)
   const [modalContent, setModalContent] = useState({ title: '', message: '' })
 
-  const handleLogout = () => {
-    localStorage.removeItem('currentUser')
+  const handleLogout = async () => {
+    await logout()
     navigate('/login')
   }
 

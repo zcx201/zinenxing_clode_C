@@ -3,7 +3,7 @@ import Modal from '../components/Modal'
 import Toast from '../components/Toast'
 
 const FriendsPage = () => {
-  const [currentTab, setCurrentTab] = useState('messages')
+  // currentTab previously used for alternate views; removed because not used
   const [selectedChat, setSelectedChat] = useState(null)
   const [messages, setMessages] = useState([])
   const [newMessage, setNewMessage] = useState('')
@@ -17,6 +17,7 @@ const FriendsPage = () => {
   const [toastType, setToastType] = useState('info')
   const dropdownRef = useRef(null)
   const chatDropdownRef = useRef(null)
+  const replyTimerRef = useRef(null)
 
   // 点击外部关闭下拉菜单
   useEffect(() => {
@@ -148,7 +149,11 @@ const FriendsPage = () => {
     setNewMessage('')
 
     // 模拟回复
-    setTimeout(() => {
+    if (replyTimerRef.current) {
+      clearTimeout(replyTimerRef.current)
+      replyTimerRef.current = null
+    }
+    replyTimerRef.current = setTimeout(() => {
       const replies = [
         '这个观点很有意思！',
         '我也有同感',
@@ -167,6 +172,15 @@ const FriendsPage = () => {
       }])
     }, 1000)
   }
+
+  useEffect(() => {
+    return () => {
+      if (replyTimerRef.current) {
+        clearTimeout(replyTimerRef.current)
+        replyTimerRef.current = null
+      }
+    }
+  }, [])
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
@@ -1003,8 +1017,8 @@ const FriendsPage = () => {
         size="sm"
       >
         <div className="p-4">
-          <p className="text-center text-gray-700 mb-4">
-            确定要退出"{selectedChat?.name}"群聊吗？<br/>
+            <p className="text-center text-gray-700 mb-4">
+            确定要退出「{selectedChat?.name}」群聊吗？<br/>
             退出后将不再接收此群消息。
           </p>
           <div className="flex gap-2">

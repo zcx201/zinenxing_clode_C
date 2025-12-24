@@ -1,12 +1,12 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
 const Header = () => {
   const navigate = useNavigate()
+  const { currentUser } = useAuth()
 
   const handleLoginClick = () => {
-    // 检查登录状态，如果未登录则跳转到登录页面
-    const currentUser = localStorage.getItem('currentUser')
     if (currentUser) {
       navigate('/profile')
     } else {
@@ -14,8 +14,7 @@ const Header = () => {
     }
   }
 
-  const currentUser = localStorage.getItem('currentUser')
-  const user = currentUser ? JSON.parse(currentUser) : null
+  const user = currentUser ? currentUser : null
 
   return (
     <div className="fixed-header">

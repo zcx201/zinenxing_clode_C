@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import favoritesManager from '../utils/favorites'
+import api from '../utils/api'
+import { useAuth } from '../context/AuthContext'
 import Toast from '../components/Toast'
 import Modal from '../components/Modal'
 
@@ -14,9 +16,76 @@ const FavoritesPage = () => {
   const [selectedDiscussion, setSelectedDiscussion] = useState(null)
 
   useEffect(() => {
-    // 从本地存储获取所有收藏
-    setFavorites(favoritesManager.getFavorites())
+    // 初始载入：优先从 mock API 获取股票类收藏；新闻类收藏仍从本地 favoritesManager 获取以保持兼容
+    let mounted = true
+    ;(async () => {
+      try {
+        const [stockRes, newsRes] = await Promise.all([
+          api.favorites.getFavorites({ page: 1, limit: 200 }),
+          api.favorites.getFavorites({ page: 1, limit: 200, type: 'news' })
+        ])
+        if (!mounted) return
+        const stockFavs = (stockRes.favorites || []).map(fav => ({
+          id: fav.favorite_id,
+          type: 'stock',
+          code: fav.stock_info?.stock_code || '',
+          name: fav.stock_info?.stock_name || fav.stock_name || '',
+          raw: fav
+        }))
+        const newsFavs = (newsRes.favorites || []).map(fav => ({
+          id: fav.favorite_id,
+          type: 'news',
+          title: fav.title,
+          source: fav.source,
+          time: fav.time,
+          raw: fav
+        }))
+        setFavorites([...stockFavs, ...newsFavs])
+      } catch (e) {
+        // 如果 API 出错，回退到本地收藏
+        setFavorites(favoritesManager.getFavorites())
+      }
+    })()
+    return () => { mounted = false }
   }, [])
+
+  const { currentUser } = useAuth()
+
+  // 在用户切换时刷新收藏列表
+  useEffect(() => {
+    // 当前用户切换时刷新收藏（优先 API）
+    let mounted = true
+    ;(async () => {
+      try {
+        if (currentUser && typeof favoritesManager.setUserId === 'function') favoritesManager.setUserId(currentUser.user_id)
+        const [stockRes, newsRes] = await Promise.all([
+          api.favorites.getFavorites({ page: 1, limit: 200 }),
+          api.favorites.getFavorites({ page: 1, limit: 200, type: 'news' })
+        ])
+        if (!mounted) return
+        const stockFavs = (stockRes.favorites || []).map(fav => ({
+          id: fav.favorite_id,
+          type: 'stock',
+          code: fav.stock_info?.stock_code || '',
+          name: fav.stock_info?.stock_name || fav.stock_name || '',
+          raw: fav
+        }))
+        const newsFavs = (newsRes.favorites || []).map(fav => ({
+          id: fav.favorite_id,
+          type: 'news',
+          title: fav.title,
+          source: fav.source,
+          time: fav.time,
+          raw: fav
+        }))
+        setFavorites([...stockFavs, ...newsFavs])
+      } catch (e) {
+        if (!mounted) return
+        setFavorites(favoritesManager.getFavorites())
+      }
+    })()
+    return () => { mounted = false }
+  }, [currentUser])
 
   // 显示Toast消息
   const showToastMessage = (message, type = 'info') => {
@@ -70,11 +139,37 @@ const FavoritesPage = () => {
   }
 
   // 移除收藏
-  const handleRemoveFavorite = (id) => {
-    const success = favoritesManager.removeFromFavorites(id)
-    if (success) {
-      setFavorites(favoritesManager.getFavorites())
+  const handleRemoveFavorite = async (id) => {
+    // 如果是 API 管理的自选股（type === 'stock' 并且 id 为 favorite_id），调用 API；否则回退到本地 favoritesManager
+    const target = favorites.find(f => f.id === id)
+    if (!target) return
+    try {
+      // 支持 API 管理的股票与新闻收藏
+      await api.favorites.deleteFavorite(id)
+      // 重新拉取股票与新闻收藏
+      const [stockRes, newsRes] = await Promise.all([
+        api.favorites.getFavorites({ page: 1, limit: 200 }),
+        api.favorites.getFavorites({ page: 1, limit: 200, type: 'news' })
+      ])
+      const stockFavs = (stockRes.favorites || []).map(fav => ({
+        id: fav.favorite_id,
+        type: 'stock',
+        code: fav.stock_info?.stock_code || '',
+        name: fav.stock_info?.stock_name || fav.stock_name || '',
+        raw: fav
+      }))
+      const newsFavs = (newsRes.favorites || []).map(fav => ({
+        id: fav.favorite_id,
+        type: 'news',
+        title: fav.title,
+        source: fav.source,
+        time: fav.time,
+        raw: fav
+      }))
+      setFavorites([...stockFavs, ...newsFavs])
       showToastMessage('已从收藏中移除', 'success')
+    } catch (e) {
+      showToastMessage('移除失败，请稍后重试', 'error')
     }
   }
 

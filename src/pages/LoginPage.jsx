@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
 const LoginPage = () => {
   const navigate = useNavigate()
@@ -19,46 +20,30 @@ const LoginPage = () => {
     }))
   }
 
-  const handleSubmit = (e) => {
+  const { login, register } = useAuth()
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
-
     if (isLogin) {
-      // 登录逻辑
-      const users = JSON.parse(localStorage.getItem('users') || '[]')
-      const user = users.find(u => u.username === formData.username && u.password === formData.password)
-
-      if (user) {
-        localStorage.setItem('currentUser', JSON.stringify(user))
+      try {
+        await login({ username: formData.username, password: formData.password })
         navigate('/')
-      } else {
-        alert('用户名或密码错误')
+      } catch (err) {
+        alert(err.message || '登录失败')
       }
     } else {
-      // 注册逻辑
+      // 注册逻辑通过 mock API
       if (formData.password !== formData.confirmPassword) {
         alert('两次输入的密码不一致')
         return
       }
 
-      const users = JSON.parse(localStorage.getItem('users') || '[]')
-      const existingUser = users.find(u => u.username === formData.username)
-
-      if (existingUser) {
-        alert('用户名已存在')
-        return
+      try {
+        await register({ username: formData.username, email: formData.email, password: formData.password })
+        navigate('/')
+      } catch (err) {
+        alert(err.message || '注册失败')
       }
-
-      const newUser = {
-        username: formData.username,
-        email: formData.email,
-        password: formData.password,
-        joinDate: new Date().toISOString()
-      }
-
-      users.push(newUser)
-      localStorage.setItem('users', JSON.stringify(users))
-      localStorage.setItem('currentUser', JSON.stringify(newUser))
-      navigate('/')
     }
   }
 
