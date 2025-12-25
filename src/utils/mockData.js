@@ -247,6 +247,87 @@ export const mockStocks = [
     is_active: true,
     created_at: daysAgo(30)
   }
+  ,
+  {
+    stock_id: 11,
+    stock_code: '300750',
+    stock_name: '宁德时代',
+    market_type: 'A股',
+    industry: '新能源',
+    listing_date: '2018-06-11',
+    is_active: true,
+    created_at: daysAgo(30)
+  },
+  {
+    stock_id: 12,
+    stock_code: '002475',
+    stock_name: '立讯精密',
+    market_type: 'A股',
+    industry: '电子制造',
+    listing_date: '2010-08-12',
+    is_active: true,
+    created_at: daysAgo(30)
+  },
+  {
+    stock_id: 13,
+    stock_code: '603259',
+    stock_name: '药明康德',
+    market_type: 'A股',
+    industry: '医药',
+    listing_date: '2015-06-23',
+    is_active: true,
+    created_at: daysAgo(30)
+  },
+  {
+    stock_id: 14,
+    stock_code: '000063',
+    stock_name: '中兴通讯',
+    market_type: 'A股',
+    industry: '通信设备',
+    listing_date: '1997-11-18',
+    is_active: true,
+    created_at: daysAgo(30)
+  },
+  {
+    stock_id: 15,
+    stock_code: '002594',
+    stock_name: '比亚迪',
+    market_type: 'A股',
+    industry: '汽车',
+    listing_date: '2002-06-19',
+    is_active: true,
+    created_at: daysAgo(30)
+  },
+  {
+    stock_id: 16,
+    stock_code: '600519',
+    stock_name: '贵州茅台',
+    market_type: 'A股',
+    industry: '白酒',
+    listing_date: '2001-08-27',
+    is_active: true,
+    created_at: daysAgo(30)
+  },
+  {
+    stock_id: 17,
+    stock_code: '601318',
+    stock_name: '中国平安',
+    market_type: 'A股',
+    industry: '保险',
+    listing_date: '1994-03-05',
+    is_active: true,
+    created_at: daysAgo(30)
+  },
+  {
+    stock_id: 18,
+    stock_code: '600036',
+    stock_name: '招商银行',
+    market_type: 'A股',
+    industry: '银行',
+    listing_date: '2002-04-09',
+    is_active: true,
+    created_at: daysAgo(30)
+  }
 ];
 
 // 模拟好友关系数据

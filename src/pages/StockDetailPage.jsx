@@ -5,6 +5,7 @@ import favoritesManager from '../utils/favorites'
 import { useAuth } from '../context/AuthContext'
 import Toast from '../components/Toast'
 import Modal from '../components/Modal'
+import { notifyFavoritesUpdated } from '../utils/favoritesNotifier'
 
 const StockDetailPage = () => {
   const { code, id, name } = useParams()
@@ -78,6 +79,7 @@ const StockDetailPage = () => {
       if (item && item.stock_id) {
         await api.favorites.addFavorite({ stock_id: item.stock_id })
         setIsFavorite(true)
+          try { notifyFavoritesUpdated() } catch (e) {}
         doToast('已加入自选股', 'success')
       } else if (item && (item.stock_code || item.code)) {
         // try to resolve stock_id first
@@ -86,12 +88,19 @@ const StockDetailPage = () => {
         if (matched && matched.stock_id) {
           await api.favorites.addFavorite({ stock_id: matched.stock_id })
           setIsFavorite(true)
+            try { notifyFavoritesUpdated() } catch (e) {}
           doToast('已加入自选股', 'success')
         } else {
           // fallback to local favoritesManager
+          try {
+            if (typeof favoritesManager.setUserId === 'function') favoritesManager.setUserId(currentUser ? currentUser.user_id : null)
+          } catch (e) {
+            // ignore
+          }
           const added = favoritesManager.addToFavorites({ type: 'stock', code: item.stock_code || item.code || '', name: item.stock_name || item.name || '' })
           if (added) {
             setIsFavorite(true)
+            try { notifyFavoritesUpdated() } catch (e) {}
             doToast('已加入本地自选（离线）', 'success')
           } else {
             doToast('已在自选中', 'warning')
@@ -104,6 +113,11 @@ const StockDetailPage = () => {
       // API error -> fallback to local
       try {
         if (item) {
+          try {
+            if (typeof favoritesManager.setUserId === 'function') favoritesManager.setUserId(currentUser ? currentUser.user_id : null)
+          } catch (e) {
+            // ignore
+          }
           const added = favoritesManager.addToFavorites({ type: 'stock', code: item.stock_code || item.code || '', name: item.stock_name || item.name || '' })
           if (added) {
             setIsFavorite(true)

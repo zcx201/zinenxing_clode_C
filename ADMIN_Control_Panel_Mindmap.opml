@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head>
+    <title>智能鑫 Admin 控制台 思维导图</title>
+    <dateCreated>2025-12-25T00:00:00Z</dateCreated>
+    <ownerName>智能鑫团队</ownerName>
+  </head>
+  <body>
+    <outline text="Admin 控制台">
+      <outline text="仪表盘 (Dashboard)">
+        <outline text="KPI 总览 (用户/DAU/MAU/留存/自选数/消息量)"/>
+        <outline text="系统健康 (CPU/内存/队列/失败任务)"/>
+        <outline text="实时告警 & 快速操作 (触发任务/重跑 job)"/>
+      </outline>
+
+      <outline text="用户管理 (Users)">
+        <outline text="列表 / 搜索 / 筛选 (状态/角色/活跃度/最后登录)"/>
+        <outline text="用户详情 (Profile, 活动流, 收藏, 自选, 举报记录)"/>
+        <outline text="操作: 禁用/解禁/重置密码/分配角色/导出/批量操作"/>
+        <outline text="接口 & 数据模型 (GET /admin/users, users 表等)"/>
+      </outline>
+
+      <outline text="权限与角色管理 (RBAC)">
+        <outline text="角色管理 (创建/编辑/删除)"/>
+        <outline text="权限分配 (role -> permissions)"/>
+        <outline text="用户角色映射"/>
+        <outline text="权限点：superadmin/admin.user_manage 等"/>
+      </outline>
+
+      <outline text="内容管理 (CMS)">
+        <outline text="新闻 / 文章 (CRUD, 定时发布, 标签, 图片)"/>
+        <outline text="AI 推荐 (AIPicks: 审阅, 手动调整, A/B 测试)"/>
+        <outline text="市场/股票数据 (stocks 管理, 导入/导出, 行业分类)"/>
+        <outline text="评论 / 举报 处理 (内容审计队列)"/>
+        <outline text="AI 模型管理 (ModelOps)">
+          <outline text="模型仓库: 版本/元数据/标签"/>
+          <outline text="训练任务管理 (触发/资源/日志)"/>
+          <outline text="评估与验证 (指标/回归测试/对比实验)"/>
+          <outline text="部署与发布 (线上/离线/A/B 测试)"/>
+          <outline text="数据集与标注管理 (数据来源/样本审查)"/>
+          <outline text="权限与审计 (谁修改/谁部署/变更历史)"/>
+        </outline>
+      </outline>
+
+      <outline text="自选嗨吧 & 收藏管理 (Favorites)">
+        <outline text="按用户/按股票查看自选"/>
+        <outline text="移除 / 批量操作 / 导入导出"/>
+        <outline text="审计: 谁在何时加入/删除"/>
+      </outline>
+
+      <outline text="群组与社交 (Groups / Friends / Messages)">
+        <outline text="群组管理 (成员管理, 解散, 权限)"/>
+        <outline text="查看群消息 / 搜索 / 举报处理"/>
+        <outline text="私信/群消息审计"/>
+      </outline>
+
+      <outline text="互动 / 评论 / 举报 (Interaction)">
+        <outline text="评论列表 / 删除 / 批量处理"/>
+        <outline text="举报工单 (查看/处理/关闭)"/>
+        <outline text="聊天记录回放 (按用户/按群/关键词)"/>
+      </outline>
+
+      <outline text="通知与消息 (Notifications)">
+        <outline text="模板管理 (邮件/SMS/推送)"/>
+        <outline text="发送历史 / 重试队列"/>
+        <outline text="手动发送 / 规则触发配置"/>
+      </outline>
+
+      <outline text="数据与统计 (Analytics)">
+        <outline text="用户增长 / 漏斗 / 留存 / 活跃曲线"/>
+        <outline text="自选增长曲线 / 消息量统计"/>
+        <outline text="导出图表 / CSV, 支持自定义时间范围"/>
+        <outline text="数据来源: 事件总线 / ETL -> OLAP (建议)"/>
+      </outline>
+
+      <outline text="审计日志 (Audit)">
+        <outline text="记录管理员后台的变更操作 (谁/何时/何改)"/>
+        <outline text="接口: GET /admin/audit"/>
+        <outline text="合规: 数据保留策略 / 导出 / 隐私处理"/>
+      </outline>
+
+      <outline text="系统设置 (System Settings)">
+        <outline text="站点参数 / 维护模式"/>
+        <outline text="第三方 API Keys (短信/邮件/行情)"/>
+        <outline text="Feature flags / 开关管理"/>
+      </outline>
+
+      <outline text="迁移与数据导入 (Migration)">
+        <outline text="上传 SQL/CSV/JSON, 执行与回滚"/>
+        <outline text="迁移历史与审计"/>
+      </outline>
+
+      <outline text="运维与监控 (Ops)">
+        <outline text="任务队列 & 后台 Job (队列长度/失败任务/重试)"/>
+        <outline text="服务健康 / 日志流 / 错误跟踪 (Sentry / ELK)"/>
+        <outline text="手动触发任务 (抓取行情, 重跑 ETL)"/>
+        <outline text="实时市场数据接入 (行情接入)">
+          <outline text="接入来源: 第三方数据商 / 内部直连"/>
+          <outline text="接入策略: 实时/近实时/批量/回溯"/>
+          <outline text="数据质量与监控 (延迟/丢包/异常点)"/>
+          <outline text="密钥管理与限流 (API Key, 流量控制)"/>
+          <outline text="入库与归档: OLTP -> OLAP, 回放能力"/>
+        </outline>
+      </outline>
+
+      <outline text="安全 (Security)">
+        <outline text="登录策略 / 异常登录监控"/>
+        <outline text="IP 黑名单 / 设备绑定"/>
+        <outline text="敏感操作二次确认与审计"/>
+      </outline>
+
+      <outline text="媒体/资产管理 (Assets)">
+        <outline text="图片/附件 浏览 / 上传 / 删除"/>
+        <outline text="CDN 签名上传 / 到期清理"/>
+      </outline>
+
+      <outline text="导出 / 备份">
+        <outline text="手动 DB 导出 / 自动备份计划"/>
+        <outline text="导出报表 CSV / JSON"/>
+      </outline>
+
+      <outline text="帮助与文档 (Docs / Support)">
+        <outline text="后台使用说明 / 权限说明"/>
+        <outline text="常见问题与管理员手册"/>
+      </outline>
+
+      <outline text="开发/部署 建议">
+        <outline text="后端: Node.js(Nest/Express) or Python(FastAPI), PostgreSQL, Redis"/>
+        <outline text="前端: React + Ant Design (或现有 Tailwind)"/>
+        <outline text="监控: Sentry, Prometheus+Grafana, ELK"/>
+        <outline text="事件流: Kafka 或 Redis Streams (用于统计/ETL)"/>
+      </outline>
+
+      <outline text="MVP 优先级 (2 周内)"/>
+      <outline text="下一步交付项">
+        <outline text="OpenAPI 草案 (用户/内容/任务 接口)"/>
+        <outline text="数据库表草案 (DDL)"/>
+        <outline text="Admin React 路由与页面骨架"/>
+      </outline>
+    </outline>
+  </body>
+</opml>

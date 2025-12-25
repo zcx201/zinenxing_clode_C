@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react'
 import api from '../utils/api'
+import favoritesManager from '../utils/favorites'
 import { useAuth } from '../context/AuthContext'
 import Modal from '../components/Modal'
 import Toast from '../components/Toast'
+import { notifyFavoritesUpdated } from '../utils/favoritesNotifier'
 
 const AIPicksPage = () => {
   const [currentTab, setCurrentTab] = useState('strategy')
@@ -205,12 +207,29 @@ const AIPicksPage = () => {
             raw: fav
           }))
           setFavorites(stockFavs)
+          // notify other pages (FavoritesPage) to refresh
+          try { notifyFavoritesUpdated() } catch (e) {}
           showToastMessage(`成功添加 ${stockToAdd.name} 到自选股`, 'success')
         } catch (err) {
           showToastMessage('添加失败或已在自选中', 'warning')
         }
       } else {
-        showToastMessage('未找到对应股票信息，添加失败', 'error')
+        // API 未能检索到对应股票，回退到本地 favoritesManager（离线自选）
+        try {
+          if (typeof favoritesManager.setUserId === 'function') favoritesManager.setUserId(currentUser ? currentUser.user_id : null)
+        } catch (e) {}
+        const added = favoritesManager.addToFavorites({ type: 'stock', code: stockToAdd.code || '', name: stockToAdd.name || '' })
+        if (added) {
+          // 尝试把本地新增项反映到当前页面的 favorites state
+          setFavorites(prev => {
+            const newItem = { id: String(Date.now()), type: 'stock', code: stockToAdd.code || '', name: stockToAdd.name || '', raw: { stock_name: stockToAdd.name, stock_code: stockToAdd.code } }
+            return [newItem, ...prev]
+          })
+          try { notifyFavoritesUpdated() } catch (e) {}
+          showToastMessage(`已本地添加 ${stockToAdd.name} 到自选股`, 'success')
+        } else {
+          showToastMessage('未找到对应股票信息，添加失败或已在自选中', 'error')
+        }
       }
     } catch (e) {
       showToastMessage('添加失败，请稍后重试', 'error')

@@ -3,6 +3,7 @@ import Modal from '../components/Modal'
 import favoritesManager from '../utils/favorites'
 import api from '../utils/api'
 import { useAuth } from '../context/AuthContext'
+import { notifyFavoritesUpdated } from '../utils/favoritesNotifier'
 
 const NewsPage = () => {
   const [selectedNews, setSelectedNews] = useState(null)
@@ -151,12 +152,14 @@ const NewsPage = () => {
     try {
       // 尝试使用 API 添加新闻收藏
       await api.favorites.addFavorite({ type: 'news', title: selectedNews.title, source: selectedNews.source, time: selectedNews.time })
+      try { notifyFavoritesUpdated() } catch (e) {}
       setToastMessage('收藏成功')
     } catch (e) {
       // 回退到本地实现以保证兼容性
       try {
         if (typeof favoritesManager.setUserId === 'function') favoritesManager.setUserId(currentUser ? currentUser.user_id : null)
         const success = favoritesManager.addToFavorites({ ...selectedNews, type: 'news' })
+        if (success) try { notifyFavoritesUpdated() } catch (e) {}
         setToastMessage(success ? '收藏成功' : '已收藏')
       } catch (err) {
         setToastMessage('收藏失败，请稍后再试')

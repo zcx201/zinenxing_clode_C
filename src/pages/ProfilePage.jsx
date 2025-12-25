@@ -16,13 +16,13 @@ const ProfilePage = () => {
 
   // 菜单项点击处理函数
   const handleMenuClick = (menuText) => {
+    // 如果是我的收藏，直接导航到 /favorites 页面（实现完整收藏管理页面）
+    if (menuText === '我的收藏') {
+      navigate('/favorites')
+      return
+    }
+
     const modalContents = {
-      '我的收藏': {
-        title: '我的收藏' + (currentUser.username ? ` - ${currentUser.username}` : ''),
-        message: currentUser.username ?
-          '这里将显示您收藏的股票、文章等内容。\n\n功能正在开发中，敬请期待！' :
-          '请先登录以查看和管理您的收藏'
-      },
       '浏览记录': {
         title: '浏览记录' + (currentUser.username ? ` - ${currentUser.username}` : ''),
         message: currentUser.username ?

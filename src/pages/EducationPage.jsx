@@ -1,9 +1,16 @@
 import React, { useState } from 'react'
 import Modal from '../components/Modal'
+import Toast from '../components/Toast'
+import api from '../utils/api'
+import favoritesManager from '../utils/favorites'
+import { notifyFavoritesUpdated } from '../utils/favoritesNotifier'
 
 const EducationPage = () => {
   const [selectedCourse, setSelectedCourse] = useState(null)
   const [showCourseModal, setShowCourseModal] = useState(false)
+  const [toastMessage, setToastMessage] = useState('')
+  const [toastType, setToastType] = useState('info')
+  const [showToast, setShowToast] = useState(false)
   const courses = [
     {
       title: '股票投资入门',
@@ -75,6 +82,48 @@ const EducationPage = () => {
   const handleStartLearning = (course) => {
     setSelectedCourse(course)
     setShowCourseModal(true)
+  }
+
+  // 收藏课程（加入我的收藏）
+  const handleAddCourseToFavorites = async (course) => {
+    try {
+      // 尝试通过 API 添加为新闻类收藏（课程不在 stocks 表，作为 news 存储）
+      await api.favorites.addFavorite({ type: 'news', title: course.title, source: '课程', time: new Date().toISOString() })
+      // 若成功，更新本地 favoritesManager（兼容本地查看）
+      if (typeof favoritesManager.setUserId === 'function') {
+        // 尝试从 api 获取当前 mock user id
+        try {
+          const cu = await api.user.getCurrentUser()
+          if (cu && cu.user_id && typeof favoritesManager.setUserId === 'function') favoritesManager.setUserId(cu.user_id)
+        } catch (e) {
+          // ignore
+        }
+      }
+  favoritesManager.addToFavorites({ type: 'news', title: course.title, source: '课程', time: new Date().toISOString() })
+  // notify favorites page
+  try { notifyFavoritesUpdated() } catch (e) {}
+  // 显示提示
+  showToastMessage(`已收藏课程：${course.title}`, 'success')
+    } catch (err) {
+      // 回退到本地收藏管理器
+      try {
+        const ok = favoritesManager.addToFavorites({ type: 'news', title: course.title, source: '课程', time: new Date().toISOString() })
+        if (ok) {
+          try { notifyFavoritesUpdated() } catch (e) {}
+          showToastMessage(`已本地收藏课程：${course.title}`, 'success')
+        } else {
+          showToastMessage('该课程已在收藏中', 'info')
+        }
+      } catch (e) {
+        showToastMessage('收藏失败，请稍后重试', 'error')
+      }
+    }
+  }
+
+  const showToastMessage = (message, type = 'info') => {
+    setToastMessage(message)
+    setToastType(type)
+    setShowToast(true)
   }
 
   return (
@@ -164,17 +213,29 @@ const EducationPage = () => {
               </div>
             </div>
 
-            <div className="text-center">
+            <div className="text-center space-y-2">
               <button
-                className="bg-primary-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-primary-600 transition-colors text-sm"
+                className="bg-primary-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-primary-600 transition-colors text-sm w-full"
                 onClick={() => setShowCourseModal(false)}
               >
                 开始学习
               </button>
+
+              <button
+                className="border border-gray-200 text-gray-700 px-4 py-2 rounded-lg w-full hover:bg-gray-50 transition-colors text-sm"
+                onClick={() => selectedCourse && handleAddCourseToFavorites(selectedCourse)}
+              >
+                收藏课程
+              </button>
             </div>
           </div>
         )}
-      </Modal>
+        </Modal>
+
+      {/* Toast 显示 */}
+      {showToast && (
+        <Toast message={toastMessage} type={toastType} duration={2500} onClose={() => setShowToast(false)} />
+      )}
     </div>
   )
 }
