@@ -15,6 +15,19 @@ const InteractionPage = () => {
   const [showGuessListModal, setShowGuessListModal] = useState(false)
   const [guessListTab, setGuessListTab] = useState('ongoing') // 'ongoing', 'history', 'all'
 
+  // 统计卡片弹窗状态
+  const [showWinRateModal, setShowWinRateModal] = useState(false)
+  const [showProfitModal, setShowProfitModal] = useState(false)
+  const [showParticipationModal, setShowParticipationModal] = useState(false)
+  
+  // 加载状态
+  const [isLoading, setIsLoading] = useState(false)
+  
+  // 模态框内容状态
+  const [winRateData, setWinRateData] = useState(null)
+  const [profitData, setProfitData] = useState(null)
+  const [participationData, setParticipationData] = useState(null)
+
   // 指数选项
   const indices = [
     { id: 'sh', name: '上证指数' },
@@ -171,6 +184,76 @@ const InteractionPage = () => {
 
     setJoinBetAmount('')
     setJoinBetType('')
+  }
+
+  // 处理统计卡片点击
+  const handleStatCardClick = async (type) => {
+    // 根据卡片类型执行不同操作
+    setIsLoading(true)
+    
+    try {
+      // 模拟数据加载延迟
+      await new Promise(resolve => setTimeout(resolve, 800))
+      
+      switch (type) {
+        case 'winRate':
+          // 模拟胜率数据
+          setWinRateData({
+            totalGames: 128,
+            winGames: 111,
+            winRate: '86.5%',
+            recentGames: [
+              { date: '2025-12-26', result: 'win', gameId: 'G128' },
+              { date: '2025-12-25', result: 'win', gameId: 'G127' },
+              { date: '2025-12-24', result: 'lose', gameId: 'G126' },
+              { date: '2025-12-23', result: 'win', gameId: 'G125' },
+              { date: '2025-12-22', result: 'win', gameId: 'G124' }
+            ]
+          })
+          setShowWinRateModal(true)
+          break
+        case 'totalProfit':
+          // 模拟收益数据
+          setProfitData({
+            totalProfit: 2584,
+            dailyProfit: 120,
+            weeklyProfit: 450,
+            monthlyProfit: 1200,
+            profitHistory: [
+              { date: '2025-12-26', profit: 120 },
+              { date: '2025-12-25', profit: 80 },
+              { date: '2025-12-24', profit: -50 },
+              { date: '2025-12-23', profit: 150 },
+              { date: '2025-12-22', profit: 100 }
+            ]
+          })
+          setShowProfitModal(true)
+          break
+        case 'participation':
+          // 模拟参与次数数据
+          setParticipationData({
+            totalParticipation: 128,
+            monthlyParticipation: 25,
+            weeklyParticipation: 8,
+            dailyParticipation: 2,
+            recentParticipations: [
+              { date: '2025-12-26', gameId: 'G128', index: '上证指数', type: 'up' },
+              { date: '2025-12-25', gameId: 'G127', index: '深证成指', type: 'down' },
+              { date: '2025-12-24', gameId: 'G126', index: '创业板指', type: 'up' },
+              { date: '2025-12-23', gameId: 'G125', index: '沪深300', type: 'down' },
+              { date: '2025-12-22', gameId: 'G124', index: '上证指数', type: 'up' }
+            ]
+          })
+          setShowParticipationModal(true)
+          break
+        default:
+          break
+      }
+    } catch (error) {
+      console.error('加载数据失败:', error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -528,6 +611,179 @@ const InteractionPage = () => {
             </div>
         </div>
       </Modal>
+      
+      {/* 加载状态 */}
+      {isLoading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+          <div className="relative bg-white rounded-3xl shadow-2xl max-w-sm w-full max-h-[75vh] overflow-hidden flex flex-col mx-0">
+            {/* 头部 */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 flex-shrink-0">
+              <h2 className="text-lg font-bold text-gray-900 truncate">加载中</h2>
+            </div>
+            
+            {/* 内容 */}
+            <div className="p-6 overflow-y-auto flex-1 max-h-[calc(75vh-60px)] flex flex-col items-center justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-primary-500 mb-4"></div>
+              <p className="text-gray-600">正在加载数据...</p>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* 胜率分析弹窗 */}
+      <Modal
+        isOpen={showWinRateModal}
+        onClose={() => setShowWinRateModal(false)}
+        title="胜率详情"
+        size="lg"
+      >
+        {winRateData && (
+          <div>
+            <div className="text-center mb-6">
+              <div className="text-4xl font-bold text-primary-500 mb-2">{winRateData.winRate}</div>
+              <div className="text-gray-600">总胜率</div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="bg-gray-50 rounded-xl p-4 text-center">
+                <div className="text-sm text-gray-600 mb-1">总参与次数</div>
+                <div className="text-2xl font-bold text-gray-900">{winRateData.totalGames}</div>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-4 text-center">
+                <div className="text-sm text-gray-600 mb-1">获胜次数</div>
+                <div className="text-2xl font-bold text-green-500">{winRateData.winGames}</div>
+              </div>
+            </div>
+            
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold mb-3">最近5场记录</h3>
+              <div className="space-y-3">
+                {winRateData.recentGames.map((game, index) => (
+                  <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold bg-primary-500">
+                        {index + 1}
+                      </div>
+                      <div>
+                        <div className="font-medium">{game.gameId}</div>
+                        <div className="text-sm text-gray-500">{game.date}</div>
+                      </div>
+                    </div>
+                    <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      game.result === 'win' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                    }`}>
+                      {game.result === 'win' ? '获胜' : '失败'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
+      
+      {/* 收益明细弹窗 */}
+      <Modal
+        isOpen={showProfitModal}
+        onClose={() => setShowProfitModal(false)}
+        title="收益明细"
+        size="lg"
+      >
+        {profitData && (
+          <div>
+            <div className="text-center mb-6">
+              <div className="text-4xl font-bold text-green-500 mb-2">{profitData.totalProfit}</div>
+              <div className="text-gray-600">累计收益（积分）</div>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="bg-gray-50 rounded-xl p-4 text-center">
+                <div className="text-xs text-gray-600 mb-1">今日收益</div>
+                <div className="text-xl font-bold text-green-500">+{profitData.dailyProfit}</div>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-4 text-center">
+                <div className="text-xs text-gray-600 mb-1">本周收益</div>
+                <div className="text-xl font-bold text-green-500">+{profitData.weeklyProfit}</div>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-4 text-center">
+                <div className="text-xs text-gray-600 mb-1">本月收益</div>
+                <div className="text-xl font-bold text-green-500">+{profitData.monthlyProfit}</div>
+              </div>
+            </div>
+            
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold mb-3">收益趋势</h3>
+              <div className="space-y-3">
+                {profitData.profitHistory.map((item, index) => (
+                  <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <div className="font-medium">{item.date}</div>
+                    <div className={`font-bold ${
+                      item.profit >= 0 ? 'text-green-500' : 'text-red-500'
+                    }`}>
+                      {item.profit >= 0 ? '+' : ''}{item.profit}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
+      
+      {/* 参与历史记录弹窗 */}
+      <Modal
+        isOpen={showParticipationModal}
+        onClose={() => setShowParticipationModal(false)}
+        title="参与记录"
+        size="lg"
+      >
+        {participationData && (
+          <div>
+            <div className="text-center mb-6">
+              <div className="text-4xl font-bold text-primary-500 mb-2">{participationData.totalParticipation}</div>
+              <div className="text-gray-600">总参与次数</div>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="bg-gray-50 rounded-xl p-4 text-center">
+                <div className="text-xs text-gray-600 mb-1">今日参与</div>
+                <div className="text-xl font-bold text-primary-500">{participationData.dailyParticipation}</div>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-4 text-center">
+                <div className="text-xs text-gray-600 mb-1">本周参与</div>
+                <div className="text-xl font-bold text-primary-500">{participationData.weeklyParticipation}</div>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-4 text-center">
+                <div className="text-xs text-gray-600 mb-1">本月参与</div>
+                <div className="text-xl font-bold text-primary-500">{participationData.monthlyParticipation}</div>
+              </div>
+            </div>
+            
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold mb-3">最近参与记录</h3>
+              <div className="space-y-3">
+                {participationData.recentParticipations.map((item, index) => (
+                  <div key={index} className="p-3 bg-gray-50 rounded-lg">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="font-medium">{item.gameId}</div>
+                      <div className="text-sm text-gray-500">{item.date}</div>
+                    </div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">{item.index}</div>
+                      <div className={`px-2 py-1 rounded-full text-xs ${
+                        item.type === 'up' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+                      }`}>
+                        {item.type === 'up' ? '看涨' : '看跌'}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
+      
       {/* 主竞猜卡片 */}
       <div className="main-guess-card">
         {/* 顶部操作区：下拉选择菜单改为顶部横条居中布局 */}
@@ -680,21 +936,57 @@ const InteractionPage = () => {
 
       {/* 历史胜率统计 */}
       <div className="stats-section">
-        <div className="stat-card">
+        <div 
+          className="stat-card"
+          onClick={() => handleStatCardClick('winRate')}
+          role="button"
+          tabIndex="0"
+          aria-label="查看胜率详情"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleStatCardClick('winRate');
+            }
+          }}
+        >
           <div className="stat-icon">🏆</div>
           <div className="stat-content">
             <div className="stat-number">86.5%</div>
             <div className="stat-label">胜率</div>
           </div>
         </div>
-        <div className="stat-card">
+        <div 
+          className="stat-card"
+          onClick={() => handleStatCardClick('totalProfit')}
+          role="button"
+          tabIndex="0"
+          aria-label="查看累计收益详情"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleStatCardClick('totalProfit');
+            }
+          }}
+        >
           <div className="stat-icon">💰</div>
           <div className="stat-content">
             <div className="stat-number">2,584</div>
             <div className="stat-label">累计收益</div>
           </div>
         </div>
-        <div className="stat-card">
+        <div 
+          className="stat-card"
+          onClick={() => handleStatCardClick('participation')}
+          role="button"
+          tabIndex="0"
+          aria-label="查看参与次数详情"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleStatCardClick('participation');
+            }
+          }}
+        >
           <div className="stat-icon">🔄</div>
           <div className="stat-content">
             <div className="stat-number">128</div>
