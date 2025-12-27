@@ -42,6 +42,12 @@ const NewsPage = () => {
   const [displayedNews, setDisplayedNews] = useState(4)
   const [isLoading, setIsLoading] = useState(false)
   const [hasMore, setHasMore] = useState(true)
+  
+  // 分享功能状态管理
+  const [showSharePanel, setShowSharePanel] = useState(false)
+  const [shareLoading, setShareLoading] = useState(false)
+  const [shareStatus, setShareStatus] = useState(null) // null, 'success', 'error'
+  const [shareMessage, setShareMessage] = useState('')
 
   const newsItems = [
     {
@@ -196,6 +202,85 @@ const NewsPage = () => {
     }, 700)
   }
 
+  // 分享按钮点击事件处理
+  const handleShareClick = () => {
+    if (!selectedNews) return
+    setShowSharePanel(true)
+    setShareStatus(null)
+    setShareMessage('')
+  }
+
+  // 关闭分享面板
+  const handleCloseSharePanel = () => {
+    setShowSharePanel(false)
+  }
+
+  // 具体分享渠道处理
+  const handleShareToChannel = async (channel) => {
+    if (!selectedNews) return
+    
+    setShareLoading(true)
+    setShareStatus(null)
+    setShareMessage('')
+    
+    try {
+      // 模拟分享过程
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // 不同渠道的处理逻辑
+      switch (channel) {
+        case 'wechat':
+          // 微信分享逻辑
+          setShareMessage('微信分享成功')
+          break
+        case 'weibo':
+          // 微博分享逻辑
+          setShareMessage('微博分享成功')
+          break
+        case 'qq':
+          // QQ分享逻辑
+          setShareMessage('QQ分享成功')
+          break
+        case 'copy':
+          // 复制链接逻辑
+          try {
+            await navigator.clipboard.writeText(window.location.href)
+            setShareMessage('链接已复制到剪贴板')
+          } catch (err) {
+            throw new Error('复制链接失败')
+          }
+          break
+        default:
+          setShareMessage('分享成功')
+      }
+      
+      setShareStatus('success')
+      
+      // 延迟关闭分享面板
+      setTimeout(() => {
+        setShowSharePanel(false)
+        setShareLoading(false)
+      }, 1000)
+      
+      // 显示Toast提示
+      setToastMessage(shareMessage)
+      setShowToast(true)
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+      toastTimerRef.current = setTimeout(() => setShowToast(false), 2000)
+      
+    } catch (error) {
+      setShareStatus('error')
+      setShareMessage('分享失败，请重试')
+      setShareLoading(false)
+      
+      // 显示Toast提示
+      setToastMessage('分享失败，请重试')
+      setShowToast(true)
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+      toastTimerRef.current = setTimeout(() => setShowToast(false), 2000)
+    }
+  }
+
   return (
     <div className="p-4">
       <div className="text-center mb-6">
@@ -295,7 +380,8 @@ const NewsPage = () => {
                 <span className="fas fa-star mr-2"></span>收藏
               </button>
               <button 
-                className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
+                className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-200 transition-all duration-300 transform hover:-translate-y-1 active:scale-95"
+                onClick={handleShareClick}
               >
                 <span className="fas fa-share-alt mr-2"></span>分享
               </button>
@@ -303,6 +389,108 @@ const NewsPage = () => {
           </div>
         )}
       </Modal>
+
+      {/* 分享面板 */}
+      {showSharePanel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50" onClick={handleCloseSharePanel}>
+          <div 
+            className="relative bg-white rounded-3xl shadow-2xl max-w-sm w-full flex flex-col mx-0"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              position: 'fixed',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%) scale(0.8)',
+              transition: 'transform 0.3s ease-out'
+            }}
+          >
+            {/* 分享面板标题 */}
+            <div className="flex items-center justify-center px-6 h-16 border-b border-gray-200 flex-shrink-0">
+              <h3 className="text-lg font-bold text-gray-900">分享到</h3>
+              <button
+                onClick={handleCloseSharePanel}
+                className="absolute right-6 top-1/2 transform -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors"
+              >
+                <span className="fas fa-times text-gray-500"></span>
+              </button>
+            </div>
+
+            {/* 分享状态提示 */}
+            {shareStatus && (
+              <div className={`px-6 py-3 ${shareStatus === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'} text-sm`}>
+                <div className="flex items-center justify-center gap-2">
+                  {shareStatus === 'success' ? (
+                    <span className="fas fa-check-circle"></span>
+                  ) : (
+                    <span className="fas fa-exclamation-circle"></span>
+                  )}
+                  <span>{shareMessage}</span>
+                </div>
+              </div>
+            )}
+
+            {/* 分享渠道列表 */}
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="grid grid-cols-4 gap-6">
+                {/* 微信分享 */}
+                <div 
+                  className="flex flex-col items-center cursor-pointer hover:scale-105 transition-all duration-300"
+                  onClick={() => handleShareToChannel('wechat')}
+                >
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-2">
+                    <span className="fab fa-weixin text-green-600 text-2xl"></span>
+                  </div>
+                  <span className="text-sm text-gray-700">微信</span>
+                </div>
+                
+                {/* 微博分享 */}
+                <div 
+                  className="flex flex-col items-center cursor-pointer hover:scale-105 transition-all duration-300"
+                  onClick={() => handleShareToChannel('weibo')}
+                >
+                  <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-2">
+                    <span className="fab fa-weibo text-red-600 text-2xl"></span>
+                  </div>
+                  <span className="text-sm text-gray-700">微博</span>
+                </div>
+                
+                {/* QQ分享 */}
+                <div 
+                  className="flex flex-col items-center cursor-pointer hover:scale-105 transition-all duration-300"
+                  onClick={() => handleShareToChannel('qq')}
+                >
+                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-2">
+                    <span className="fab fa-qq text-blue-600 text-2xl"></span>
+                  </div>
+                  <span className="text-sm text-gray-700">QQ</span>
+                </div>
+                
+                {/* 复制链接 */}
+                <div 
+                  className="flex flex-col items-center cursor-pointer hover:scale-105 transition-all duration-300"
+                  onClick={() => handleShareToChannel('copy')}
+                >
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-2">
+                    <span className="fas fa-link text-gray-600 text-2xl"></span>
+                  </div>
+                  <span className="text-sm text-gray-700">复制链接</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 取消按钮 */}
+            <div className="px-6 py-4 border-t border-gray-200 flex-shrink-0">
+              <button
+                className="w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
+                onClick={handleCloseSharePanel}
+                disabled={shareLoading}
+              >
+                取消
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Toast提示 */}
       {showToast && (

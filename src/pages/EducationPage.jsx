@@ -11,6 +11,10 @@ const EducationPage = () => {
   const [toastMessage, setToastMessage] = useState('')
   const [toastType, setToastType] = useState('info')
   const [showToast, setShowToast] = useState(false)
+  // 弹窗按钮状态管理
+  const [isLoading, setIsLoading] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [processingMessage, setProcessingMessage] = useState('')
   const courses = [
     {
       title: '股票投资入门',
@@ -78,10 +82,45 @@ const EducationPage = () => {
     ]
   }
 
-  // 开始学习函数
+  // 开始学习函数（卡片点击）
   const handleStartLearning = (course) => {
     setSelectedCourse(course)
     setShowCourseModal(true)
+    // 重置状态
+    setIsLoading(false)
+    setIsProcessing(false)
+    setProcessingMessage('')
+  }
+
+  // 开始学习函数（弹窗内按钮点击）
+  const handleStartCourse = async () => {
+    if (!selectedCourse) return
+    
+    try {
+      setIsLoading(true)
+      setProcessingMessage('正在进入学习...')
+      setIsProcessing(true)
+      
+      // 模拟异步操作，例如请求后端或执行跳转
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      
+      // 操作完成后，显示成功提示
+      showToastMessage(`已进入${selectedCourse.title}学习`, 'success')
+      
+      // 延迟关闭弹窗，让用户看到提示
+      setTimeout(() => {
+        setShowCourseModal(false)
+        setIsLoading(false)
+        setIsProcessing(false)
+        setProcessingMessage('')
+      }, 1000)
+    } catch (error) {
+      // 处理错误
+      showToastMessage('进入学习失败，请稍后重试', 'error')
+      setIsLoading(false)
+      setIsProcessing(false)
+      setProcessingMessage('')
+    }
   }
 
   // 收藏课程（加入我的收藏）
@@ -213,19 +252,52 @@ const EducationPage = () => {
               </div>
             </div>
 
-            <div className="text-center space-y-2">
+            <div className="space-y-3">
+              {/* 处理中提示 */}
+              {isProcessing && (
+                <div className="flex items-center justify-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-sm animate-fade-in">
+                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-primary-500"></div>
+                  <span>{processingMessage}</span>
+                </div>
+              )}
+              
+              <div className="flex gap-2">
+                <button
+                  className="bg-primary-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-primary-600 transition-all duration-300 text-sm flex-1 flex items-center justify-center gap-2 active:scale-95"
+                  onClick={handleStartCourse}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
+                      <span>处理中...</span>
+                    </>
+                  ) : (
+                    <span>开始学习</span>
+                  )}
+                </button>
+                
+                <button
+                  className="border border-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-all duration-300 text-sm flex-1 flex items-center justify-center active:scale-95"
+                  onClick={() => selectedCourse && handleAddCourseToFavorites(selectedCourse)}
+                  disabled={isLoading}
+                >
+                  <span className="fas fa-bookmark mr-1"></span>
+                  <span>收藏</span>
+                </button>
+              </div>
+              
               <button
-                className="bg-primary-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-primary-600 transition-colors text-sm w-full"
-                onClick={() => setShowCourseModal(false)}
+                className="border border-gray-300 text-gray-600 px-4 py-2 rounded-lg w-full hover:bg-gray-50 transition-all duration-300 text-sm active:scale-95"
+                onClick={() => {
+                  setShowCourseModal(false)
+                  setIsLoading(false)
+                  setIsProcessing(false)
+                  setProcessingMessage('')
+                }}
+                disabled={isLoading}
               >
-                开始学习
-              </button>
-
-              <button
-                className="border border-gray-200 text-gray-700 px-4 py-2 rounded-lg w-full hover:bg-gray-50 transition-colors text-sm"
-                onClick={() => selectedCourse && handleAddCourseToFavorites(selectedCourse)}
-              >
-                收藏课程
+                取消
               </button>
             </div>
           </div>
