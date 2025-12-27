@@ -26,26 +26,98 @@ const getCurrentUserId = () => apiCurrentUserId || 1
 //
 const getAuthToken = () => authToken
 
+// 密码强度验证
+const validatePasswordStrength = (password) => {
+  // 至少8个字符，包含大小写字母和数字
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/;
+  return passwordRegex.test(password);
+};
+
+// 认证日志系统
+const authLogger = {
+  log: (action, userId, details) => {
+    try {
+      const logs = JSON.parse(localStorage.getItem('authLogs') || '[]');
+      logs.push({
+        timestamp: new Date().toISOString(),
+        action,
+        userId,
+        details
+      });
+      // 只保留最近100条日志
+      const recentLogs = logs.slice(-100);
+      localStorage.setItem('authLogs', JSON.stringify(recentLogs));
+    } catch (e) {
+      // 忽略日志存储错误
+    }
+  }
+};
+
+// 获取持久化用户数据
+const getPersistedUsers = () => {
+  try {
+    const storedUsers = localStorage.getItem('mockUsers');
+    if (storedUsers) {
+      const parsedUsers = JSON.parse(storedUsers);
+      if (Array.isArray(parsedUsers)) {
+        return parsedUsers;
+      }
+    }
+  } catch (e) {
+    // 忽略解析错误
+  }
+  return [...mockUsers];
+};
+
+// 保存用户数据到持久化存储
+const savePersistedUsers = (users) => {
+  try {
+    localStorage.setItem('mockUsers', JSON.stringify(users));
+  } catch (e) {
+    // 忽略存储错误
+  }
+};
+
 // 认证相关API
 const authApi = {
   // 用户注册
   register: async (userData) => {
     await delay(500);
-    const existingUser = mockUsers.find(user => user.username === userData.username || user.email === userData.email);
+    
+    // 密码强度验证
+    if (!validatePasswordStrength(userData.password)) {
+      throw new Error('密码必须至少8个字符，包含大小写字母和数字');
+    }
+    
+    // 获取持久化用户数据
+    const persistedUsers = getPersistedUsers();
+    
+    const existingUser = persistedUsers.find(user => user.username === userData.username || user.email === userData.email);
     if (existingUser) {
       throw new Error('用户名或邮箱已存在');
     }
+    
     const newUser = {
       user_id: generateId(),
       username: userData.username,
       email: userData.email,
       password_hash: userData.password, // 实际项目中应该使用密码哈希
       phone: userData.phone,
-  avatar: '用户',
-  created_at: new Date().toISOString(),
+      avatar: '用户',
+      created_at: new Date().toISOString(),
       last_login: null
     };
-    mockUsers.push(newUser);
+    
+    // 更新用户列表并保存到持久化存储
+    const updatedUsers = [...persistedUsers, newUser];
+    savePersistedUsers(updatedUsers);
+    
+    // 记录注册日志
+    authLogger.log('register', newUser.user_id, {
+      username: newUser.username,
+      email: newUser.email
+    });
+    
     return {
       user_id: newUser.user_id,
       username: newUser.username,
@@ -57,10 +129,38 @@ const authApi = {
   // 用户登录
   login: async (credentials) => {
     await delay(500);
-    const user = mockUsers.find(user => user.username === credentials.username && user.password_hash === credentials.password);
+    
+    // 获取持久化用户数据
+    const persistedUsers = getPersistedUsers();
+    
+    const user = persistedUsers.find(user => user.username === credentials.username && user.password_hash === credentials.password);
     if (!user) {
+      // 记录登录失败日志
+      authLogger.log('login_failed', null, {
+        username: credentials.username,
+        reason: '用户名或密码错误'
+      });
       throw new Error('用户名或密码错误');
     }
+    
+    // 更新用户登录时间
+    const updatedUsers = persistedUsers.map(u => {
+      if (u.user_id === user.user_id) {
+        return {
+          ...u,
+          last_login: new Date().toISOString()
+        };
+      }
+      return u;
+    });
+    savePersistedUsers(updatedUsers);
+    
+    // 记录登录成功日志
+    authLogger.log('login', user.user_id, {
+      username: user.username,
+      last_login: new Date().toISOString()
+    });
+    
     return {
       user_id: user.user_id,
       username: user.username,
@@ -72,7 +172,44 @@ const authApi = {
   // 用户登出
   logout: async () => {
     await delay(300);
+    
+    // 记录登出日志
+    authLogger.log('logout', getCurrentUserId(), {
+      timestamp: new Date().toISOString()
+    });
+    
     return { success: true, message: 'Logout successful' };
+  },
+  
+  // 获取认证日志
+  getAuthLogs: async () => {
+    await delay(200);
+    try {
+      const logs = localStorage.getItem('authLogs');
+      return logs ? JSON.parse(logs) : [];
+    } catch (e) {
+      return [];
+    }
+  },
+  
+  // 检查用户账户健康
+  checkAccountHealth: async (userId) => {
+    await delay(300);
+    const persistedUsers = getPersistedUsers();
+    const user = persistedUsers.find(u => u.user_id === userId);
+    
+    if (!user) {
+      throw new Error('用户不存在');
+    }
+    
+    // 简单的账户健康检查
+    const health = {
+      last_login: user.last_login,
+      account_age_days: Math.floor((new Date() - new Date(user.created_at)) / (1000 * 60 * 60 * 24)),
+      is_active: true
+    };
+    
+    return health;
   }
 };
 

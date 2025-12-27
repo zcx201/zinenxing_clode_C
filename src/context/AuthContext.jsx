@@ -34,13 +34,14 @@ export const AuthProvider = ({ children }) => {
     }
   }, [currentUser])
 
-  const login = async ({ username, password }) => {
+  const login = async ({ username, password, rememberMe = false }) => {
     const res = await api.auth.login({ username, password })
     const safeUser = {
       user_id: res.user_id,
       username: res.username,
       email: res.email,
-      token: res.token
+      token: res.token,
+      rememberMe: rememberMe
     }
     setCurrentUser(safeUser)
     if (safeUser.token && typeof api.setToken === 'function') api.setToken(safeUser.token)
