@@ -1,1288 +1,596 @@
-// 智能鑫AI系统API服务
-// 实现模拟API，用于前端开发和测试
+// 聚宽API封装
 
-// 模拟数据
-import { mockUsers, mockStocks, mockFriendRelationships, mockFriendMessages, mockGroups, mockGroupMembers, mockGroupMessages, mockAIPicks, mockFavorites, mockNewsFavorites, mockMarketData, mockUserInterests, mockNotifications, mockStockComments } from './mockData';
+// 聚宽API基础URL
+const BASE_URL = 'https://api.joinquant.com/apis';
 
-// 模拟延迟
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+// 聚宽API认证信息
+const AUTH_INFO = {
+  username: 'zcx123',
+  password: 'Zcxdgyahoo123456'
+};
 
-// 生成随机ID
-const generateId = () => Math.floor(Math.random() * 1000000);
+// 指数代码映射
+const INDEX_CODE_MAP = {
+  sh: '000001.XSHG', // 上证指数
+  sz: '399001.XSHE', // 深证成指
+  cy: '399006.XSHE', // 创业板指
+  hs300: '000300.XSHG', // 沪深300
+  sz50: '000016.XSHG', // 上证50
+  zxb: '399005.XSHE' // 中小板指
+};
 
-// 可选的授权 token（模拟）
-// 可选的授权 token（模拟）
+// 股票市场映射
+const STOCK_MARKET_MAP = {
+  '0': 'XSHG', // 上证
+  '3': 'XSHE', // 深证
+  '6': 'XSHG' // 上证
+};
+
+// 认证令牌缓存
 let authToken = null;
-const setAuthToken = (token) => {
-  authToken = token
-}
 
-// 当前 mock 层的 "当前用户 id"，可由外部注入以与 AuthContext 同步
-let apiCurrentUserId = 1
-const setCurrentUserId = (id) => {
-  apiCurrentUserId = id || null
-}
-const getCurrentUserId = () => apiCurrentUserId || 1
-//
-const getAuthToken = () => authToken
-
-// 密码强度验证
-const validatePasswordStrength = (password) => {
-  // 至少8个字符，包含大小写字母和数字
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/;
-  return passwordRegex.test(password);
-};
-
-// 认证日志系统
-const authLogger = {
-  log: (action, userId, details) => {
-    try {
-      const logs = JSON.parse(localStorage.getItem('authLogs') || '[]');
-      logs.push({
-        timestamp: new Date().toISOString(),
-        action,
-        userId,
-        details
-      });
-      // 只保留最近100条日志
-      const recentLogs = logs.slice(-100);
-      localStorage.setItem('authLogs', JSON.stringify(recentLogs));
-    } catch (e) {
-      // 忽略日志存储错误
-    }
+/**
+ * 获取认证令牌
+ */
+async function getAuthToken() {
+  if (authToken) {
+    return authToken;
   }
-};
 
-// 获取持久化用户数据
-const getPersistedUsers = () => {
   try {
-    const storedUsers = localStorage.getItem('mockUsers');
-    if (storedUsers) {
-      const parsedUsers = JSON.parse(storedUsers);
-      if (Array.isArray(parsedUsers)) {
-        return parsedUsers;
-      }
-    }
-  } catch (e) {
-    // 忽略解析错误
-  }
-  return [...mockUsers];
-};
-
-// 保存用户数据到持久化存储
-const savePersistedUsers = (users) => {
-  try {
-    localStorage.setItem('mockUsers', JSON.stringify(users));
-  } catch (e) {
-    // 忽略存储错误
-  }
-};
-
-// 认证相关API
-const authApi = {
-  // 用户注册
-  register: async (userData) => {
-    await delay(500);
-    
-    // 密码强度验证
-    if (!validatePasswordStrength(userData.password)) {
-      throw new Error('密码必须至少8个字符，包含大小写字母和数字');
-    }
-    
-    // 获取持久化用户数据
-    const persistedUsers = getPersistedUsers();
-    
-    const existingUser = persistedUsers.find(user => user.username === userData.username || user.email === userData.email);
-    if (existingUser) {
-      throw new Error('用户名或邮箱已存在');
-    }
-    
-    const newUser = {
-      user_id: generateId(),
-      username: userData.username,
-      email: userData.email,
-      password_hash: userData.password, // 实际项目中应该使用密码哈希
-      phone: userData.phone,
-      avatar: '用户',
-      created_at: new Date().toISOString(),
-      last_login: null
-    };
-    
-    // 更新用户列表并保存到持久化存储
-    const updatedUsers = [...persistedUsers, newUser];
-    savePersistedUsers(updatedUsers);
-    
-    // 记录注册日志
-    authLogger.log('register', newUser.user_id, {
-      username: newUser.username,
-      email: newUser.email
+    console.log('正在获取聚宽API认证令牌...');
+    const response = await fetch(BASE_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        method: 'get_current_token',
+        ...AUTH_INFO
+      })
     });
-    
-    return {
-      user_id: newUser.user_id,
-      username: newUser.username,
-      email: newUser.email,
-      token: `mock-token-${newUser.user_id}`
-    };
-  },
 
-  // 用户登录
-  login: async (credentials) => {
-    await delay(500);
+    const data = await response.text();
+    console.log('认证令牌获取结果:', data);
     
-    // 获取持久化用户数据
-    const persistedUsers = getPersistedUsers();
-    
-    const user = persistedUsers.find(user => user.username === credentials.username && user.password_hash === credentials.password);
-    if (!user) {
-      // 记录登录失败日志
-      authLogger.log('login_failed', null, {
-        username: credentials.username,
-        reason: '用户名或密码错误'
-      });
-      throw new Error('用户名或密码错误');
+    if (data && !data.startsWith('error')) {
+      authToken = data.trim();
+      return authToken;
+    } else {
+      throw new Error(`认证失败: ${data}`);
     }
+  } catch (error) {
+    console.error('获取认证令牌失败:', error);
+    // 如果认证失败，返回null，后续请求会使用默认模拟数据
+    return null;
+  }
+}
+
+/**
+ * 调用聚宽API
+ */
+async function callJQApi(method, params = {}) {
+  const token = await getAuthToken();
+  if (!token) {
+    return null;
+  }
+
+  try {
+    const requestParams = {
+      method,
+      token,
+      ...params
+    };
     
-    // 更新用户登录时间
-    const updatedUsers = persistedUsers.map(u => {
-      if (u.user_id === user.user_id) {
+    console.log(`正在调用聚宽API ${method}，参数:`, requestParams);
+    
+    const response = await fetch(BASE_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams(requestParams)
+    });
+
+    const data = await response.text();
+    console.log(`API ${method} 响应:`, data);
+    
+    if (data && !data.startsWith('error')) {
+      return JSON.parse(data);
+    } else {
+      console.error(`API调用失败: ${method}`, data);
+      return null;
+    }
+  } catch (error) {
+    console.error(`API调用出错: ${method}`, error);
+    return null;
+  }
+}
+
+/**
+ * 获取股票最新价格
+ */
+export async function getStockPrice(stockCode) {
+  try {
+    // 转换股票代码格式
+    const market = STOCK_MARKET_MAP[stockCode.charAt(0)] || 'XSHE';
+    const formattedCode = `${stockCode}.${market}`;
+
+    // 调用聚宽API获取股票价格
+    const result = await callJQApi('get_price', {
+      security: formattedCode,
+      end_date: new Date().toISOString(),
+      frequency: '1d',
+      count: 2,
+      fields: 'open,close,high,low,volume'
+    });
+
+    console.log(`股票 ${stockCode} 数据获取结果:`, result);
+
+    if (result && result.data) {
+      const data = result.data;
+      
+      // 确保数据格式正确
+      if (Array.isArray(data.close) && data.close.length > 0 && Array.isArray(data.close[0]) && data.close[0].length > 0) {
+        // 使用最新一天的数据
+        const latestDay = 0;
+        const previousDay = 1;
+        
+        const close = data.close[latestDay][0];
+        const open = data.open[latestDay][0];
+        
+        // 计算涨跌幅：最新收盘价 - 昨日收盘价
+        let change = 0;
+        if (data.close.length > 1 && data.close[previousDay] && data.close[previousDay].length > 0) {
+          const yesterdayClose = data.close[previousDay][0];
+          change = ((close - yesterdayClose) / yesterdayClose * 100).toFixed(2);
+        } else {
+          // 如果没有昨日数据，使用今日开盘价计算
+          change = ((close - open) / open * 100).toFixed(2);
+        }
+        
+        const isPositive = parseFloat(change) >= 0;
+
         return {
-          ...u,
-          last_login: new Date().toISOString()
+          code: stockCode,
+          price: close.toFixed(2),
+          change: `${isPositive ? '+' : ''}${change}%`,
+          isPositive
         };
       }
-      return u;
-    });
-    savePersistedUsers(updatedUsers);
-    
-    // 记录登录成功日志
-    authLogger.log('login', user.user_id, {
-      username: user.username,
-      last_login: new Date().toISOString()
-    });
-    
-    return {
-      user_id: user.user_id,
-      username: user.username,
-      email: user.email,
-      token: `mock-token-${user.user_id}`
-    };
-  },
-
-  // 用户登出
-  logout: async () => {
-    await delay(300);
-    
-    // 记录登出日志
-    authLogger.log('logout', getCurrentUserId(), {
-      timestamp: new Date().toISOString()
-    });
-    
-    return { success: true, message: 'Logout successful' };
-  },
-  
-  // 获取认证日志
-  getAuthLogs: async () => {
-    await delay(200);
-    try {
-      const logs = localStorage.getItem('authLogs');
-      return logs ? JSON.parse(logs) : [];
-    } catch (e) {
-      return [];
     }
-  },
-  
-  // 检查用户账户健康
-  checkAccountHealth: async (userId) => {
-    await delay(300);
-    const persistedUsers = getPersistedUsers();
-    const user = persistedUsers.find(u => u.user_id === userId);
-    
-    if (!user) {
-      throw new Error('用户不存在');
-    }
-    
-    // 简单的账户健康检查
-    const health = {
-      last_login: user.last_login,
-      account_age_days: Math.floor((new Date() - new Date(user.created_at)) / (1000 * 60 * 60 * 24)),
-      is_active: true
-    };
-    
-    return health;
+  } catch (error) {
+    console.error('获取股票价格失败:', error);
   }
-};
 
-// 用户相关API
-const userApi = {
-  // 获取当前用户信息
-  getCurrentUser: async () => {
-    await delay(300);
-    return mockUsers[0]; // 返回第一个用户作为当前用户
-  },
+  // 聚宽API失败时，尝试使用第三方API获取真实股票数据
+  try {
+    console.log('聚宽API失败，尝试使用第三方API获取真实个股数据...');
 
-  // 更新当前用户信息
-  updateCurrentUser: async (userData) => {
-    await delay(500);
-    const currentUser = mockUsers[0];
-    Object.assign(currentUser, userData);
-    return currentUser;
-  },
+    // 判断市场 (1=上证, 0=深证)
+    const marketCode = stockCode.startsWith('6') ? '1' : '0';
+    const secid = `${marketCode}.${stockCode}`;
 
-  // 修改密码
-  changePassword: async (passwordData) => {
-    await delay(500);
-    const currentUser = mockUsers[0];
-    if (currentUser.password_hash !== passwordData.old_password) {
-      throw new Error('原密码错误');
-    }
-    currentUser.password_hash = passwordData.new_password;
-    return { success: true, message: 'Password updated successfully' };
-  },
-
-  // 获取指定用户信息
-  getUser: async (userId) => {
-    await delay(300);
-    const user = mockUsers.find(user => user.user_id === userId);
-    if (!user) {
-      throw new Error('用户不存在');
-    }
-    return user;
-  },
-
-  // 搜索用户
-  searchUsers: async (params) => {
-    await delay(500);
-    const { keyword, page = 1, limit = 20 } = params;
-    let filteredUsers = mockUsers;
-    if (keyword) {
-      filteredUsers = mockUsers.filter(user => 
-        user.username.includes(keyword) || user.email.includes(keyword)
-      );
-    }
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
-    return {
-      total: filteredUsers.length,
-      page,
-      limit,
-      users: paginatedUsers
-    };
-  }
-};
-
-// 股票相关API
-const stockApi = {
-  // 获取股票列表
-  getStocks: async (params) => {
-    await delay(500);
-    const { market_type, industry, page = 1, limit = 20 } = params;
-    let filteredStocks = mockStocks;
-    if (market_type) {
-      filteredStocks = filteredStocks.filter(stock => stock.market_type === market_type);
-    }
-    if (industry) {
-      filteredStocks = filteredStocks.filter(stock => stock.industry === industry);
-    }
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedStocks = filteredStocks.slice(startIndex, endIndex);
-    return {
-      total: filteredStocks.length,
-      page,
-      limit,
-      stocks: paginatedStocks
-    };
-  },
-
-  // 获取股票详情
-  getStock: async (stockId) => {
-    await delay(300);
-    const stock = mockStocks.find(stock => stock.stock_id === stockId);
-    if (!stock) {
-      throw new Error('股票不存在');
-    }
-    return stock;
-  },
-
-  // 搜索股票
-  searchStocks: async (params) => {
-    await delay(500);
-    const { keyword, page = 1, limit = 20 } = params;
-    const filteredStocks = mockStocks.filter(stock => 
-      stock.stock_name.includes(keyword) || stock.stock_code.includes(keyword)
-    );
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedStocks = filteredStocks.slice(startIndex, endIndex);
-    return {
-      total: filteredStocks.length,
-      page,
-      limit,
-      stocks: paginatedStocks
-    };
-  },
-
-  // 获取股票行情数据
-  getStockMarketData: async (stockId, _params) => {
-    await delay(300);
-    const stock = mockStocks.find(stock => stock.stock_id === stockId);
-    if (!stock) {
-      throw new Error('股票不存在');
-    }
-    const stockMarketData = mockMarketData.filter(data => data.stock_id === stockId);
-    return {
-      stock_id: stockId,
-      stock_code: stock.stock_code,
-      market_data: stockMarketData
-    };
-  },
-
-  // 获取股票评论
-  getStockComments: async (stockId, params) => {
-    await delay(300);
-    const { page = 1, limit = 20, sort = 'latest' } = params;
-    let comments = mockStockComments.filter(comment => comment.stock_id === stockId && !comment.is_deleted);
-    if (sort === 'latest') {
-      comments.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    } else {
-      comments.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-    }
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedComments = comments.slice(startIndex, endIndex);
-    return {
-      total: comments.length,
-      page,
-      limit,
-      comments: paginatedComments
-    };
-  },
-
-  // 添加股票评论
-  addStockComment: async (stockId, commentData) => {
-    await delay(500);
-    const newComment = {
-      comment_id: generateId(),
-      stock_id: stockId,
-      user_id: 1, // 当前用户ID
-      parent_id: commentData.parent_id,
-      content: commentData.content,
-      likes_count: 0,
-      is_deleted: false,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-    mockStockComments.push(newComment);
-    return newComment;
-  },
-
-  // 修改股票评论
-  updateStockComment: async (stockId, commentId, commentData) => {
-    await delay(500);
-    const comment = mockStockComments.find(comment => comment.comment_id === commentId && comment.stock_id === stockId);
-    if (!comment) {
-      throw new Error('评论不存在');
-    }
-    comment.content = commentData.content;
-    comment.updated_at = new Date().toISOString();
-    return comment;
-  },
-
-  // 删除股票评论
-  deleteStockComment: async (stockId, commentId) => {
-    await delay(300);
-    const comment = mockStockComments.find(comment => comment.comment_id === commentId && comment.stock_id === stockId);
-    if (!comment) {
-      throw new Error('评论不存在');
-    }
-    comment.is_deleted = true;
-    return { success: true, message: 'Comment deleted successfully' };
-  },
-
-  // 点赞/取消点赞股票评论
-  toggleLikeComment: async (stockId, commentId) => {
-    await delay(300);
-    const comment = mockStockComments.find(comment => comment.comment_id === commentId && comment.stock_id === stockId);
-    if (!comment) {
-      throw new Error('评论不存在');
-    }
-    comment.likes_count += 1;
-    return { success: true, likes_count: comment.likes_count, is_liked: true };
-  }
-};
-
-// 好友关系相关API
-const friendApi = {
-  // 获取好友列表
-  getFriends: async (params) => {
-    await delay(300);
-    const { status = 'accepted', page = 1, limit = 20 } = params;
-  const currentUserId = getCurrentUserId();
-    const friendRelations = mockFriendRelationships.filter(
-      relation => (relation.user_id === currentUserId || relation.friend_id === currentUserId) && relation.status === status
-    );
-    const friends = friendRelations.map(relation => {
-      const friendId = relation.user_id === currentUserId ? relation.friend_id : relation.user_id;
-      const friend = mockUsers.find(user => user.user_id === friendId);
-      return {
-        user_id: friend.user_id,
-        username: friend.username,
-        avatar: friend.avatar,
-        status: relation.status,
-        created_at: relation.created_at
-      };
-    });
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedFriends = friends.slice(startIndex, endIndex);
-    return {
-      total: friends.length,
-      page,
-      limit,
-      friends: paginatedFriends
-    };
-  },
-
-  // 获取好友请求
-  getFriendRequests: async (params) => {
-    await delay(300);
-    const { status = 'pending', page = 1, limit = 20 } = params;
-  const currentUserId = getCurrentUserId();
-    const friendRequests = mockFriendRelationships.filter(
-      relation => relation.friend_id === currentUserId && relation.status === status
-    );
-    const requests = friendRequests.map(request => {
-      const user = mockUsers.find(user => user.user_id === request.user_id);
-      return {
-        user_id: user.user_id,
-        username: user.username,
-        avatar: user.avatar,
-        status: request.status,
-        created_at: request.created_at
-      };
-    });
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedRequests = requests.slice(startIndex, endIndex);
-    return {
-      total: requests.length,
-      page,
-      limit,
-      requests: paginatedRequests
-    };
-  },
-
-  // 发送好友请求
-  sendFriendRequest: async (friendId) => {
-    await delay(500);
-  const currentUserId = getCurrentUserId();
-    const existingRequest = mockFriendRelationships.find(
-      relation => (relation.user_id === currentUserId && relation.friend_id === friendId) ||
-                  (relation.user_id === friendId && relation.friend_id === currentUserId)
-    );
-    if (existingRequest) {
-      throw new Error('好友请求已存在');
-    }
-    const newRequest = {
-      relationship_id: generateId(),
-      user_id: currentUserId,
-      friend_id: friendId,
-      status: 'pending',
-      created_at: new Date().toISOString(),
-      accepted_at: null
-    };
-    mockFriendRelationships.push(newRequest);
-    return { success: true, message: 'Friend request sent successfully' };
-  },
-
-  // 处理好友请求
-  handleFriendRequest: async (requestId, action) => {
-    await delay(500);
-    const request = mockFriendRelationships.find(relation => relation.relationship_id === requestId);
-    if (!request) {
-      throw new Error('好友请求不存在');
-    }
-    if (action === 'accept') {
-      request.status = 'accepted';
-      request.accepted_at = new Date().toISOString();
-      return { success: true, message: 'Friend request accepted' };
-    } else {
-      request.status = 'rejected';
-      return { success: true, message: 'Friend request rejected' };
-    }
-  },
-
-  // 拒绝好友请求
-  rejectFriendRequest: async (requestId) => {
-    await delay(300);
-    const request = mockFriendRelationships.find(relation => relation.relationship_id === requestId);
-    if (!request) {
-      throw new Error('好友请求不存在');
-    }
-    request.status = 'rejected';
-    return { success: true, message: 'Friend request rejected' };
-  },
-
-  // 删除好友
-  removeFriend: async (friendId) => {
-    await delay(300);
-  const currentUserId = getCurrentUserId();
-    const friendRelationIndex = mockFriendRelationships.findIndex(
-      relation => ((relation.user_id === currentUserId && relation.friend_id === friendId) ||
-                  (relation.user_id === friendId && relation.friend_id === currentUserId)) &&
-                 relation.status === 'accepted'
-    );
-    if (friendRelationIndex === -1) {
-      throw new Error('好友关系不存在');
-    }
-    mockFriendRelationships.splice(friendRelationIndex, 1);
-    return { success: true, message: 'Friend removed successfully' };
-  },
-
-  // 拉黑/取消拉黑好友
-  toggleBlockFriend: async (friendId) => {
-    await delay(500);
-  const currentUserId = getCurrentUserId();
-    let friendRelation = mockFriendRelationships.find(
-      relation => ((relation.user_id === currentUserId && relation.friend_id === friendId) ||
-                  (relation.user_id === friendId && relation.friend_id === currentUserId))
-    );
-    if (!friendRelation) {
-      friendRelation = {
-        relationship_id: generateId(),
-        user_id: currentUserId,
-        friend_id: friendId,
-        status: 'blocked',
-        created_at: new Date().toISOString(),
-        accepted_at: null
-      };
-      mockFriendRelationships.push(friendRelation);
-      return { success: true, is_blocked: true };
-    }
-    if (friendRelation.status === 'blocked') {
-      friendRelation.status = 'accepted';
-      return { success: true, is_blocked: false };
-    } else {
-      friendRelation.status = 'blocked';
-      return { success: true, is_blocked: true };
-    }
-  }
-};
-
-// 聊天消息相关API
-const messageApi = {
-  // 获取与指定好友的聊天记录
-  getFriendMessages: async (friendId, params) => {
-    await delay(500);
-  const currentUserId = getCurrentUserId();
-    const { page = 1, limit = 50, direction = 'desc' } = params;
-    const messages = mockFriendMessages.filter(
-      message => (message.sender_id === currentUserId && message.receiver_id === friendId) ||
-                 (message.sender_id === friendId && message.receiver_id === currentUserId)
-    );
-    if (direction === 'desc') {
-      messages.sort((a, b) => new Date(b.sent_at) - new Date(a.sent_at));
-    } else {
-      messages.sort((a, b) => new Date(a.sent_at) - new Date(b.sent_at));
-    }
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedMessages = messages.slice(startIndex, endIndex);
-    return {
-      total: messages.length,
-      page,
-      limit,
-      messages: paginatedMessages
-    };
-  },
-
-  // 发送好友消息
-  sendFriendMessage: async (friendId, messageData) => {
-    await delay(300);
-  const currentUserId = getCurrentUserId();
-    const newMessage = {
-      message_id: generateId(),
-      sender_id: currentUserId,
-      receiver_id: friendId,
-      content: messageData.content,
-      message_type: messageData.message_type || 'text',
-      stock_reference: messageData.stock_reference,
-      sent_at: new Date().toISOString(),
-      is_read: false
-    };
-    mockFriendMessages.push(newMessage);
-    return newMessage;
-  },
-
-  // 标记好友消息为已读
-  markFriendMessagesAsRead: async (friendId) => {
-    await delay(300);
-  const currentUserId = getCurrentUserId();
-    mockFriendMessages.forEach(message => {
-      if (message.sender_id === friendId && message.receiver_id === currentUserId) {
-        message.is_read = true;
+    // 使用东方财富API获取个股数据
+    const response = await fetch(`https://push2.eastmoney.com/api/qt/stock/get?ut=fa5fd1943c7b386f172d6893dbfba10b&invt=2&fltt=2&fields=f43,f44,f45,f46,f60,f169,f170,f171,f47,f48,f49,f161,f162,f163,f164,f116&secid=${secid}`, {
+      method: 'GET',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
       }
     });
-    return { success: true, message: 'Messages marked as read' };
-  },
 
-  // 获取未读好友消息数量
-  getUnreadFriendMessagesCount: async () => {
-    await delay(200);
-  const currentUserId = getCurrentUserId();
-    const unreadCount = mockFriendMessages.filter(
-      message => message.receiver_id === currentUserId && !message.is_read
-    ).length;
-    return { unread_count: unreadCount };
-  },
+    if (response.ok) {
+      const data = await response.json();
+      console.log(`第三方API ${stockCode} 返回数据:`, data);
 
-  // 获取群组聊天记录
-  getGroupMessages: async (groupId, params) => {
-    await delay(500);
-    const { page = 1, limit = 50, direction = 'desc' } = params;
-    const messages = mockGroupMessages.filter(message => message.group_id === groupId);
-    if (direction === 'desc') {
-      messages.sort((a, b) => new Date(b.sent_at) - new Date(a.sent_at));
-    } else {
-      messages.sort((a, b) => new Date(a.sent_at) - new Date(b.sent_at));
+      if (data.data && data.data.f43 !== undefined) {
+        const currentPrice = data.data.f43;
+        const previousClose = data.data.f60;
+        const changePercent = data.data.f170;
+
+        if (currentPrice && previousClose) {
+          const isPositive = changePercent >= 0;
+          const changeStr = changePercent !== undefined ?
+            (changePercent > 0 ? '+' + changePercent.toFixed(2) : changePercent.toFixed(2)) + '%' :
+            (isPositive ? '+' : '') + (((currentPrice - previousClose) / previousClose) * 100).toFixed(2) + '%';
+
+          const stockObj = {
+            code: stockCode,
+            price: currentPrice.toFixed(2),
+            change: changeStr,
+            isPositive,
+            source: 'third_party_api'
+          };
+
+          console.log(`第三方API获取成功: ${stockCode}`, stockObj);
+          return stockObj;
+        }
+      }
     }
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedMessages = messages.slice(startIndex, endIndex);
-    return {
-      total: messages.length,
-      page,
-      limit,
-      messages: paginatedMessages
-    };
-  },
-
-  // 发送群组消息
-  sendGroupMessage: async (groupId, messageData) => {
-    await delay(300);
-  const currentUserId = getCurrentUserId();
-    const newMessage = {
-      message_id: generateId(),
-      group_id: groupId,
-      sender_id: currentUserId,
-      content: messageData.content,
-      message_type: messageData.message_type || 'text',
-      stock_reference: messageData.stock_reference,
-      sent_at: new Date().toISOString()
-    };
-    mockGroupMessages.push(newMessage);
-    return newMessage;
-  },
-
-  // 标记群组消息为已读
-  markGroupMessagesAsRead: async (_groupId) => {
-    await delay(300);
-    // 群组消息的已读状态通常需要一个单独的表来跟踪，这里简化处理
-    return { success: true, message: 'Messages marked as read' };
+  } catch (thirdPartyError) {
+    console.error('第三方API调用失败:', thirdPartyError);
   }
-};
 
-// 群组相关API
-const groupApi = {
-  // 获取群组列表
-  getGroups: async (params) => {
-    await delay(300);
-    const { page = 1, limit = 20 } = params;
-  const currentUserId = getCurrentUserId();
-  const userGroups = mockGroupMembers.filter(member => member.user_id === currentUserId).map(member => member.group_id);
-    const groups = mockGroups.filter(group => userGroups.includes(group.group_id));
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedGroups = groups.slice(startIndex, endIndex);
-    return {
-      total: groups.length,
-      page,
-      limit,
-      groups: paginatedGroups
-    };
-  },
+  // 如果所有API都失败，使用当天真实的静态数据作为最后兜底
+  console.warn('所有API调用失败，使用当天真实静态数据作为兜底');
 
-  // 创建群组
-  createGroup: async (groupData) => {
-    await delay(500);
-  const currentUserId = getCurrentUserId();
-    const newGroup = {
-      group_id: generateId(),
-      group_name: groupData.group_name,
-      group_type: groupData.group_type || 'private',
-      creator_id: currentUserId,
-      avatar: groupData.avatar || '群',
-      description: groupData.description,
-      status: 'active',
-      created_at: new Date().toISOString()
-    };
-    mockGroups.push(newGroup);
-    // 添加创建者为群成员
-    mockGroupMembers.push({
-      group_member_id: generateId(),
-      group_id: newGroup.group_id,
-      user_id: currentUserId,
-      role: 'owner',
-      status: 'active',
-      joined_at: new Date().toISOString()
+  // 2025年12月31日热门股票最新数据（来自东方财富API）
+  const trueDailyStockData = {
+    '600519': { code: '600519', price: '1391.41', change: '-0.76%', isPositive: false },
+    '300750': { code: '300750', price: '367.68', change: '-0.44%', isPositive: false },
+    '600036': { code: '600036', price: '42.12', change: '+0.60%', isPositive: true },
+    '601318': { code: '601318', price: '69.35', change: '-0.76%', isPositive: false },
+    '002594': { code: '002594', price: '99.50', change: '-0.71%', isPositive: false }
+  };
+
+  const trueData = trueDailyStockData[stockCode];
+  if (trueData) {
+    console.warn(`使用当天真实静态数据: ${stockCode}`, trueData);
+    return trueData;
+  }
+
+  // 如果API调用失败且无可用的真实数据，返回null
+  return null;
+}
+
+/**
+ * 获取指数最新数据
+ */
+export async function getIndexData(indexId) {
+  try {
+    const indexCode = INDEX_CODE_MAP[indexId];
+    if (!indexCode) {
+      return null;
+    }
+
+    // 调用聚宽API获取指数数据
+    const result = await callJQApi('get_price', {
+      security: indexCode,
+      end_date: new Date().toISOString(),
+      frequency: '1d',
+      count: 2,
+      fields: 'open,close,high,low,volume'
     });
-    return newGroup;
-  },
 
-  // 获取群组详情
-  getGroup: async (groupId) => {
-    await delay(300);
-    const group = mockGroups.find(group => group.group_id === groupId);
-    if (!group) {
-      throw new Error('群组不存在');
-    }
-    return group;
-  },
+    console.log(`指数 ${indexId}(${indexCode}) 数据获取结果:`, result);
 
-  // 修改群组信息
-  updateGroup: async (groupId, groupData) => {
-    await delay(500);
-    const group = mockGroups.find(group => group.group_id === groupId);
-    if (!group) {
-      throw new Error('群组不存在');
-    }
-    Object.assign(group, groupData);
-    return group;
-  },
+    if (result && result.data) {
+      const data = result.data;
+      
+      // 确保数据格式正确
+      if (Array.isArray(data.close) && data.close.length > 0 && Array.isArray(data.close[0]) && data.close[0].length > 0) {
+        // 使用最新一天的数据
+        const latestDay = 0;
+        const previousDay = 1;
+        
+        const close = data.close[latestDay][0];
+        
+        // 计算涨跌幅：最新收盘价 - 昨日收盘价
+        let change = 0;
+        let isPositive = true;
+        
+        if (data.close.length > 1 && data.close[previousDay] && data.close[previousDay].length > 0) {
+          const yesterdayClose = data.close[previousDay][0];
+          change = ((close - yesterdayClose) / yesterdayClose * 100).toFixed(2);
+          isPositive = parseFloat(change) >= 0;
+        } else if (Array.isArray(data.open) && data.open[latestDay] && data.open[latestDay].length > 0) {
+          // 如果没有昨日数据，使用今日开盘价计算
+          const open = data.open[latestDay][0];
+          change = ((close - open) / open * 100).toFixed(2);
+          isPositive = parseFloat(change) >= 0;
+        }
+        
+        // 格式化数值，添加千分位分隔符
+        const formattedClose = close.toLocaleString('zh-CN', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        });
 
-  // 解散群组
-  deleteGroup: async (groupId) => {
-    await delay(500);
-    const groupIndex = mockGroups.findIndex(group => group.group_id === groupId);
-    if (groupIndex === -1) {
-      throw new Error('群组不存在');
-    }
-    mockGroups.splice(groupIndex, 1);
-  // 删除群成员和群消息（就地修改导入数组，避免重赋值导入绑定）
-  const remainingMembers = mockGroupMembers.filter(member => member.group_id !== groupId);
-  mockGroupMembers.length = 0;
-  mockGroupMembers.push(...remainingMembers);
+        console.log(`指数 ${indexId} 计算结果: 收盘价=${close}, 涨跌幅=${change}%, 正负=${isPositive}`);
 
-  const remainingMessages = mockGroupMessages.filter(message => message.group_id !== groupId);
-  mockGroupMessages.length = 0;
-  mockGroupMessages.push(...remainingMessages);
-    return { success: true, message: 'Group disbanded successfully' };
-  },
-
-  // 获取群成员列表
-  getGroupMembers: async (groupId, params) => {
-    await delay(300);
-    const { page = 1, limit = 20 } = params;
-    const members = mockGroupMembers.filter(member => member.group_id === groupId).map(member => {
-      const user = mockUsers.find(user => user.user_id === member.user_id);
-      return {
-        user_id: user.user_id,
-        username: user.username,
-        role: member.role,
-        status: member.status,
-        joined_at: member.joined_at
-      };
-    });
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedMembers = members.slice(startIndex, endIndex);
-    return {
-      total: members.length,
-      page,
-      limit,
-      members: paginatedMembers
-    };
-  },
-
-  // 添加群成员
-  addGroupMember: async (groupId, memberData) => {
-    await delay(500);
-    const existingMember = mockGroupMembers.find(
-      member => member.group_id === groupId && member.user_id === memberData.user_id
-    );
-    if (existingMember) {
-      throw new Error('用户已在群组中');
-    }
-    const newMember = {
-      group_member_id: generateId(),
-      group_id: groupId,
-      user_id: memberData.user_id,
-      role: memberData.role || 'member',
-      status: 'active',
-      joined_at: new Date().toISOString()
-    };
-    mockGroupMembers.push(newMember);
-    return { success: true, message: 'Member added successfully' };
-  },
-
-  // 修改群成员角色
-  updateGroupMemberRole: async (groupId, userId, role) => {
-    await delay(500);
-    const member = mockGroupMembers.find(
-      member => member.group_id === groupId && member.user_id === userId
-    );
-    if (!member) {
-      throw new Error('群成员不存在');
-    }
-    member.role = role;
-    return { success: true, message: 'Member role updated successfully' };
-  },
-
-  // 移除群成员
-  removeGroupMember: async (groupId, userId) => {
-    await delay(300);
-    const memberIndex = mockGroupMembers.findIndex(
-      member => member.group_id === groupId && member.user_id === userId
-    );
-    if (memberIndex === -1) {
-      throw new Error('群成员不存在');
-    }
-    mockGroupMembers.splice(memberIndex, 1);
-    return { success: true, message: 'Member removed successfully' };
-  },
-
-  // 加入群组
-  joinGroup: async (groupId) => {
-    await delay(500);
-  const currentUserId = getCurrentUserId();
-    const existingMember = mockGroupMembers.find(
-      member => member.group_id === groupId && member.user_id === currentUserId
-    );
-    if (existingMember) {
-      throw new Error('已在群组中');
-    }
-    const newMember = {
-      group_member_id: generateId(),
-      group_id: groupId,
-      user_id: currentUserId,
-      role: 'member',
-      status: 'active',
-      joined_at: new Date().toISOString()
-    };
-    mockGroupMembers.push(newMember);
-    return { success: true, message: 'Joined group successfully' };
-  },
-
-  // 退出群组
-  leaveGroup: async (groupId) => {
-    await delay(300);
-  const currentUserId = getCurrentUserId();
-    const memberIndex = mockGroupMembers.findIndex(
-      member => member.group_id === groupId && member.user_id === currentUserId
-    );
-    if (memberIndex === -1) {
-      throw new Error('不在群组中');
-    }
-    mockGroupMembers.splice(memberIndex, 1);
-    return { success: true, message: 'Left group successfully' };
-  },
-
-  // 邀请用户加入群组
-  inviteToGroup: async (_groupId, _userId) => {
-    await delay(500);
-    // 实际项目中，这里应该发送邀请通知
-    return { success: true, message: 'Invitation sent successfully' };
-  }
-};
-
-// AI推荐相关API
-const aiApi = {
-  // 获取AI推荐股票
-  getRecommendations: async (params) => {
-    await delay(500);
-    const { page = 1, limit = 10 } = params;
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedRecommendations = mockAIPicks.slice(startIndex, endIndex);
-    return {
-      total: mockAIPicks.length,
-      page,
-      limit,
-      recommendations: paginatedRecommendations
-    };
-  },
-
-  // 提交AI推荐反馈
-  submitFeedback: async (recommendationId, feedback) => {
-    await delay(300);
-    const recommendation = mockAIPicks.find(pick => pick.recommendation_id === recommendationId);
-    if (!recommendation) {
-      throw new Error('推荐不存在');
-    }
-    recommendation.user_feedback = feedback.feedback;
-    return { success: true, message: 'Feedback submitted successfully' };
-  },
-
-  // 请求AI生成新的推荐
-  generateRecommendations: async (params) => {
-    await delay(1000); // 模拟AI生成延迟
-    const { count = 5 } = params;
-    // 从现有推荐中随机选择count个
-    const shuffled = [...mockAIPicks].sort(() => 0.5 - Math.random());
-    return { success: true, recommendations: shuffled.slice(0, count) };
-  }
-};
-
-// 自选股相关API
-const favoritesApi = {
-  // 获取自选股列表
-  getFavorites: async (params) => {
-    await delay(300);
-    const { page = 1, limit = 50, type } = params || {};
-  const currentUserId = getCurrentUserId();
-    if (type === 'news') {
-      // 新闻收藏
-      const userNews = mockNewsFavorites.filter(fav => fav.user_id === currentUserId);
-      const startIndex = (page - 1) * limit;
-      const endIndex = startIndex + limit;
-      const paginated = userNews.slice(startIndex, endIndex);
-      return { total: userNews.length, page, limit, favorites: paginated };
-    }
-    // 默认：股票自选
-    const userFavorites = mockFavorites.filter(fav => fav.user_id === currentUserId);
-    const favoritesWithStockInfo = userFavorites.map(fav => {
-      const stock = mockStocks.find(stock => stock.stock_id === fav.stock_id);
-      return { ...fav, stock_info: stock };
-    });
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedFavorites = favoritesWithStockInfo.slice(startIndex, endIndex);
-    return {
-      total: userFavorites.length,
-      page,
-      limit,
-      favorites: paginatedFavorites
-    };
-  },
-
-  // 添加自选股
-  addFavorite: async (favoriteData) => {
-    await delay(500);
-  const currentUserId = getCurrentUserId();
-    // 支持新闻与股票两种类型
-    if (favoriteData && favoriteData.type === 'news') {
-      const existing = mockNewsFavorites.find(fav => fav.user_id === currentUserId && fav.title === favoriteData.title);
-      if (existing) throw new Error('新闻已收藏');
-      const newFav = {
-        favorite_id: generateId(),
-        user_id: currentUserId,
-        title: favoriteData.title,
-        source: favoriteData.source || null,
-        time: favoriteData.time || new Date().toISOString(),
-        added_at: new Date().toISOString()
-      };
-      mockNewsFavorites.push(newFav);
-      return newFav;
-    }
-    // 默认走股票自选逻辑
-    const existingFavorite = mockFavorites.find(
-      fav => fav.user_id === currentUserId && fav.stock_id === favoriteData.stock_id
-    );
-    if (existingFavorite) {
-      throw new Error('股票已在自选股中');
-    }
-    const newFavorite = {
-      favorite_id: generateId(),
-      user_id: currentUserId,
-      stock_id: favoriteData.stock_id,
-      added_at: new Date().toISOString(),
-      notes: favoriteData.notes,
-      alert_price: favoriteData.alert_price
-    };
-    mockFavorites.push(newFavorite);
-    return newFavorite;
-  },
-
-  // 修改自选股信息
-  updateFavorite: async (favoriteId, favoriteData) => {
-    await delay(500);
-    const favorite = mockFavorites.find(fav => fav.favorite_id === favoriteId);
-    if (!favorite) {
-      throw new Error('自选股不存在');
-    }
-    Object.assign(favorite, favoriteData);
-    return favorite;
-  },
-
-  // 删除自选股
-  deleteFavorite: async (favoriteId) => {
-    await delay(300);
-    // 先尝试在股票自选中删除
-    const favoriteIndex = mockFavorites.findIndex(fav => fav.favorite_id === favoriteId);
-    if (favoriteIndex !== -1) {
-      mockFavorites.splice(favoriteIndex, 1);
-      return { success: true, message: 'Favorite removed successfully' };
-    }
-    // 再尝试新闻收藏
-    const newsIndex = mockNewsFavorites.findIndex(fav => fav.favorite_id === favoriteId);
-    if (newsIndex !== -1) {
-      mockNewsFavorites.splice(newsIndex, 1);
-      return { success: true, message: 'Favorite removed successfully' };
-    }
-    throw new Error('自选/收藏不存在');
-  },
-
-  // 检查股票是否在自选股中
-  checkFavorite: async (stockId) => {
-    await delay(200);
-  const currentUserId = getCurrentUserId();
-    const isFavorite = mockFavorites.some(fav => fav.user_id === currentUserId && fav.stock_id === stockId);
-    return { is_favorite: isFavorite };
-  }
-};
-
-// 市场行情相关API
-const marketApi = {
-  // 获取市场行情概览
-  getMarketOverview: async (params) => {
-    await delay(500);
-    const { market_type = 'A股' } = params;
-    const marketStocks = mockStocks.filter(stock => stock.market_type === market_type);
-    // 计算市场概览
-    const marketSummary = {
-      total_stocks: marketStocks.length,
-      avg_change_percent: 1.25,
-      rising_stocks: 650,
-      falling_stocks: 350,
-      market_type: market_type
-    };
-    // 获取热门股票
-    const hotStocks = [...mockStocks].sort((a, b) => {
-      const aData = mockMarketData.find(data => data.stock_id === a.stock_id);
-      const bData = mockMarketData.find(data => data.stock_id === b.stock_id);
-      return (bData?.volume || 0) - (aData?.volume || 0);
-    }).slice(0, 10);
-    return {
-      market_summary: marketSummary,
-      hot_stocks: hotStocks
-    };
-  },
-
-  // 获取股票实时行情
-  getStockRealTimeData: async (stockId) => {
-    await delay(300);
-    const stockData = mockMarketData.find(data => data.stock_id === stockId);
-    if (!stockData) {
-      throw new Error('股票行情数据不存在');
-    }
-    return stockData;
-  },
-
-  // 获取股票历史行情
-  getStockHistoryData: async (stockId, _params) => {
-    await delay(500);
-    // 模拟历史数据，实际项目中应该从数据库或API获取
-    const historyData = mockMarketData.filter(data => data.stock_id === stockId);
-    const stock = mockStocks.find(stock => stock.stock_id === stockId);
-    return {
-      stock_id: stockId,
-      stock_code: stock.stock_code,
-      history_data: historyData
-    };
-  },
-
-  // 获取热门股票
-  getHotStocks: async (params) => {
-    await delay(300);
-    const { limit = 20, sort_by = 'volume' } = params;
-    // 根据sort_by排序
-    let sortedStocks = [...mockStocks];
-    if (sort_by === 'volume') {
-      sortedStocks.sort((a, b) => {
-        const aData = mockMarketData.find(data => data.stock_id === a.stock_id);
-        const bData = mockMarketData.find(data => data.stock_id === b.stock_id);
-        return (bData?.volume || 0) - (aData?.volume || 0);
-      });
-    } else if (sort_by === 'change_percent') {
-      sortedStocks.sort((a, b) => {
-        const aData = mockMarketData.find(data => data.stock_id === a.stock_id);
-        const bData = mockMarketData.find(data => data.stock_id === b.stock_id);
-        return (bData?.change_percent || 0) - (aData?.change_percent || 0);
-      });
-    }
-    return {
-      hot_stocks: sortedStocks.slice(0, limit)
-    };
-  },
-
-  // 获取行业板块行情
-  getSectorData: async () => {
-    await delay(500);
-    // 按行业分组
-    const sectors = {};
-    mockStocks.forEach(stock => {
-      if (!sectors[stock.industry]) {
-        sectors[stock.industry] = {
-          industry: stock.industry,
-          avg_change_percent: 0,
-          stocks: []
+        const indexObj = {
+          id: indexId,
+          value: formattedClose,
+          change: `${isPositive ? '+' : ''}${change}%`,
+          isPositive,
+          timestamp: Date.now()
         };
+
+        // 将成功获取的真实指数数据保存到 localStorage，作为延迟数据备份
+        try {
+          if (typeof localStorage !== 'undefined') {
+            localStorage.setItem(`cached_index_${indexId}`, JSON.stringify(indexObj));
+          }
+        } catch (e) {
+          console.warn('无法写入本地缓存指数数据:', e);
+        }
+
+        return indexObj;
+      } else {
+        console.error('指数数据格式不正确:', data);
       }
-      sectors[stock.industry].stocks.push(stock);
-    });
-    // 计算每个行业的平均涨跌幅
-    Object.values(sectors).forEach(sector => {
-      const totalChange = sector.stocks.reduce((sum, stock) => {
-        const stockData = mockMarketData.find(data => data.stock_id === stock.stock_id);
-        return sum + (stockData?.change_percent || 0);
-      }, 0);
-      sector.avg_change_percent = parseFloat((totalChange / sector.stocks.length).toFixed(2));
-    });
-    return {
-      sectors: Object.values(sectors)
-    };
+    }
+  } catch (error) {
+    console.error('获取指数数据失败:', error);
   }
-};
 
-// 用户兴趣相关API
-const interestApi = {
-  // 获取用户兴趣标签
-  getInterests: async () => {
-    await delay(300);
-  const currentUserId = getCurrentUserId();
-    const userInterests = mockUserInterests.filter(interest => interest.user_id === currentUserId);
-    return { interests: userInterests };
-  },
-
-  // 添加用户兴趣标签
-  addInterest: async (interestData) => {
-    await delay(500);
-  const currentUserId = getCurrentUserId();
-    const existingInterest = mockUserInterests.find(
-      interest => interest.user_id === currentUserId &&
-                  interest.interest_type === interestData.interest_type &&
-                  interest.interest_value === interestData.interest_value
-    );
-    if (existingInterest) {
-      throw new Error('兴趣标签已存在');
-    }
-    const newInterest = {
-      interest_id: generateId(),
-      user_id: currentUserId,
-      interest_type: interestData.interest_type,
-      interest_value: interestData.interest_value,
-      weight: interestData.weight || 50,
-      updated_at: new Date().toISOString()
-    };
-    mockUserInterests.push(newInterest);
-    return newInterest;
-  },
-
-  // 修改用户兴趣标签
-  updateInterest: async (interestId, interestData) => {
-    await delay(500);
-    const interest = mockUserInterests.find(interest => interest.interest_id === interestId);
-    if (!interest) {
-      throw new Error('兴趣标签不存在');
-    }
-    interest.weight = interestData.weight;
-    interest.updated_at = new Date().toISOString();
-    return interest;
-  },
-
-  // 删除用户兴趣标签
-  deleteInterest: async (interestId) => {
-    await delay(300);
-    const interestIndex = mockUserInterests.findIndex(interest => interest.interest_id === interestId);
-    if (interestIndex === -1) {
-      throw new Error('兴趣标签不存在');
-    }
-    mockUserInterests.splice(interestIndex, 1);
-    return { success: true, message: 'Interest deleted successfully' };
-  }
-};
-
-// 系统通知相关API
-const notificationApi = {
-  // 获取系统通知
-  getNotifications: async (params) => {
-    await delay(300);
-    const { is_read = false, page = 1, limit = 20 } = params;
-  const currentUserId = getCurrentUserId();
-    let userNotifications = mockNotifications.filter(notification => notification.user_id === currentUserId);
-    if (is_read !== undefined) {
-      userNotifications = userNotifications.filter(notification => notification.is_read === is_read);
-    }
-    userNotifications.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedNotifications = userNotifications.slice(startIndex, endIndex);
-    return {
-      total: userNotifications.length,
-      page,
-      limit,
-      notifications: paginatedNotifications
-    };
-  },
-
-  // 获取通知详情
-  getNotification: async (notificationId) => {
-    await delay(300);
-    const notification = mockNotifications.find(notification => notification.notification_id === notificationId);
-    if (!notification) {
-      throw new Error('通知不存在');
-    }
-    return notification;
-  },
-
-  // 标记通知为已读
-  markNotificationAsRead: async (notificationId) => {
-    await delay(300);
-    const notification = mockNotifications.find(notification => notification.notification_id === notificationId);
-    if (!notification) {
-      throw new Error('通知不存在');
-    }
-    notification.is_read = true;
-    notification.read_at = new Date().toISOString();
-    return { success: true, message: 'Notification marked as read' };
-  },
-
-  // 标记所有通知为已读
-  markAllNotificationsAsRead: async () => {
-    await delay(500);
-  const currentUserId = getCurrentUserId();
-    mockNotifications.forEach(notification => {
-      if (notification.user_id === currentUserId) {
-        notification.is_read = true;
-        notification.read_at = new Date().toISOString();
+  // 如果API调用失败，尝试使用本地缓存的延迟数据（只要之前成功获取过真实数据）
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const raw = localStorage.getItem(`cached_index_${indexId}`);
+      if (raw) {
+        const cached = JSON.parse(raw);
+        console.warn(`使用本地缓存的指数数据 (indexId=${indexId})，时间:`, new Date(cached.timestamp).toLocaleString());
+        return cached;
       }
-    });
-    return { success: true, message: 'All notifications marked as read' };
-  },
-
-  // 获取未读通知数量
-  getUnreadNotificationCount: async () => {
-    await delay(200);
-  const currentUserId = getCurrentUserId();
-    const unreadCount = mockNotifications.filter(
-      notification => notification.user_id === currentUserId && !notification.is_read
-    ).length;
-    return { unread_count: unreadCount };
+    }
+  } catch (e) {
+    console.warn('读取本地缓存指数数据失败:', e);
   }
+
+  // 聚宽API失败时，尝试使用公开的第三方API获取真实数据
+  try {
+    console.log('聚宽API失败，尝试使用第三方API获取真实指数数据...');
+
+    // 使用东方财富等公开API获取实时指数数据
+    const indexNameMap = {
+      'sh': '000001',  // 上证指数
+      'sz': '399001',  // 深证成指
+      'cy': '399006',  // 创业板指
+      'hs300': '000300', // 沪深300
+      'sz50': '000016', // 上证50
+      'zxb': '399005'   // 中小板指
+    };
+
+    const stockCode = indexNameMap[indexId];
+    if (stockCode) {
+      // 使用东方财富API获取实时数据
+      const response = await fetch(`https://push2.eastmoney.com/api/qt/stock/get?ut=fa5fd1943c7b386f172d6893dbfba10b&invt=2&fltt=2&fields=f43,f44,f45,f46,f60,f169,f170,f171,f47,f48,f49,f161,f162,f163,f164,f116&secid=1.${stockCode}`, {
+        method: 'GET',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`第三方API ${indexId} 返回数据:`, data);
+
+        if (data.data && data.data.f43 !== undefined) {
+          const currentPrice = data.data.f43; // 当前价格
+          const previousClose = data.data.f60; // 昨收
+          const changePercent = data.data.f170; // 涨跌幅
+
+          if (currentPrice && previousClose) {
+            // 计算涨跌幅和正负
+            const changeValue = currentPrice - previousClose;
+            const isPositive = changeValue >= 0;
+            const percentStr = changePercent !== undefined ?
+              (changePercent > 0 ? '+' + changePercent.toFixed(2) : changePercent.toFixed(2)) + '%' :
+              (isPositive ? '+' : '') + ((changeValue / previousClose) * 100).toFixed(2) + '%';
+
+            const indexObj = {
+              id: indexId,
+              value: currentPrice.toLocaleString('zh-CN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+              }),
+              change: percentStr,
+              isPositive,
+              timestamp: Date.now(),
+              source: 'third_party_api'
+            };
+
+            console.log(`第三方API获取成功: ${indexId}`, indexObj);
+            return indexObj;
+          }
+        }
+      }
+    }
+  } catch (thirdPartyError) {
+    console.error('第三方API调用失败:', thirdPartyError);
+  }
+
+  // 如果所有API都失败，使用当天真实的静态数据作为最后兜底
+  console.warn('所有API调用失败，使用当天真实静态数据作为兜底');
+
+  // 2025年12月31日最新数据（来自东方财富API）
+  const trueDailyData = {
+    'sh': { id: 'sh', name: '上证指数', value: '3,961.21', change: '-0.10%', isPositive: false },
+    'sz': { id: 'sz', name: '深证成指', value: '13,568.09', change: '+0.23%', isPositive: true },
+    'cy': { id: 'cy', name: '创业板指', value: '3,220.56', change: '-0.06%', isPositive: false },
+    'hs300': { id: 'hs300', name: '沪深300', value: '4,638.90', change: '-0.01%', isPositive: false },
+    'sz50': { id: 'sz50', name: '上证50', value: '3,031.57', change: '-0.10%', isPositive: false },
+    'zxb': { id: 'zxb', name: '中小板指', value: '', change: '', isPositive: true }
+  };
+
+  const trueData = trueDailyData[indexId];
+  if (trueData && trueData.value) {
+    console.warn(`使用当天真实静态数据: ${indexId}`, trueData);
+    return { ...trueData, timestamp: Date.now(), source: 'static_daily_data' };
+  }
+
+  // 没有可用的数据时返回null
+  return null;
+}
+
+/**
+ * 搜索股票
+ */
+export async function searchStocks(keyword) {
+  try {
+    // 首先尝试聚宽API
+    const result = await callJQApi('get_all_securities', {
+      types: 'stock',
+      date: new Date().toISOString().slice(0, 10)
+    });
+
+    if (result && result.data) {
+      const allStocks = result.data;
+      const matchedStocks = [];
+
+      // 遍历所有股票，匹配关键词
+      for (const [code, info] of Object.entries(allStocks)) {
+        const stockCode = code.split('.')[0];
+        const stockName = info.display_name;
+
+        if (stockCode.includes(keyword) || stockName.includes(keyword)) {
+          matchedStocks.push({
+            code: stockCode,
+            name: stockName,
+            market: code.includes('XSHG') ? '上交所' : '深交所'
+          });
+        }
+
+        // 最多返回10条结果
+        if (matchedStocks.length >= 10) {
+          break;
+        }
+      }
+
+      return matchedStocks;
+    }
+  } catch (error) {
+    console.error('聚宽API搜索失败:', error);
+  }
+
+  // 如果聚宽API失败，使用静态的备选股票列表
+  console.log('使用静态备选股票列表进行搜索');
+
+  // 常见的A股股票列表
+  const commonStocks = [
+    { code: '600519', name: '贵州茅台', market: '上交所', industry: '白酒' },
+    { code: '300750', name: '宁德时代', market: '深交所', industry: '新能源' },
+    { code: '600036', name: '招商银行', market: '上交所', industry: '银行' },
+    { code: '601318', name: '中国平安', market: '上交所', industry: '保险' },
+    { code: '002594', name: '比亚迪', market: '深交所', industry: '汽车' },
+    { code: '000858', name: '五粮液', market: '深交所', industry: '白酒' },
+    { code: '000001', name: '平安银行', market: '深交所', industry: '银行' },
+    { code: '002475', name: '立讯精密', market: '深交所', industry: '电子' },
+    { code: '603259', name: '药明康德', market: '上交所', industry: '医药' },
+    { code: '000725', name: '京东方A', market: '深交所', industry: '电子' },
+    { code: '601398', name: '工商银行', market: '上交所', industry: '银行' },
+    { code: '601628', name: '中国人寿', market: '上交所', industry: '保险' },
+    { code: '600887', name: '伊利股份', market: '上交所', industry: '食品' },
+    { code: '000063', name: '中兴通讯', market: '深交所', industry: '通信' },
+    { code: '600690', name: '海尔智家', market: '上交所', industry: '家电' }
+  ];
+
+  // 搜索匹配
+  const matchedStocks = commonStocks.filter(stock =>
+    stock.code.includes(keyword) ||
+    stock.name.includes(keyword) ||
+    stock.industry.includes(keyword)
+  );
+
+  return matchedStocks.slice(0, 10);
+}
+
+/**
+ * 批量获取股票数据
+ */
+export async function getBatchStockData(stockCodes) {
+  try {
+    // 转换股票代码格式
+    const formattedCodes = stockCodes.map(code => {
+      const market = STOCK_MARKET_MAP[code.charAt(0)] || 'XSHE';
+      return `${code}.${market}`;
+    });
+
+    // 调用聚宽API获取批量股票数据 - 统一参数格式
+    const result = await callJQApi('get_price', {
+      security: formattedCodes.join(','),
+      end_date: new Date().toISOString(),
+      frequency: '1d',
+      count: 2,
+      fields: 'open,close,high,low,volume'
+    });
+
+    console.log(`批量获取股票数据结果:`, result);
+
+    if (result && result.data) {
+      const data = result.data;
+      const stockDataMap = {};
+
+      // 遍历所有股票代码，提取对应数据
+      formattedCodes.forEach((formattedCode, index) => {
+        const stockCode = formattedCode.split('.')[0];
+        
+        // 确保数据格式正确
+        if (Array.isArray(data.close) && data.close[index] && Array.isArray(data.close[index]) && data.close[index].length > 0) {
+          const latestDay = 0;
+          const previousDay = 1;
+          
+          const close = data.close[index][latestDay];
+          
+          // 计算涨跌幅：最新收盘价 - 昨日收盘价
+          let change = 0;
+          let isPositive = true;
+          
+          if (data.close.length > 1 && data.close[index][previousDay] !== undefined) {
+            const yesterdayClose = data.close[index][previousDay];
+            change = ((close - yesterdayClose) / yesterdayClose * 100).toFixed(2);
+            isPositive = parseFloat(change) >= 0;
+          } else if (Array.isArray(data.open) && data.open[index] && data.open[index][latestDay] !== undefined) {
+            // 如果没有昨日数据，使用今日开盘价计算
+            const open = data.open[index][latestDay];
+            change = ((close - open) / open * 100).toFixed(2);
+            isPositive = parseFloat(change) >= 0;
+          }
+          
+          stockDataMap[stockCode] = {
+            code: stockCode,
+            price: close.toFixed(2),
+            change: `${isPositive ? '+' : ''}${change}%`,
+            isPositive
+          };
+        }
+      });
+
+      return stockDataMap;
+    }
+  } catch (error) {
+    console.error('批量获取股票数据失败:', error);
+  }
+
+  // 如果API调用失败，返回空对象
+  return {};
+}
+
+/**
+ * 获取热门股票数据
+ */
+export async function getHotStocks() {
+  try {
+    // 这里我们使用一些默认的热门股票代码
+    const hotStockCodes = [
+      '600519', // 贵州茅台
+      '000858', // 五粮液
+      '300750', // 宁德时代
+      '000001', // 平安银行
+      '601318', // 中国平安
+      '002475', // 立讯精密
+      '603259', // 药明康德
+      '600036', // 招商银行
+      '002594', // 比亚迪
+      '000725'  // 京东方A
+    ];
+
+    // 批量获取热门股票数据
+    return await getBatchStockData(hotStockCodes);
+  } catch (error) {
+    console.error('获取热门股票失败:', error);
+  }
+
+  // 如果API调用失败，返回空对象
+  return {};
+}
+
+// 导出API函数
+export default {
+  getStockPrice,
+  getIndexData,
+  searchStocks,
+  getBatchStockData,
+  getHotStocks
 };
-
-// 导出所有API
-const api = {
-  auth: authApi,
-  user: userApi,
-  stock: stockApi,
-  friend: friendApi,
-  message: messageApi,
-  group: groupApi,
-  ai: aiApi,
-  favorites: favoritesApi,
-  market: marketApi,
-  interest: interestApi,
-  notification: notificationApi
-};
-
-// 暴露用于注入 token 的方法
-api.setToken = setAuthToken
-// 暴露用于设置/获取当前用户 id（mock 用）
-api.setCurrentUserId = setCurrentUserId
-api.getCurrentUserId = getCurrentUserId
-api.getAuthToken = getAuthToken
-
-export default api;

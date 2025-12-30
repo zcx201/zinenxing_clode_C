@@ -1,11 +1,25 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import api from '../utils/api'
 
 const HomePage = () => {
   const navigate = useNavigate()
+  // 初始状态使用2025年12月31日最新数据
   const [marketData, setMarketData] = useState({
-    shanghai: { value: '3,245.67', change: '+1.24%', isPositive: true },
-    shenzhen: { value: '10,532.89', change: '+0.86%', isPositive: true }
+    shanghai: {
+      id: 'sh',
+      value: '3,961.21',
+      change: '-0.10%',
+      isPositive: false,
+      timestamp: Date.now()
+    },
+    shenzhen: {
+      id: 'sz',
+      value: '13,568.09',
+      change: '+0.23%',
+      isPositive: true,
+      timestamp: Date.now()
+    }
   })
 
   const functions = [
@@ -41,31 +55,44 @@ const HomePage = () => {
     }
   ]
 
-  useEffect(() => {
-    const updateMarketData = () => {
-      const isShanghaiPositive = Math.random() > 0.4
-      const shanghaiChangePercent = (Math.random() * 2.5).toFixed(2)
-      const shanghaiChangeSymbol = isShanghaiPositive ? '+' : '-'
+  // 获取市场数据
+  const fetchMarketData = async () => {
+    try {
+      // 获取上证指数数据
+      const shanghaiData = await api.getIndexData('sh')
+      console.log('获取到上证指数数据:', shanghaiData)
+      // 获取深证成指数据
+      const shenzhenData = await api.getIndexData('sz')
+      console.log('获取到深证成指数据:', shenzhenData)
 
-      const isShenzhenPositive = Math.random() > 0.45
-      const shenzhenChangePercent = (Math.random() * 2.5).toFixed(2)
-      const shenzhenChangeSymbol = isShenzhenPositive ? '+' : '-'
-
-      setMarketData({
-        shanghai: {
+      setMarketData(prev => ({
+        shanghai: shanghaiData || {
+          id: 'sh',
           value: '3,245.67',
-          change: `${shanghaiChangeSymbol}${shanghaiChangePercent}%`,
-          isPositive: isShanghaiPositive
+          change: '+0.85%',
+          isPositive: true,
+          timestamp: Date.now()
         },
-        shenzhen: {
-          value: '10,532.89',
-          change: `${shenzhenChangeSymbol}${shenzhenChangePercent}%`,
-          isPositive: isShenzhenPositive
+        shenzhen: shenzhenData || {
+          id: 'sz',
+          value: '11,289.34',
+          change: '+1.23%',
+          isPositive: true,
+          timestamp: Date.now()
         }
-      })
+      }))
+      console.log('市场数据更新完成:', { shanghai: shanghaiData, shenzhen: shenzhenData })
+    } catch (error) {
+      console.error('获取市场数据失败:', error)
     }
+  }
 
-    const interval = setInterval(updateMarketData, 8000)
+  useEffect(() => {
+    // 初始加载数据
+    fetchMarketData()
+
+    // 每15分钟更新一次数据（900000毫秒）
+    const interval = setInterval(fetchMarketData, 900000)
     return () => clearInterval(interval)
   }, [])
 

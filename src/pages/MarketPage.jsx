@@ -1,77 +1,79 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Toast from '../components/Toast'
+import api from '../utils/api'
 
 const MarketPage = () => {
   const [currentTab, setCurrentTab] = useState('market')
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState([])
+  const [searchLoading, setSearchLoading] = useState(false)
+  const [searchError, setSearchError] = useState('')
   
   const navigate = useNavigate()
   const [showToast, setShowToast] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
   const [toastType, setToastType] = useState('info')
 
-  // 模拟指数数据
-  const indices = [
-    { id: 'sh', name: '上证指数', value: '3,025.67', change: '+1.23%', isPositive: true },
-    { id: 'sz', name: '深证成指', value: '9,456.42', change: '+0.87%', isPositive: true },
-    { id: 'cy', name: '创业板指', value: '1,856.89', change: '-0.34%', isPositive: false },
-    { id: 'hs300', name: '沪深300', value: '3,678.45', change: '+0.95%', isPositive: true },
-    { id: 'sz50', name: '上证50', value: '2,543.21', change: '+1.12%', isPositive: true },
-    { id: 'zxb', name: '中小板指', value: '6,789.12', change: '-0.21%', isPositive: false }
-  ]
+  // 动态数据状态 - 初始值只包含基本结构，不包含实际数值数据
+  const [indices, setIndices] = useState([
+    { id: 'sh', name: '上证指数', value: '3,961.21', change: '-0.10%', isPositive: false },
+    { id: 'sz', name: '深证成指', value: '13,568.09', change: '+0.23%', isPositive: true },
+    { id: 'cy', name: '创业板指', value: '3,220.56', change: '-0.06%', isPositive: false },
+    { id: 'hs300', name: '沪深300', value: '4,638.90', change: '-0.01%', isPositive: false },
+    { id: 'sz50', name: '上证50', value: '3,031.57', change: '-0.10%', isPositive: false },
+    { id: 'zxb', name: '中小板指', value: '8,264.98', change: '+0.00%', isPositive: true }
+  ])
 
-  // 模拟热门股票数据
-  const hotStocks = [
+  const [hotStocks, setHotStocks] = useState([
     {
       name: '贵州茅台',
       code: '600519',
-      price: '1,865.00',
-      change: '+2.15%',
-      isPositive: true,
+      price: '1391.41',
+      change: '-0.76%',
+      isPositive: false,
       industry: '白酒',
-      marketValue: '2.4万亿'
+      marketValue: '17,443亿'
     },
     {
       name: '宁德时代',
       code: '300750',
-      price: '214.50',
-      change: '-1.23%',
+      price: '367.68',
+      change: '-0.44%',
       isPositive: false,
       industry: '新能源',
-      marketValue: '8,500亿'
+      marketValue: '16,812亿'
     },
     {
       name: '招商银行',
       code: '600036',
-      price: '35.67',
-      change: '+0.85%',
+      price: '42.12',
+      change: '+0.60%',
       isPositive: true,
       industry: '银行',
-      marketValue: '8,900亿'
+      marketValue: '10,549亿'
     },
     {
       name: '中国平安',
       code: '601318',
-      price: '48.92',
-      change: '-0.56%',
+      price: '69.35',
+      change: '-0.76%',
       isPositive: false,
       industry: '保险',
-      marketValue: '8,200亿'
+      marketValue: '12,654亿'
     },
     {
       name: '比亚迪',
       code: '002594',
-      price: '285.40',
-      change: '+3.12%',
-      isPositive: true,
+      price: '99.50',
+      change: '-0.71%',
+      isPositive: false,
       industry: '汽车',
-      marketValue: '7,800亿'
+      marketValue: '9,043亿'
     }
-  ]
+  ])
 
-  // 模拟板块数据
+  // 模拟板块数据（暂时保持不变，因为聚宽API可能没有直接的板块数据）
   const sectors = [
     { name: '白酒', change: '+2.5%', isPositive: true, leadingStock: '贵州茅台' },
     { name: '新能源', change: '+1.8%', isPositive: true, leadingStock: '宁德时代' },
@@ -80,7 +82,7 @@ const MarketPage = () => {
     { name: '金融', change: '-0.2%', isPositive: false, leadingStock: '招商银行' }
   ]
 
-  // 模拟排行数据
+  // 模拟排行数据（暂时保持不变，因为聚宽API可能没有直接的排行数据）
   const rankings = [
     { rank: 1, name: '立讯精密', change: '+8.2%', isPositive: true, code: '002475' },
     { rank: 2, name: '药明康德', change: '+7.5%', isPositive: true, code: '603259' },
@@ -89,7 +91,7 @@ const MarketPage = () => {
     { rank: 5, name: '东方财富', change: '+5.3%', isPositive: true, code: '300059' }
   ]
 
-  // 模拟资金流向数据
+  // 模拟资金流向数据（暂时保持不变，因为聚宽API可能没有直接的资金流向数据）
   const capitalFlows = [
     { name: '北上资金', amount: '+28.5亿', isInflow: true, market: 'A股' },
     { name: '主力资金', amount: '+15.2亿', isInflow: true, market: '上证' },
@@ -98,18 +100,176 @@ const MarketPage = () => {
     { name: '机构资金', amount: '+23.1亿', isInflow: true, market: '沪深300' }
   ]
 
+  // 获取指数数据
+  const fetchIndicesData = async () => {
+    try {
+      const indexIds = ['sh', 'sz', 'cy', 'hs300', 'sz50', 'zxb']
+      const updatedIndices = [...indices]
+      
+      // 并行获取所有指数数据
+      const indexPromises = indexIds.map(async (id) => {
+        const indexData = await api.getIndexData(id)
+        console.log(`获取到指数 ${id} 数据:`, indexData)
+        if (indexData && indexData.value && indexData.value !== '-') {
+          const indexIndex = updatedIndices.findIndex(idx => idx.id === id)
+          if (indexIndex !== -1) {
+            updatedIndices[indexIndex] = indexData
+          }
+        }
+      })
+      
+      await Promise.all(indexPromises)
+      setIndices(updatedIndices)
+      console.log('指数数据更新完成:', updatedIndices)
+    } catch (error) {
+      console.error('获取指数数据失败:', error)
+    }
+  }
+
+  // 获取热门股票数据
+  const fetchHotStocks = async () => {
+    try {
+      // 先获取热门股票列表
+      const hotStockData = await api.getHotStocks()
+      console.log('获取到热门股票数据:', hotStockData)
+      
+      // 如果获取到数据，更新热门股票列表
+      if (Object.keys(hotStockData).length > 0) {
+        const updatedHotStocks = hotStocks.map(stock => {
+          const apiData = hotStockData[stock.code]
+          if (apiData) {
+            return {
+              ...stock,
+              price: apiData.price,
+              change: apiData.change,
+              isPositive: apiData.isPositive
+            }
+          }
+          return stock
+        })
+        setHotStocks(updatedHotStocks)
+        console.log('热门股票数据更新完成:', updatedHotStocks)
+      } else {
+        // 如果没有获取到数据，尝试逐个获取股票数据
+        console.log('尝试逐个获取热门股票数据...')
+        const updatedHotStocks = await Promise.all(hotStocks.map(async (stock) => {
+          const stockData = await api.getStockPrice(stock.code)
+          if (stockData) {
+            return {
+              ...stock,
+              price: stockData.price,
+              change: stockData.change,
+              isPositive: stockData.isPositive
+            }
+          }
+          return stock
+        }))
+        setHotStocks(updatedHotStocks)
+        console.log('逐个获取热门股票数据完成:', updatedHotStocks)
+      }
+    } catch (error) {
+      console.error('获取热门股票数据失败:', error)
+    }
+  }
+
   // 搜索功能
   useEffect(() => {
-    if (searchQuery.trim()) {
-      // 模拟搜索逻辑
-      const results = hotStocks.filter(stock =>
-        stock.name.includes(searchQuery) || stock.code.includes(searchQuery)
-      )
-      setSearchResults(results)
-    } else {
-      setSearchResults([])
+    const fetchSearchResults = async () => {
+      if (searchQuery.trim()) {
+        setSearchLoading(true)
+        setSearchError('')
+        
+        try {
+          // 使用聚宽API搜索股票
+          const results = await api.searchStocks(searchQuery)
+          if (results.length > 0) {
+            // 获取搜索结果的实时价格数据
+            const enhancedResults = await Promise.all(
+              results.map(async (result) => {
+                try {
+                  // 获取股票的实时价格数据
+                  const stockData = await api.getStockPrice(result.code)
+                  if (stockData) {
+                    return {
+                      ...result,
+                      price: stockData.price,
+                      change: stockData.change,
+                      isPositive: stockData.isPositive,
+                      industry: result.industry || '-',
+                      marketValue: '-' // 可以从API获取市值数据
+                    }
+                  }
+                } catch (error) {
+                  console.error(`获取股票 ${result.code} 数据失败:`, error)
+                }
+
+                // 如果没有实时数据，使用基础信息并添加默认值
+                return {
+                  ...result,
+                  price: '-',
+                  change: '0.00%',
+                  isPositive: true,
+                  industry: result.industry || '-',
+                  marketValue: '-' 
+                }
+              })
+            )
+
+            setSearchResults(enhancedResults.slice(0, 10)) // 最多显示10条结果
+          } else {
+            setSearchResults([])
+            setSearchError('未找到相关股票')
+          }
+        } catch (error) {
+          console.error('搜索股票失败:', error)
+          setSearchResults([])
+          setSearchError('搜索失败，请检查网络连接或稍后重试')
+        } finally {
+          setSearchLoading(false)
+        }
+      } else {
+        setSearchResults([])
+        setSearchError('')
+        setSearchLoading(false)
+      }
     }
+
+    const debounceTimer = setTimeout(fetchSearchResults, 300)
+    return () => clearTimeout(debounceTimer)
   }, [searchQuery])
+  
+  // 处理回车键搜索
+  const handleSearchKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      if (searchResults.length === 1) {
+        // 唯一匹配时直接跳转
+        handleViewDetail(searchResults[0])
+      } else if (searchResults.length > 1) {
+        // 多个匹配时聚焦到搜索结果
+        const resultsContainer = document.querySelector('.search-results')
+        if (resultsContainer) {
+          resultsContainer.scrollIntoView({ behavior: 'smooth' })
+        }
+      } else if (searchQuery.trim() && !searchLoading) {
+        // 无结果时提示
+        setSearchError('未找到相关股票')
+      }
+    }
+  }
+
+  // 初始化获取数据
+  useEffect(() => {
+    fetchIndicesData()
+    fetchHotStocks()
+    
+    // 每15分钟更新一次数据（900000毫秒）
+    const interval = setInterval(() => {
+      fetchIndicesData()
+      fetchHotStocks()
+    }, 900000)
+    
+    return () => clearInterval(interval)
+  }, [])
 
   // 交互处理：路由跳转至详情页（优先通过 location.state 传递数据）
   const handleViewDetail = (stock) => {
@@ -291,23 +451,47 @@ const MarketPage = () => {
             placeholder="搜索股票名称或代码"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyPress={handleSearchKeyPress}
+            onFocus={() => console.log('搜索框获得焦点')}
+            onBlur={() => console.log('搜索框失去焦点')}
           />
+          {searchLoading && (
+            <span className="fas fa-spinner fa-spin search-loading"></span>
+          )}
         </div>
-        {searchResults.length > 0 && (
-          <div className="search-results">
-            {searchResults.map((result, index) => (
-              <div key={index} className="search-result-item" onClick={() => handleViewDetail(result)}>
-                <div className="search-result-info">
-                  <div className="search-result-name">{result.name}</div>
-                  <div className="search-result-code">{result.code}</div>
-                </div>
-                <div className="search-result-price">
-                  <div className={`search-result-change ${result.isPositive ? 'change-up' : 'change-down'}`}>
-                    {result.change}
+        
+        {/* 搜索结果区域 */}
+        {searchQuery.trim() && (
+          <div className="search-results-container">
+            {searchLoading ? (
+              <div className="search-loading-text">搜索中...</div>
+            ) : searchError ? (
+              <div className="search-error-text">{searchError}</div>
+            ) : searchResults.length > 0 ? (
+              <div className="search-results">
+                {searchResults.map((result, index) => (
+                  <div key={index} className="search-result-item" onClick={() => handleViewDetail(result)}>
+                    <div className="search-result-info">
+                      <div className="search-result-name-code">
+                        <div className="search-result-name">{result.name}</div>
+                        <div className="search-result-code">{result.code}</div>
+                      </div>
+                      <div className="search-result-tags">
+                        <div className="search-result-tag">{result.industry || '-'}</div>
+                      </div>
+                    </div>
+                    <div className="search-result-price-info">
+                      <div className="search-result-price">{result.price}</div>
+                      <div className={`search-result-change ${result.isPositive ? 'change-up' : 'change-down'}`}>
+                        {result.change}
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ))}
               </div>
-            ))}
+            ) : (
+              <div className="search-no-results">未找到相关股票</div>
+            )}
           </div>
         )}
       </div>

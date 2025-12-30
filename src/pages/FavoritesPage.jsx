@@ -245,17 +245,64 @@ const FavoritesPage = () => {
     }
   }
 
-  // 模拟股票数据
-  const mockStockData = [
-    { name: '贵州茅台', code: '600519', price: '1,865.00', change: '+2.15%', isPositive: true },
-    { name: '宁德时代', code: '300750', price: '214.50', change: '-1.23%', isPositive: false },
-    { name: '招商银行', code: '600036', price: '35.67', change: '+0.85%', isPositive: true },
-    { name: '中国平安', code: '601318', price: '48.92', change: '-0.56%', isPositive: false }
-  ]
-
   // 分离股票和新闻收藏
   const favoriteStocks = favorites.filter(item => item.type === 'stock')
   const favoriteNews = favorites.filter(item => item.type === 'news')
+
+  // 股票实时数据状态
+  const [stockRealTimeData, setStockRealTimeData] = useState({})
+
+  // 获取股票实时数据
+  const fetchStockRealTimeData = async () => {
+    try {
+      if (favoriteStocks.length === 0) return
+      
+      // 提取所有股票代码
+      const stockCodes = favoriteStocks.map(stock => stock.code).filter(Boolean)
+      if (stockCodes.length === 0) return
+      
+      console.log('开始获取自选股实时数据，股票代码:', stockCodes)
+      
+      // 使用聚宽API批量获取股票数据
+      const stockDataMap = await api.getBatchStockData(stockCodes)
+      console.log('获取到自选股实时数据:', stockDataMap)
+      
+      if (Object.keys(stockDataMap).length > 0) {
+        setStockRealTimeData(stockDataMap)
+        console.log('自选股实时数据更新完成:', stockDataMap)
+      } else {
+        // 如果批量获取失败，尝试逐个获取
+        console.log('批量获取失败，尝试逐个获取自选股数据...')
+        const individualDataMap = {};
+        
+        for (const code of stockCodes) {
+          const stockData = await api.getStockPrice(code);
+          if (stockData) {
+            individualDataMap[code] = stockData;
+          }
+        }
+        
+        if (Object.keys(individualDataMap).length > 0) {
+          setStockRealTimeData(individualDataMap);
+          console.log('逐个获取自选股数据完成:', individualDataMap);
+        }
+      }
+    } catch (error) {
+      console.error('获取股票实时数据失败:', error)
+    }
+  }
+
+  // 初始化获取股票实时数据
+  useEffect(() => {
+    fetchStockRealTimeData()
+    
+    // 每10秒更新一次股票实时数据
+    const interval = setInterval(() => {
+      fetchStockRealTimeData()
+    }, 10000)
+    
+    return () => clearInterval(interval)
+  }, [favoriteStocks])
 
   // 社区讨论状态
   const [discussions, setDiscussions] = useState([
@@ -334,8 +381,8 @@ const FavoritesPage = () => {
         ) : (
           <div className="space-y-3">
             {favoriteStocks.map((stock, index) => {
-              // 查找模拟数据中的股票信息
-              const stockInfo = mockStockData.find(s => s.code === stock.code) || stock
+              // 使用从聚宽API获取的实时股票数据
+              const realTimeData = stockRealTimeData[stock.code] || stock
               return (
                 <div key={index} onClick={() => {
                   // 点击股票卡片：跳转到股票详情
@@ -351,21 +398,24 @@ const FavoritesPage = () => {
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="text-right">
-                      <div className="font-bold text-gray-900">{stockInfo.price || stock.price}</div>
+                      <div className="font-bold text-gray-900">{realTimeData.price || '0.00'}</div>
                       <div className={`text-sm font-semibold ${
-                        stockInfo.isPositive !== undefined
-                          ? stockInfo.isPositive ? 'text-red-500' : 'text-green-500'
-                          : stock.changeDirection === 'up' ? 'text-red-500' : 'text-green-500'
+                        realTimeData.isPositive !== undefined
+                          ? realTimeData.isPositive ? 'text-red-500' : 'text-green-500'
+                          : 'text-gray-500'
                       }`}>
-                        {stockInfo.change || stock.change}
+                        {realTimeData.change || '0.00%'}
                       </div>
                     </div>
                     <button
-                      onClick={(e) => { e.stopPropagation(); handleRemoveFavorite(stock.id) }}
-                      className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors opacity-0 group-hover:opacity-100"
-                      title="移除收藏"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleRemoveFavorite(stock.id)
+                      }}
+                      className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                      title="移除自选"
                     >
-                      <span className="fas fa-times"></span>
+                      <i className="fas fa-times"></i>
                     </button>
                   </div>
                 </div>
