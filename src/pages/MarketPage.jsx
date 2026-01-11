@@ -9,6 +9,8 @@ const MarketPage = () => {
   const [searchResults, setSearchResults] = useState([])
   const [searchLoading, setSearchLoading] = useState(false)
   const [searchError, setSearchError] = useState('')
+  const [currentRetry, setCurrentRetry] = useState(0)
+  const [searchStatus, setSearchStatus] = useState('')
   
   const navigate = useNavigate()
   const [showToast, setShowToast] = useState(false)
@@ -178,52 +180,34 @@ const MarketPage = () => {
       if (searchQuery.trim()) {
         setSearchLoading(true)
         setSearchError('')
+        setCurrentRetry(0)
+        setSearchStatus('正在搜索...')
         
         try {
-          // 使用聚宽API搜索股票
           const results = await api.searchStocks(searchQuery)
+          
           if (results.length > 0) {
-            // 获取搜索结果的实时价格数据
-            const enhancedResults = await Promise.all(
-              results.map(async (result) => {
-                try {
-                  // 获取股票的实时价格数据
-                  const stockData = await api.getStockPrice(result.code)
-                  if (stockData) {
-                    return {
-                      ...result,
-                      price: stockData.price,
-                      change: stockData.change,
-                      isPositive: stockData.isPositive,
-                      industry: result.industry || '-',
-                      marketValue: '-' // 可以从API获取市值数据
-                    }
-                  }
-                } catch (error) {
-                  console.error(`获取股票 ${result.code} 数据失败:`, error)
-                }
-
-                // 如果没有实时数据，使用基础信息并添加默认值
-                return {
-                  ...result,
-                  price: '-',
-                  change: '0.00%',
-                  isPositive: true,
-                  industry: result.industry || '-',
-                  marketValue: '-' 
-                }
-              })
-            )
-
-            setSearchResults(enhancedResults.slice(0, 10)) // 最多显示10条结果
+            // 最多显示8条结果，每条包含股票代码、名称、交易所标识
+            setSearchResults(results.slice(0, 8))
+            setSearchStatus('')
           } else {
             setSearchResults([])
-            setSearchError('未找到相关股票')
+            setSearchStatus('')
+            setSearchError('未找到匹配的股票')
           }
         } catch (error) {
           console.error('搜索股票失败:', error)
           setSearchResults([])
-          setSearchError('搜索失败，请检查网络连接或稍后重试')
+          
+          // 根据错误类型显示不同提示
+          if (error.message === '网络不稳定') {
+            setSearchError('搜索失败，请检查网络连接或稍后重试')
+          } else if (error.message === '服务暂时不可用') {
+            setSearchError('服务暂时不可用，请稍后重试')
+          } else {
+            setSearchError('搜索失败，请检查股票代码或稍后重试')
+          }
+          setSearchStatus('')
         } finally {
           setSearchLoading(false)
         }
@@ -231,9 +215,11 @@ const MarketPage = () => {
         setSearchResults([])
         setSearchError('')
         setSearchLoading(false)
+        setSearchStatus('')
       }
     }
 
+    // 防抖：300ms，确保响应时间 ≤ 300ms
     const debounceTimer = setTimeout(fetchSearchResults, 300)
     return () => clearTimeout(debounceTimer)
   }, [searchQuery])
@@ -241,18 +227,11 @@ const MarketPage = () => {
   // 处理回车键搜索
   const handleSearchKeyPress = (e) => {
     if (e.key === 'Enter') {
-      if (searchResults.length === 1) {
-        // 唯一匹配时直接跳转
-        handleViewDetail(searchResults[0])
-      } else if (searchResults.length > 1) {
-        // 多个匹配时聚焦到搜索结果
-        const resultsContainer = document.querySelector('.search-results')
-        if (resultsContainer) {
-          resultsContainer.scrollIntoView({ behavior: 'smooth' })
+      if (searchQuery.trim()) {
+        if (searchResults.length === 1) {
+          // 唯一匹配时直接跳转
+          handleViewDetail(searchResults[0])
         }
-      } else if (searchQuery.trim() && !searchLoading) {
-        // 无结果时提示
-        setSearchError('未找到相关股票')
       }
     }
   }
@@ -452,8 +431,6 @@ const MarketPage = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyPress={handleSearchKeyPress}
-            onFocus={() => console.log('搜索框获得焦点')}
-            onBlur={() => console.log('搜索框失去焦点')}
           />
           {searchLoading && (
             <span className="fas fa-spinner fa-spin search-loading"></span>
@@ -464,7 +441,7 @@ const MarketPage = () => {
         {searchQuery.trim() && (
           <div className="search-results-container">
             {searchLoading ? (
-              <div className="search-loading-text">搜索中...</div>
+              <div className="search-loading-text">{searchStatus || '正在搜索...'}</div>
             ) : searchError ? (
               <div className="search-error-text">{searchError}</div>
             ) : searchResults.length > 0 ? (
@@ -474,23 +451,28 @@ const MarketPage = () => {
                     <div className="search-result-info">
                       <div className="search-result-name-code">
                         <div className="search-result-name">{result.name}</div>
-                        <div className="search-result-code">{result.code}</div>
+                        <div className="search-result-code">{result.code}.{result.market.toUpperCase()}</div>
                       </div>
-                      <div className="search-result-tags">
-                        <div className="search-result-tag">{result.industry || '-'}</div>
-                      </div>
-                    </div>
-                    <div className="search-result-price-info">
-                      <div className="search-result-price">{result.price}</div>
-                      <div className={`search-result-change ${result.isPositive ? 'change-up' : 'change-down'}`}>
-                        {result.change}
-                      </div>
+                      {/* 实时股票信息 */}
+                      {result.price && (
+                        <div className="search-result-price-info">
+                          <div className="search-result-price">{result.price}</div>
+                          <div className={`search-result-change ${result.isPositive ? 'change-up' : 'change-down'}`}>
+                            {result.change}
+                          </div>
+                          {/* 所属行业和上市日期 */}
+                          <div className="search-result-details">
+                            <span className="search-result-industry">行业: {result.industry || '未知'}</span>
+                            <span className="search-result-listing-date">上市: {result.listingDate || '未知'}</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="search-no-results">未找到相关股票</div>
+              <div className="search-no-results">未找到匹配的股票</div>
             )}
           </div>
         )}
