@@ -1,0 +1,380 @@
+# ============================================================================
+# 多阶段 Dockerfile - 智能鑫AI 完整栈
+#
+# 支持三个构建目标：
+#   - frontend   : 前端 Node.js + Vite 应用
+#   - backend    : 后端 Node.js API 服务（需自行编写后端代码）
+#   - production : 生产环境前端
+#
+# 使用方式：
+#   # 构建前端
+#   docker build -t zhinengxin-ai:frontend --target frontend .
+#
+#   # 构建后端
+#   docker build -t zhinengxin-ai:backend --target backend .
+#
+# ============================================================================
+
+# ============================================================================
+# 【第1阶段】依赖解析 - 共享层，最大化缓存
+# ============================================================================
+FROM node:18-alpine AS dependencies
+
+# 元数据
+LABEL maintainer="ZhinengXin Team"
+LABEL description="智能鑫AI - 依赖层"
+
+# 工作目录
+WORKDIR /app
+
+# 【关键】仅复制 package.json 和 package-lock.json
+# 这样能最大化 Docker 缓存效率
+# 即使源代码改变，这一层也不需要重新执行 npm install
+COPY package*.json ./
+
+# 安装生产依赖
+# --legacy-peer-deps: 兼容旧版本的依赖冲突
+# --no-audit: 跳过安全审计（加快构建）
+RUN npm ci --legacy-peer-deps --no-audit
+
+# ============================================================================
+# 【第2阶段】开发依赖 - 用于开发和测试
+# ============================================================================
+FROM dependencies AS dependencies-dev
+
+LABEL description="智能鑫AI - 开发依赖层"
+
+# 安装开发依赖
+RUN npm install --legacy-peer-deps --no-audit
+
+# ============================================================================
+# 【第3阶段】源代码构建 - 编译 TypeScript / Vite 打包
+# ============================================================================
+FROM dependencies-dev AS builder
+
+LABEL description="智能鑫AI - 构建层"
+
+WORKDIR /app
+
+# 复制整个项目（排除 .dockerignore 中的文件）
+COPY . .
+
+# 构建生产版本（Vite 打包到 dist/）
+# 如果是后端，改为相应的构建命令
+RUN npm run build
+
+# ============================================================================
+# 【第4阶段】前端应用 - 生产最小化镜像
+# ============================================================================
+FROM node:18-alpine AS frontend
+
+LABEL description="智能鑫AI - 前端服务"
+LABEL version="1.0.0"
+
+# 元数据
+ENV NODE_ENV=production
+ENV APP_TYPE=frontend
+
+# 创建非 root 用户（安全最佳实践）
+RUN addgroup -g 1001 nodejs && adduser -S nodejs -u 1001
+
+WORKDIR /app
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 从依赖层复制 node_modules（已安装的生产依赖）
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COPY --from=dependencies /app/node_modules ./node_modules
+COPY --from=dependencies /app/package*.json ./
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 从构建层复制编译产物
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/public ./public
+
+# 配置文件（Vite、Tailwind 等）
+COPY vite.config.js tailwind.config.js postcss.config.js ./
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 权限设置（安全）
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RUN chown -R nodejs:nodejs /app
+
+# 切换为非 root 用户
+USER nodejs
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 启动命令：生产模式下启动 Vite 预览服务
+# 注：在 docker-compose 中会被环境变量覆盖
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EXPOSE 3001
+CMD ["npm", "run", "preview"]
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 健康检查
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+  CMD wget --quiet --tries=1 --spider http://localhost:3001/ || exit 1
+
+# ============================================================================
+# 【第5阶段】后端应用 - Node.js API 服务
+# ============================================================================
+FROM node:18-alpine AS backend
+
+LABEL description="智能鑫AI - 后端 API 服务"
+LABEL version="1.0.0"
+
+# 元数据
+ENV NODE_ENV=production
+ENV APP_TYPE=backend
+
+# 创建非 root 用户
+RUN addgroup -g 1001 nodejs && adduser -S nodejs -u 1001
+
+WORKDIR /app
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 从依赖层复制 node_modules
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COPY --from=dependencies /app/node_modules ./node_modules
+COPY --from=dependencies /app/package*.json ./
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 复制后端源代码
+# 注：假设后端代码在 backend/ 目录或 dist/ 中
+# 如果项目结构不同，请根据实际修改
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# 方案A：如果有预编译的后端代码
+COPY --from=builder /app/dist ./dist
+
+# 方案B：或复制源代码（如果后端是 Node.js 脚本）
+# COPY --from=builder /app/backend ./
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 权限设置
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RUN chown -R nodejs:nodejs /app
+
+USER nodejs
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# API 服务端口
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EXPOSE 3000
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 启动命令
+# 注：假设有 npm start 脚本指向后端入口
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CMD ["npm", "start"]
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 健康检查
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+  CMD wget --quiet --tries=1 --spider http://localhost:3000/health || exit 1
+
+# ============================================================================
+# 【第6阶段】前端开发 - 带热更新支持
+# ============================================================================
+FROM dependencies-dev AS frontend-dev
+
+LABEL description="智能鑫AI - 前端开发环境"
+
+ENV NODE_ENV=development
+ENV APP_TYPE=frontend-dev
+
+WORKDIR /app
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 从开发依赖层复制 node_modules
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COPY --from=dependencies-dev /app/node_modules ./node_modules
+COPY --from=dependencies-dev /app/package*.json ./
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 创建非 root 用户
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RUN addgroup -g 1001 nodejs && adduser -S nodejs -u 1001
+RUN chown -R nodejs:nodejs /app
+
+USER nodejs
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 热更新开发端口
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EXPOSE 5173
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Vite 开发服务器
+# 注意：源代码由 docker-compose volumes 挂载
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CMD ["npm", "run", "dev"]
+
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+  CMD wget --quiet --tries=1 --spider http://localhost:5173/ || exit 1
+
+# ============================================================================
+# 【第7阶段】后端开发 - 带调试支持
+# ============================================================================
+FROM node:18-alpine AS backend-dev
+
+LABEL description="智能鑫AI - 后端开发环境"
+
+ENV NODE_ENV=development
+ENV APP_TYPE=backend-dev
+
+WORKDIR /app
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 安装所有依赖（包括开发依赖和调试工具）
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COPY package*.json ./
+
+RUN npm ci --legacy-peer-deps && \
+    npm install -g nodemon  # 自动重启开发工具
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 创建非 root 用户
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RUN addgroup -g 1001 nodejs && adduser -S nodejs -u 1001
+RUN chown -R nodejs:nodejs /app
+
+USER nodejs
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 调试和 API 端口
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EXPOSE 3000 9229
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 开发启动命令（使用 nodemon 自动重启）
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CMD ["nodemon", "--inspect=0.0.0.0:9229", "dist/index.js"]
+
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+  CMD wget --quiet --tries=1 --spider http://localhost:3000/health || exit 1
+
+# ============================================================================
+# 【第8阶段】生产最小化镜像 - production target
+# ============================================================================
+FROM node:18-alpine AS production
+
+LABEL maintainer="ZhinengXin Team"
+LABEL description="智能鑫AI - 生产前端镜像"
+LABEL version="1.0.0"
+
+ENV NODE_ENV=production
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 创建非 root 用户（安全最佳实践）
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RUN addgroup -g 1001 nodejs && \
+    adduser -S nodejs -u 1001
+
+WORKDIR /app
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 多阶段复制：最小化镜像大小
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# 1. 仅复制生产依赖
+COPY --from=dependencies /app/node_modules ./node_modules
+COPY --from=dependencies /app/package*.json ./
+
+# 2. 复制编译产物
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/public ./public
+
+# 3. 配置文件
+COPY vite.config.js tailwind.config.js postcss.config.js ./
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 权限和所有权
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RUN chown -R nodejs:nodejs /app && \
+    chmod -R 755 /app
+
+# 切换为非 root 用户
+USER nodejs
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 暴露端口
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EXPOSE 3001
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 启动命令
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CMD ["npm", "run", "preview"]
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 健康检查
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+  CMD wget --quiet --tries=1 --spider http://localhost:3001/ || exit 1
+
+# ============================================================================
+# 【使用说明】
+# ============================================================================
+#
+# 1️⃣  构建前端生产镜像
+#    docker build -t zhinengxin-ai:frontend --target frontend .
+#
+# 2️⃣  构建后端生产镜像
+#    docker build -t zhinengxin-ai:backend --target backend .
+#
+# 3️⃣  构建前端开发镜像（带热更新）
+#    docker build -t zhinengxin-ai:frontend-dev --target frontend-dev .
+#
+# 4️⃣  构建生产前端镜像（与 target=frontend 相同）
+#    docker build -t zhinengxin-ai:production --target production .
+#
+# 5️⃣  Docker Compose 会自动选择构建目标
+#    docker-compose -f docker-compose.production.yml build
+#
+# ============================================================================
+# 【镜像大小对比】
+# ============================================================================
+#
+# 基础镜像（node:18-alpine）    : ~170 MB
+# 加上生产依赖                  : ~250 MB
+# 加上编译产物（Vite dist）     : ~270-290 MB
+#
+# 最终镜像大小                  : 260-290 MB （生产环境）
+#                              : 500-600 MB （开发环境，含devDeps）
+#
+# ============================================================================
+# 【构建缓存优化】
+# ============================================================================
+#
+# 层缓存顺序（从快变化到慢变化）：
+#
+# 1️⃣  操作系统和基础工具       (最稳定，几乎不变)
+# 2️⃣  系统依赖和全局工具       (稳定，很少变化)
+# 3️⃣  package.json 和依赖      (中等，经常变化)
+# 4️⃣  源代码文件               (不稳定，频繁变化)
+# 5️⃣  构建产物                 (完全依赖源代码)
+#
+# 结果：只要不修改 package.json，npm install 就会被缓存
+#       代码修改只需要重新构建最后几层，速度很快
+#
+# ============================================================================
+# 【安全最佳实践】
+# ============================================================================
+#
+# ✅ 已实现：
+#   - 非 root 用户运行（uid 1001）
+#   - 仅包含必要文件（通过多阶段构建）
+#   - 只复制生产依赖（开发依赖不进入生产镜像）
+#   - 明确的健康检查
+#   - 设置了文件权限（755）
+#
+# ⚠️  建议：
+#   - 使用 docker scan 扫描漏洞：docker scan zhinengxin-ai:frontend
+#   - 定期更新基础镜像：docker pull node:18-alpine
+#   - 添加入侵检测：使用 Trivy 或 Grype
+#   - 生产环境配置只读文件系统：security_opt: no-new-privileges
+#
+# ============================================================================

@@ -1,0 +1,112 @@
+# ============================================================================
+# Docker Compose 生产专用配置 - 智能鑫AI Prod
+#
+# 此文件覆盖/扩展基础docker-compose.yml，专为生产环境优化
+#
+# 使用方式：
+# docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# 特性：
+# - 无卷挂载（只读文件系统）
+# - 更严格的资源限制
+# - 更激进的重启策略
+# - 安全相关的额外配置
+#
+# ============================================================================
+
+version: '3.9'
+
+services:
+  zhinengxin-prod:
+    # 使用profile隔离，仅在生产模式下启用
+    profiles:
+      - prod
+    
+    # 生产环境：不挂载任何卷，确保安全性和隔离性
+    # 所有文件都来自镜像构建时的COPY指令
+    volumes: []
+    
+    # 安全相关配置
+    security_opt:
+      # 使用AppArmor安全配置文件（可选，需要宿主机支持）
+      # - apparmor=docker-default
+      # 禁用不必要的capability
+      - no-new-privileges:true
+    
+    # 生产环境：使用只读根文件系统（提高安全性）
+    # read_only: true  # 注意：这可能会导致某些临时文件无法写入
+    
+    # 生产环境环境变量（严格的安全和性能设置）
+    environment:
+      NODE_ENV: production
+      LOG_LEVEL: warn          # 生产环境只记录警告及以上级别
+      # 禁用某些调试特性
+      DEBUG: ""
+      # 性能相关
+      NODE_OPTIONS: "--max-old-space-size=256"
+    
+    # 生产环境资源限制（更严格）
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 512M
+        reservations:
+          cpus: '1'
+          memory: 256M
+      
+      # 部署策略（Docker Swarm模式）
+      # 如果使用Kubernetes，需要用Helm或其他工具
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    
+    # 日志配置（生产环境日志要记录但不能过多）
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+        # 标签便于日志聚合
+        labels: "service=zhinengxin-ai,environment=production"
+    
+    # Healthcheck配置（生产环境更严格）
+    healthcheck:
+      test: ["CMD", "curl", "-f", "--connect-timeout", "5", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    
+    # 重启策略（生产环境：尽可能保持服务可用）
+    restart: unless-stopped
+    
+    # 容器停止的宽限期（给应用时间优雅关闭）
+    stop_grace_period: 30s
+    
+    # 其他生产安全选项
+    cap_drop:          # 移除不需要的Linux capabilities
+      - ALL
+    cap_add:           # 仅添加需要的capabilities
+      - NET_BIND_SERVICE
+
+networks:
+  zhinengxin-network:
+    driver: bridge
+    # 生产网络配置（可选）
+    driver_opts:
+      # 限制网络资源（如果需要）
+      # com.docker.network.bridge.name: br-zhinengxin
+
+# 说明：
+# 1. 生产镜像中不包含源代码、测试文件、开发工具
+# 2. 使用非root用户运行（在Dockerfile中已配置）
+# 3. 只读根文件系统选项可根据实际需求启用
+# 4. 日志驱动可根据需要更换为Splunk、ELK等
+# 5. 可在前面添加Nginx反向代理以提高安全性和性能

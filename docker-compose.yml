@@ -1,0 +1,201 @@
+# ============================================================================
+# Docker Compose 配置文件 - 智能鑫AI
+#
+# 此配置支持：
+# - 生产环境（Prod）：精简、安全、高性能
+# - 开发环境（Dev）：热挂载、热更新、便于调试
+#
+# 使用方式：
+# 【仅运行生产环境】
+# docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+#
+# 【仅运行开发环境】
+# docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+#
+# 【同时运行两个环境】
+# docker-compose -f docker-compose.yml -f docker-compose.prod.yml -f docker-compose.dev.yml up
+#
+# ============================================================================
+
+version: '3.9'
+
+services:
+  # ========================================================================
+  # 生产环境 - zhinengxin-prod
+  # ========================================================================
+  zhinengxin-prod:
+    # 使用build上下文指定Dockerfile和target
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+      # 构建缓存选项（Docker BuildKit特性）
+      cache_from:
+        - type=gha  # 使用GitHub Actions缓存（如在GHA中运行）
+    
+    # 镜像名称和标签
+    image: zhinengxin-ai:latest
+    container_name: zhinengxin-prod
+    
+    # 端口映射：容器内3000 -> 主机3000
+    ports:
+      - "3000:3000"
+    
+    # 重启策略（生产环境很重要）
+    restart: unless-stopped
+    
+    # 资源限制（保护宿主机）
+    deploy:
+      resources:
+        limits:
+          cpus: '2'           # 最多占用2个CPU
+          memory: 512M        # 最多占用512MB内存
+        reservations:
+          cpus: '1'           # 预留1个CPU
+          memory: 256M        # 预留256MB内存
+    
+    # 健康检查
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    
+    # 环境变量
+    environment:
+      NODE_ENV: production
+      LOG_LEVEL: info
+    
+    # 日志配置
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # 网络配置
+    networks:
+      - zhinengxin-network
+
+  # ========================================================================
+  # 开发环境 - zhinengxin-dev
+  # ========================================================================
+  zhinengxin-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    
+    image: zhinengxin-ai:dev
+    container_name: zhinengxin-dev
+    
+    # 交互式终端（便于开发调试）
+    stdin_open: true
+    tty: true
+    
+    # 端口映射：容器内5173 -> 主机5173
+    ports:
+      - "5173:5173"
+    
+    # 关键特性：本地源代码挂载（热更新）
+    volumes:
+      # 挂载src目录以支持热更新
+      - ./src:/app/src
+      # 挂载public目录（如果有公共资源）
+      - ./public:/app/public
+      # 挂载vite配置（便于实时调整）
+      - ./vite.config.js:/app/vite.config.js
+      # 挂载Tailwind配置
+      - ./tailwind.config.js:/app/tailwind.config.js
+      # 使用命名卷存储node_modules，避免性能问题
+      - zhinengxin-dev-node-modules:/app/node_modules
+    
+    # 重启策略（开发环境宽松一点）
+    restart: on-failure:3
+    
+    # 资源限制（开发环境给予更多资源用于快速构建）
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 2G
+        reservations:
+          cpus: '2'
+          memory: 1G
+    
+    # 健康检查（检查Vite服务器）
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5173/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    
+    # 环境变量
+    environment:
+      NODE_ENV: development
+      VITE_HMR_HOST: localhost
+      VITE_HMR_PORT: 5173
+      VITE_HMR_PROTOCOL: ws
+      LOG_LEVEL: debug
+    
+    # 日志配置
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"       # 开发环境日志可以更多
+        max-file: "5"
+    
+    # 网络配置
+    networks:
+      - zhinengxin-network
+    
+    # 依赖关系（可选：确保数据库等先启动）
+    # depends_on:
+    #   - database
+    #   - redis
+
+# ============================================================================
+# Docker命名卷管理
+# ============================================================================
+
+volumes:
+  # 开发环境node_modules卷
+  # 作用：避免在宿主机和容器之间频繁同步大量文件，提高性能
+  zhinengxin-dev-node-modules:
+    driver: local
+
+# ============================================================================
+# Docker网络配置
+# ============================================================================
+
+networks:
+  # 自定义网络，便于容器间通信
+  zhinengxin-network:
+    driver: bridge
+
+# ============================================================================
+# 说明和最佳实践：
+#
+# 1. 网络隔离：
+#    - Prod和Dev使用同一网络便于相互通信（如有需要）
+#    - 在生产部署中可考虑不同的网络拓扑
+#
+# 2. 卷管理：
+#    - 开发环境挂载源代码实现热更新
+#    - node_modules使用命名卷避免性能问题
+#    - 生产环境不挂载任何卷（只读文件系统）
+#
+# 3. 资源限制：
+#    - Prod：保守的资源限制（确保稳定性）
+#    - Dev：宽松的资源限制（快速构建和调试）
+#
+# 4. 重启策略：
+#    - Prod：unless-stopped（除非显式停止，否则总是重启）
+#    - Dev：on-failure（只在失败时重启）
+#
+# 5. 日志配置：
+#    - 两个环境都配置了日志轮转，防止日志文件过大
+#
+# ============================================================================

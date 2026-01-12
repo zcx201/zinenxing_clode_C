@@ -1,0 +1,148 @@
+# ============================================================================
+# Docker Compose 开发专用配置 - 智能鑫AI Dev
+#
+# 此文件覆盖/扩展基础docker-compose.yml，专为开发环境优化
+#
+# 使用方式（推荐）：
+# 【方式1】仅运行开发环境（简单快速）
+# docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+#
+# 【方式2】同时运行生产和开发（如需要）
+# docker-compose -f docker-compose.yml -f docker-compose.prod.yml -f docker-compose.dev.yml up -d --build
+#
+# 【查看日志】
+# docker-compose logs -f zhinengxin-dev
+#
+# 【停止容器】
+# docker-compose -f docker-compose.yml -f docker-compose.dev.yml down
+#
+# ============================================================================
+
+# 注意：不要在此文件中声明version，它会继承docker-compose.yml的版本
+
+services:
+  zhinengxin-dev:
+    # 覆盖基础配置中的zhinengxin-dev服务
+    # 这里的配置会合并/覆盖docker-compose.yml中的相同字段
+    
+    # 【关键】：重新构建镜像，确保包含最新代码
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    
+    image: zhinengxin-ai:dev
+    container_name: zhinengxin-dev
+    
+    # 交互式终端（便于开发调试）
+    stdin_open: true
+    tty: true
+    
+    # 端口映射：容器内5173 -> 主机5173
+    ports:
+      - "5173:5173"
+    
+    # ========================================================================
+    # 【核心特性】：本地源代码挂载（热更新）
+    # 重要：顺序很关键！后面的卷会覆盖前面的同名挂载点
+    # ========================================================================
+    volumes:
+      # 1. 首先挂载整个本地项目（会同步源代码）
+      - .:/app:cached
+      
+      # 2. 然后用命名卷保护node_modules（防止被本地空目录覆盖）
+      - zhinengxin-dev-node-modules:/app/node_modules
+      
+      # 3. 挂载缓存目录（加快构建速度）
+      - zhinengxin-dev-vite-cache:/app/.vite
+      - zhinengxin-dev-node-cache:/app/.npm-cache
+    
+    # ========================================================================
+    # 【开发专用】：环境变量
+    # ========================================================================
+    environment:
+      # Node环境
+      NODE_ENV: development
+      
+      # Vite HMR（热模块替换）配置
+      # HMR = Hot Module Replacement（浏览器自动刷新）
+      VITE_HMR_HOST: localhost      # 本地机器host
+      VITE_HMR_PORT: 5173            # Vite开发服务器端口
+      VITE_HMR_PROTOCOL: ws           # WebSocket协议（推荐用ws而不是http）
+      
+      # 日志级别
+      LOG_LEVEL: debug
+      
+      # npm行为优化
+      NPM_CONFIG_LOGLEVEL: verbose
+    
+    # ========================================================================
+    # 【重启策略】：开发环境宽松
+    # ========================================================================
+    restart: on-failure:3             # 失败3次后停止
+    
+    # ========================================================================
+    # 【资源限制】：开发环境给予充足资源
+    # ========================================================================
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 2G
+        reservations:
+          cpus: '2'
+          memory: 1G
+    
+    # ========================================================================
+    # 【健康检查】：确保Vite开发服务器正常
+    # ========================================================================
+    healthcheck:
+      # 检查Vite服务器是否响应
+      test: ["CMD", "curl", "-f", "http://localhost:5173/", "||", "exit", "1"]
+      interval: 30s                   # 每30秒检查一次
+      timeout: 10s                    # 超时10秒视为失败
+      retries: 5                      # 失败5次后标记为不健康
+      start_period: 30s               # 启动后30秒内不检查（给Vite启动时间）
+    
+    # ========================================================================
+    # 【日志配置】：开发环境日志更详细
+    # ========================================================================
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"               # 单个日志文件最大50MB
+        max-file: "5"                 # 最多保留5个日志文件
+    
+    # ========================================================================
+    # 【网络配置】：使用基础配置中定义的网络
+    # ========================================================================
+    networks:
+      - zhinengxin-network
+
+# ============================================================================
+# Docker 命名卷管理
+# ============================================================================
+volumes:
+  # 开发环境node_modules卷
+  # 作用：避免在宿主机和容器之间频繁同步大量npm包文件，提高性能
+  zhinengxin-dev-node-modules:
+    driver: local
+  
+  # Vite缓存卷
+  # 作用：加快开发构建速度，缓存预编译的依赖
+  zhinengxin-dev-vite-cache:
+    driver: local
+  
+  # npm缓存卷
+  # 作用：缓存npm下载的包，重装时无需重新下载
+  zhinengxin-dev-node-cache:
+    driver: local
+
+# ============================================================================
+# Docker 网络配置
+# 注意：当同时加载两个文件时，网络来自docker-compose.yml
+#       当单独运行此文件时，使用下面的网络定义
+# ============================================================================
+networks:
+  zhinengxin-network:
+    driver: bridge
